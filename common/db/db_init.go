@@ -17,9 +17,9 @@ type DB struct {
 func MustNewMySQL(url string) *DB {
 	db, err := gorm.Open(mysql.Open(url))
 	if err != nil {
-		panic("连接至MySQL失败: " + err.Error())
+		panic("Failed to connect to MySQL" + err.Error())
 	}
-	fmt.Println("连接至MySQL成功")
+	fmt.Println("Connected to MySQL")
 	return &DB{client: db}
 }
 
