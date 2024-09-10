@@ -8,6 +8,11 @@ type Proxy struct {
 }
 
 type Config struct {
-	Proxies []Proxy
 	Log     logx.LogConf
+	Proxies []Proxy
+	Auth    struct {
+		AccessSecret string
+		AccessExpire int
+	}
+	WhiteList []string
 }

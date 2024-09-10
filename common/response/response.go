@@ -1,3 +1,7 @@
+// response.go
+// HttpSuccess, HttpFail 一般用于API接口响应
+// HttpResponse 用于网关等
+
 package response
 
 import (
@@ -12,6 +16,7 @@ type Resp struct {
 	Content any    `json:"content"`
 }
 
+// HttpSuccess 成功响应
 func HttpSuccess(r *http.Request, w http.ResponseWriter, resp any) {
 	response := Resp{
 		Code:    0,
@@ -21,11 +26,17 @@ func HttpSuccess(r *http.Request, w http.ResponseWriter, resp any) {
 	httpx.WriteJsonCtx(r.Context(), w, http.StatusOK, &response)
 }
 
-func HttpFail(r *http.Request, w http.ResponseWriter, code uint8, err error) {
+// HttpFail 失败响应
+func HttpFail(r *http.Request, w http.ResponseWriter, err error) {
 	response := Resp{
-		Code:    code,
-		Msg:     err.Error(),
-		Content: nil,
+		Code:    6,
+		Msg:     "寄了",
+		Content: err.Error(),
 	}
 	httpx.WriteJsonCtx(r.Context(), w, http.StatusOK, &response)
+}
+
+// HttpResponse 自定义响应
+func HttpResponse(r *http.Request, w http.ResponseWriter, status int, resp *Resp) {
+	httpx.WriteJsonCtx(r.Context(), w, status, resp)
 }
