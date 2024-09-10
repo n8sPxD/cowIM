@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	response "github.com/n8sPxD/cowIM/common/response"
 	"github.com/n8sPxD/cowIM/imapi/auth/internal/logic"
 	"github.com/n8sPxD/cowIM/imapi/auth/internal/svc"
 	"github.com/n8sPxD/cowIM/imapi/auth/internal/types"
@@ -13,16 +14,16 @@ func registerHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.RegisterRequest
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			response.HttpFail(r, w, 6, err)
 			return
 		}
 
 		l := logic.NewRegisterLogic(r.Context(), svcCtx)
 		resp, err := l.Register(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			response.HttpFail(r, w, 6, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			response.HttpSuccess(r, w, resp)
 		}
 	}
 }
