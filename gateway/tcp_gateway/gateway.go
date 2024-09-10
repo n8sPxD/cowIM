@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"io"
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -68,6 +67,7 @@ func (g *Gateway) handleConnection(conn net.Conn) {
 		// 这里可以根据msg.Command调用RPC接口，然后处理返回的结果
 
 		// 返回一个简单的响应消息
+		// TODO: 根据用户请求以及长连接后端服务响应进行改造
 		response := protocol.Message{
 			Header: protocol.Header{
 				Version:      msg.Version,
@@ -98,7 +98,7 @@ func main() {
 
 	gateway, err := NewGateway(":9000") // 监听9000端口
 	if err != nil {
-		log.Fatalf("Failed to start gateway: %v", err)
+		logx.Errorf("Failed to start gateway: %v", err)
 	}
 
 	// 处理退出信号，平滑关闭

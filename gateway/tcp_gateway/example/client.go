@@ -33,7 +33,7 @@ func main() {
 		_ = client.conn.Conn.Close()
 	}()
 
-	// 构建测试消息
+	// 构建消息
 	testMessage := protocol.Message{
 		Header: protocol.Header{
 			Version:      1,     // 假设版本号为1

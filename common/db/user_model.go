@@ -9,12 +9,8 @@ import (
 func (db *DB) InsertUser(ctx context.Context, user *models.User) error {
 	db.rwMutex.Lock()
 	defer db.rwMutex.Unlock()
-	err := db.client.WithContext(ctx).Create(user).Error
-	if err != nil {
+	if err := db.client.WithContext(ctx).Create(user).Error; err != nil {
 		return err
 	}
-	conf := models.UserConfig{
-		UserID: user.ID,
-	}
-	return db.client.WithContext(ctx).Create(&conf).Error
+	return db.client.WithContext(ctx).Create(&models.UserConfig{UserID: user.ID}).Error
 }
