@@ -1,0 +1,11 @@
+Proxies:
+  - Route: "/login"
+    Target: "http://localhost:20001"
+
+  - Route: "/register"
+    Target: "http://localhost:20001"
+
+Log:
+  Encoding: plain
+  TimeFormat: 2006-01-02 15:04:05
+  Stat: false

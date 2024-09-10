@@ -1,0 +1,32 @@
+syntax = "v1"
+
+info (
+	title:   "auth"
+	desc:    "用户注册和登陆服务"
+	author:  "n8spxd"
+	version: "v1"
+)
+
+type (
+	RegisterRequest {
+		Nickname string `json:"nickname"`
+		Password string `json:"password"`
+	}
+	RegisterResponse  {}
+	LoginRequest {
+		Nickname string `json:"nickname"`
+		Password string `json:"password"`
+	}
+	LoginResponse {
+		Token string `json:"token"`
+	}
+)
+
+service auth {
+	@handler register
+	post /register (RegisterRequest) returns (RegisterResponse)
+
+	@handler login
+	post /login (LoginRequest) returns (LoginResponse)
+}
+
