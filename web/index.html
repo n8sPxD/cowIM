@@ -13,13 +13,24 @@
             margin: 0;
             font-family: Arial, sans-serif;
         }
-        .login-container {
-            text-align: center;
+
+        .container {
+            display: flex;
+            justify-content: center;  /* 容器内子项水平居中 */
+            align-items: center; /* 容器内子项垂直居中 */
+            width: 700px;
             border: 1px solid #000;
-            padding: 40px;
-            width: 300px;
             background-color: #fff;
+            padding: 40px;
+            height: 300px; /* 固定容器高度 */
         }
+
+        .login-container {
+            margin-right: 50px; /* 让登录框和cowsay保持适当间距 */
+            width: 300px;
+            text-align: center;
+        }
+
         input[type="text"], input[type="password"] {
             width: 100%;
             padding: 10px;
@@ -27,6 +38,7 @@
             border: 1px solid #000;
             border-radius: 5px;
         }
+
         button {
             padding: 10px 20px;
             margin: 10px;
@@ -35,29 +47,50 @@
             cursor: pointer;
             border-radius: 5px;
         }
+
+        #cowsay-container {
+            margin-left: auto;  /* 自动调整左边距 */
+            margin-right: auto; /* 自动调整右边距 */
+            font-family: monospace;
+            white-space: pre;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%; /* 确保高度填充 */
+        }
+
     </style>
 </head>
 <body>
 
-<div class="login-container">
-    <h2>cow IM</h2>
-    <form id="loginForm">
-        <div>
-            <label for="username">用户名</label><br>
-            <input type="text" id="username" name="username" required>
-        </div>
-        <div>
-            <label for="password">密码</label><br>
-            <input type="password" id="password" name="password" required>
-        </div>
-        <div>
-            <button type="button" id="registerBtn">注册</button>
-            <button type="submit">登录</button>
-        </div>
-    </form>
+<div class="container">
+    <!-- 登录框 -->
+    <div class="login-container">
+        <h2>cow IM</h2>
+        <form id="loginForm">
+            <div>
+                <label for="username">用户名</label><br>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div>
+                <label for="password">密码</label><br>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div>
+                <button type="button" id="registerBtn">注册</button>
+                <button type="submit">登录</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- cowsay 输出框 -->
+    <div id="cowsay-container"></div>
 </div>
 
+<script src="./bundle.js"></script>
+
 <script>
+
     // 注册按钮跳转到注册页面
     document.getElementById('registerBtn').onclick = function () {
         window.location.href = '/register';  // 此处可跳转到注册页面的 URL
@@ -70,18 +103,18 @@
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
-        fetch('http://localhost:8080/login', {
+        fetch('http://192.168.1.246:8080/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({username, password})
         })
             .then(response => response.json())
             .then(data => {
                 if (data.code === 0) {
                     // 如果鉴权通过，跳转到聊天页面
-                    window.location.href = '/chat.html';
+                    window.location.href = '/chat';
                 } else {
                     // 鉴权失败，弹出错误信息
                     alert('用户名或密码错误');
