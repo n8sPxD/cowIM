@@ -9,3 +9,7 @@ Log:
   Encoding: plain
   TimeFormat: 2006-01-02 15:04:05
   Stat: false
+
+Auth:
+  AccessSecret: wcnm123
+  AccessExpire: 1440  # 单位为分钟
