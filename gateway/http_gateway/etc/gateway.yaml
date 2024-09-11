@@ -16,3 +16,4 @@ Auth:
 
 WhiteList:
   - /register
+  - /login

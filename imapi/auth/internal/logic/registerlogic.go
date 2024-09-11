@@ -27,7 +27,7 @@ func NewRegisterLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Register
 
 func (l *RegisterLogic) Register(req *types.RegisterRequest) (*types.RegisterResponse, error) {
 	if err := l.svcCtx.MySQL.InsertUser(l.ctx, &models.User{
-		Username: req.Nickname,
+		Username: req.Username,
 		Password: req.Password,
 	}); err != nil {
 		var mysqlErr *mysql.MySQLError
@@ -36,6 +36,5 @@ func (l *RegisterLogic) Register(req *types.RegisterRequest) (*types.RegisterRes
 		}
 		return nil, err
 	}
-
 	return &types.RegisterResponse{}, nil
 }

@@ -35,7 +35,8 @@ func (g *Gateway) Start() error {
 
 	// 设置反向代理路由
 	for _, proxy := range g.proxies {
-		mux.HandleFunc(proxy.Route, g.reverseProxyHandler(proxy.Target))
+		// 使用handleCORS包装每个处理器
+		mux.HandleFunc(proxy.Route, handleCORS(http.HandlerFunc(g.reverseProxyHandler(proxy.Target))))
 		logx.Infof("Route: %s -> Target: %s", proxy.Route, proxy.Target)
 	}
 
@@ -83,6 +84,25 @@ func jwtParse(r *http.Request, w http.ResponseWriter) bool {
 	// 鉴权成功，继续转发请求
 	logx.Infof("Authenticated user: %s", claims.Username)
 	return true
+}
+
+// handleCORS 设置CORS响应头并处理OPTIONS预检请求
+func handleCORS(next http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// 设置CORS响应头
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// 如果是OPTIONS请求，提前返回
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		// 否则继续处理下一个处理器
+		next.ServeHTTP(w, r)
+	}
 }
 
 // reverseProxyHandler 返回一个 HTTP 处理器用于反向代理请求

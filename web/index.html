@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cow IM - 登录</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .login-container {
+            text-align: center;
+            border: 1px solid #000;
+            padding: 40px;
+            width: 300px;
+            background-color: #fff;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #000;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: 1px solid #000;
+            background-color: #fff;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h2>cow IM</h2>
+    <form id="loginForm">
+        <div>
+            <label for="username">用户名</label><br>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div>
+            <label for="password">密码</label><br>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <div>
+            <button type="button" id="registerBtn">注册</button>
+            <button type="submit">登录</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // 注册按钮跳转到注册页面
+    document.getElementById('registerBtn').onclick = function () {
+        window.location.href = '/register';  // 此处可跳转到注册页面的 URL
+    };
+
+    // 登录表单提交逻辑
+    document.getElementById('loginForm').onsubmit = function (e) {
+        e.preventDefault(); // 阻止表单的默认提交行为
+
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        fetch('http://localhost:8080/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 0) {
+                    // 如果鉴权通过，跳转到聊天页面
+                    window.location.href = '/chat.html';
+                } else {
+                    // 鉴权失败，弹出错误信息
+                    alert('用户名或密码错误');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('请求失败，请稍后再试');
+            });
+    };
+</script>
+
+</body>
+</html>

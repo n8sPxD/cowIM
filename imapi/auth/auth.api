@@ -9,12 +9,12 @@ info (
 
 type (
 	RegisterRequest {
-		Nickname string `json:"nickname"`
+		Username string `json:"username"`
 		Password string `json:"password"`
 	}
 	RegisterResponse  {}
 	LoginRequest {
-		Nickname string `json:"nickname"`
+		Username string `json:"username"`
 		Password string `json:"password"`
 	}
 	LoginResponse {
