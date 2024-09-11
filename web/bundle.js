@@ -2,7 +2,7 @@
 const cowsay = require("cowsay");
 
 const cowText = cowsay.say({
-    text: "Welcome to Cow IM!",
+    text: "Welcome to Cow IM!\n\nCow is not Copy-On-Write!",
     e: "^^",
     T: "U "
 });
