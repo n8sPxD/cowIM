@@ -3,7 +3,7 @@
 个人绞尽脑汁设计的即时通讯系统
 
 ### 架构图
-<img src="docs/cowIm架构v2.png" height="719" alt="架构图v2">
+<img src="docs/cowIm架构v3.png" alt="架构图v2">
 
 ### 目前实现与进度
 #### 底层及架构
