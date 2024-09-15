@@ -1,3 +1,20 @@
 syntax = "proto3";
 
-package template;
+package imrpc;
+option go_package="./imrpc";
+
+service ImRPC {
+  rpc SendSingleMessage(SendMessageRequest) returns (SendMessageResponse);
+}
+
+// TODO: 按照libnet.Message格式改写SendMessageRequest，
+message SendMessageRequest {
+  string SendUser = 1;
+  string RecvUser = 2;
+  int32 RecvGroup = 3;
+  int32 Type = 4;
+  string Content = 5;
+}
+
+message SendMessageResponse {
+}

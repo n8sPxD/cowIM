@@ -17,8 +17,8 @@ import (
 
 // Session TCP会话
 type Session struct {
-	User       string       // 哪位用户连接的
-	Conn       net.Conn     // 会话
+	user       string       // 当前会话用户
+	conn       net.Conn     // TCP连接
 	parser     Parser       // 协议解析器
 	manager    *Manager     // 该会话属于哪个manager管理
 	sendChan   chan Message // 消息缓存队列
@@ -27,9 +27,9 @@ type Session struct {
 	closeMutex sync.Mutex
 }
 
-func TcpSession(manager *Manager, Conn net.Conn, chanSize int) *Session {
+func NewSession(manager *Manager, Conn net.Conn, chanSize int) *Session {
 	s := &Session{
-		Conn:      Conn,
+		conn:      Conn,
 		parser:    NewIMProtocol().NewParser(),
 		manager:   manager,
 		closeFlag: 0,
@@ -42,13 +42,21 @@ func TcpSession(manager *Manager, Conn net.Conn, chanSize int) *Session {
 	return s
 }
 
+func (ts *Session) User() string {
+	return ts.user
+}
+
+func (ts *Session) SetUser(user string) {
+	ts.user = user
+}
+
 func (ts *Session) sendLoop() {
 	for {
 		select {
 		case msg := <-ts.sendChan:
 			err := ts.send(msg)
 			if err != nil {
-				logx.Errorf("User %v send message error: %v", ts.User, err)
+				logx.Errorf("User %v send message error: %v", ts.user, err)
 				return
 			}
 		case <-ts.closeChan:
@@ -60,7 +68,7 @@ func (ts *Session) sendLoop() {
 
 func (ts *Session) send(msg Message) error {
 	buf := ts.parser.Encode(msg)
-	n, err := ts.Conn.Write(buf)
+	n, err := ts.conn.Write(buf)
 	if err != nil {
 		return err
 	}
@@ -68,7 +76,6 @@ func (ts *Session) send(msg Message) error {
 		logx.Errorf("n: %d, len(buf):%d\n", n, len(buf))
 		return fmt.Errorf("发送失败！可能是服务器出了问题")
 	}
-	logx.Info("send over")
 	return nil
 }
 
@@ -77,6 +84,7 @@ var (
 	SessionBlockedErr = errors.New("session blocked")
 )
 
+// Send 服务器给当前Session用户发消息
 func (ts *Session) Send(msg Message) error {
 	if ts.IsClosed() {
 		return SessionClosedErr
@@ -102,7 +110,7 @@ func (ts *Session) readPackSize() (uint32, error) {
 
 func (ts *Session) readUint32BE() (uint32, error) {
 	b := make([]byte, PACK_SIZE)
-	_, err := io.ReadFull(ts.Conn, b)
+	_, err := io.ReadFull(ts.conn, b)
 	if err != nil {
 		return 0, err
 	}
@@ -111,13 +119,14 @@ func (ts *Session) readUint32BE() (uint32, error) {
 
 func (ts *Session) readPacket(msgSize uint32) ([]byte, error) {
 	b := make([]byte, msgSize)
-	_, err := io.ReadFull(ts.Conn, b)
+	_, err := io.ReadFull(ts.conn, b)
 	if err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
+// Receive 当前Session用户给服务器发消息
 func (ts *Session) Receive() (*Message, error) {
 	packLen, err := ts.readPackSize()
 	if err != nil {
@@ -125,7 +134,7 @@ func (ts *Session) Receive() (*Message, error) {
 	}
 	logx.Info("packLen: ", packLen)
 	if packLen > MAX_PACK_SIZE {
-		// TODO: 分包发送过长消息
+		// TODO: 分包接受过长消息
 		return nil, errors.New("发送消息过长")
 	}
 	buf, err := ts.readPacket(packLen)
@@ -143,10 +152,10 @@ func (ts *Session) Receive() (*Message, error) {
 
 func (ts *Session) Close() error {
 	if atomic.CompareAndSwapInt32(&ts.closeFlag, 0, 1) {
-		err := ts.Conn.Close()
+		err := ts.conn.Close()
 		close(ts.closeChan)
 		if ts.manager != nil {
-			ts.manager.Remove(ts.User)
+			ts.manager.Remove(ts.user)
 		}
 		return err
 	}

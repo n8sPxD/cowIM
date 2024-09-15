@@ -73,6 +73,6 @@ func (ts *Server) Accept() (*libnet.Session, error) {
 			return nil, err
 		}
 
-		return libnet.TcpSession(ts.Manager, conn, ts.SendChanSize), nil
+		return libnet.NewSession(ts.Manager, conn, ts.SendChanSize), nil
 	}
 }
