@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/n8sPxD/cowIM/common/db"
+	"github.com/n8sPxD/cowIM/common/db/mysql"
 )
 
 var (
@@ -11,7 +11,7 @@ var (
 )
 
 func main() {
-	mysqldb := db.MustNewMySQL(dataSource)
+	mysqldb := mysql.MustNewMySQL(dataSource)
 	if err := mysqldb.Migrate(); err != nil {
 		fmt.Println("自动迁移失败")
 	} else {

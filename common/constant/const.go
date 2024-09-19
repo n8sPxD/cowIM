@@ -1,33 +1,18 @@
 package constant
 
-// User Privilege
+// User 权利
 const (
 	USER_ADMIN  = 0
 	USER_COMMON = 1
+	USER_SYSTEM = 99
 )
 
-// RPC Command Type
+// Message 类型
 const (
-	_ = iota
-	SINGLE_CHAT_REQ
-	GROUP_CHAT_REQ
-	SINGLE_CHAT_RESP
-	GROUP_CHAT_RESP
-	//HEART_BEAT_REQ  = 98
-	//HEART_BEAT_RESP = 99
-)
-
-// Message Type
-const (
-	COMMON_MSG = iota
-	REPLY_MSG
-	IMAGE_MSG
-	VIDEO_MSG
-	FILE_MSG
-)
-
-// Single or group message
-const (
-	NONE_GROUP  = -1
-	NONE_SINGLE = ""
+	MSG_COMMON_MSG = iota
+	MSG_REPLY_MSG
+	MSG_IMAGE_MSG
+	MSG_VIDEO_MSG
+	MSG_FILE_MSG
+	MSG_SYSTEM_MSG
 )

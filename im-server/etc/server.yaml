@@ -1,0 +1,36 @@
+Name: websocket-server
+Host: 127.0.0.1
+Port: 8081
+
+Log:
+  Encoding: plain
+  TimeFormat: 2006-01-02 15:04:05
+  Level: debug
+  Stat: false
+
+Auth:
+  AccessSecret: wcnm123
+  AccessExpire: 1440  # 单位为分钟
+
+WorkID: 1
+
+AuthRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: authrpc.rpc
+
+MsgPusherConf: # 从用户接受消息，转发到消息队列
+  Brokers:
+    - 127.0.0.1:9092
+  Topic: message_pusher
+
+SendConsumerConf: # 处理Chat服务发来的消息，转发给用户
+  Name: message_sender_1
+  Brokers:
+    - 127.0.0.1:9092
+  Group: message_send_pusher
+  Topic: message_sender
+  Offset: first
+  Consumers: 8
+  Processors: 8

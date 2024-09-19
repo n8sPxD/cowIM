@@ -8,6 +8,7 @@ import (
 )
 
 type PayLoad struct {
+	ID       uint32 `json:"ID"`
 	Username string `json:"username"`
 }
 
