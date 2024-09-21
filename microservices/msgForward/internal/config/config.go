@@ -19,4 +19,10 @@ type Config struct {
 		Brokers []string
 		Topic   string
 	}
+	MsgDBSaver struct {
+		Brokers []string
+		Topic   string
+	}
+
+	WorkID uint16
 }

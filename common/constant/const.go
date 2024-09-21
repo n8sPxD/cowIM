@@ -23,3 +23,8 @@ const (
 	GROUP_CHAT
 	BIG_GROUP_CHAT
 )
+
+// 存表中区分表的类型
+const (
+	MESSAGE_RECORD = iota
+)

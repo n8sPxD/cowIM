@@ -5,15 +5,16 @@ import (
 
 	"github.com/n8sPxD/cowIM/common/db/myMongo"
 	"github.com/n8sPxD/cowIM/common/db/myRedis"
-	"github.com/n8sPxD/cowIM/microservices/message/internal/config"
+	"github.com/n8sPxD/cowIM/microservices/msgForward/internal/config"
 	"github.com/segmentio/kafka-go"
 )
 
 type ServiceContext struct {
-	Config    config.Config
-	Redis     *myRedis.DB
-	Mongo     *myMongo.DB
-	MsgSender *kafka.Writer
+	Config     config.Config
+	Redis      *myRedis.DB
+	Mongo      *myMongo.DB
+	MsgSender  *kafka.Writer
+	MsgDBSaver *kafka.Writer
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -24,6 +25,10 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		MsgSender: &kafka.Writer{
 			Addr:  kafka.TCP(c.MsgSender.Brokers...),
 			Topic: c.MsgSender.Topic,
+		},
+		MsgDBSaver: &kafka.Writer{
+			Addr:  kafka.TCP(c.MsgDBSaver.Brokers...),
+			Topic: c.MsgDBSaver.Topic,
 		},
 	}
 }

@@ -26,12 +26,12 @@ type Message struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	From    uint32  `protobuf:"varint,1,opt,name=from,proto3" json:"from,omitempty"`                      // 发送者
-	To      uint32  `protobuf:"varint,2,opt,name=to,proto3" json:"to,omitempty"`                          // 接受者
-	Content string  `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`                 // 消息内容
-	Type    uint32  `protobuf:"varint,4,opt,name=type,proto3" json:"type,omitempty"`                      // 群组还是单聊，群组是500人以下群还是500人以上群？
-	MsgType uint32  `protobuf:"varint,5,opt,name=msg_type,json=msgType,proto3" json:"msg_type,omitempty"` // 聊天类型，直接聊天、回复、文件信息？
-	Extend  *uint64 `protobuf:"varint,6,opt,name=extend,proto3,oneof" json:"extend,omitempty"`            // 消息拓展内容（回复消息的原消息id）
+	From    uint32 `protobuf:"varint,1,opt,name=from,proto3" json:"from,omitempty"`                      // 发送者
+	To      uint32 `protobuf:"varint,2,opt,name=to,proto3" json:"to,omitempty"`                          // 接受者
+	Content string `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`                 // 消息内容
+	Type    uint32 `protobuf:"varint,4,opt,name=type,proto3" json:"type,omitempty"`                      // 群组还是单聊，群组是500人以下群还是500人以上群？
+	MsgType uint32 `protobuf:"varint,5,opt,name=msg_type,json=msgType,proto3" json:"msg_type,omitempty"` // 聊天类型，直接聊天、回复、文件信息？
+	Extend  *int64 `protobuf:"varint,6,opt,name=extend,proto3,oneof" json:"extend,omitempty"`            // 消息拓展内容（回复消息的原消息id）
 }
 
 func (x *Message) Reset() {
@@ -101,7 +101,7 @@ func (x *Message) GetMsgType() uint32 {
 	return 0
 }
 
-func (x *Message) GetExtend() uint64 {
+func (x *Message) GetExtend() int64 {
 	if x != nil && x.Extend != nil {
 		return *x.Extend
 	}
@@ -121,7 +121,7 @@ var file_message_proto_rawDesc = []byte{
 	0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x6d, 0x73, 0x67, 0x5f, 0x74, 0x79,
 	0x70, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x6d, 0x73, 0x67, 0x54, 0x79, 0x70,
 	0x65, 0x12, 0x1b, 0x0a, 0x06, 0x65, 0x78, 0x74, 0x65, 0x6e, 0x64, 0x18, 0x06, 0x20, 0x01, 0x28,
-	0x04, 0x48, 0x00, 0x52, 0x06, 0x65, 0x78, 0x74, 0x65, 0x6e, 0x64, 0x88, 0x01, 0x01, 0x42, 0x09,
+	0x03, 0x48, 0x00, 0x52, 0x06, 0x65, 0x78, 0x74, 0x65, 0x6e, 0x64, 0x88, 0x01, 0x01, 0x42, 0x09,
 	0x0a, 0x07, 0x5f, 0x65, 0x78, 0x74, 0x65, 0x6e, 0x64, 0x42, 0x09, 0x5a, 0x07, 0x2e, 0x2f, 0x66,
 	0x72, 0x6f, 0x6e, 0x74, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }

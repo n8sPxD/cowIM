@@ -17,7 +17,7 @@ import (
 
 func TestLoginAndSendMsg(t *testing.T) {
 	// 步骤 1：用户登录并获取 JWT 令牌
-	jwtToken, err := login(7, "123456")
+	jwtToken, err := login(1, "123456")
 	if err != nil {
 		log.Fatalf("登录失败: %v", err)
 	}
@@ -109,8 +109,8 @@ func connectWebSocket(jwtToken string) error {
 	// 示例：发送一条消息
 	messageToSend := "Hello, WebSocket Server!"
 	sendMessage := front.Message{
-		From:    7,
-		To:      7,
+		From:    1,
+		To:      1,
 		Content: messageToSend,
 		Type:    constant.SINGLE_CHAT,
 		MsgType: constant.MSG_COMMON_MSG,

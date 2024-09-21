@@ -16,7 +16,7 @@ func (db *DB) InsertUser(ctx context.Context, user *models.User) error {
 		}
 		return err
 	}
-	return db.client.WithContext(ctx).Create(&models.UserConfig{UserID: uint(user.ID)}).Error
+	return db.client.WithContext(ctx).Create(&models.UserConfig{UserID: user.ID}).Error
 }
 
 // GetUserInfo 获取特定用户的信息（密码、用户名）

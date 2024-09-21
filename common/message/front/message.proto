@@ -9,5 +9,5 @@ message Message {
   string content = 3; // 消息内容
   uint32 type = 4; // 群组还是单聊，群组是500人以下群还是500人以上群？
   uint32 msg_type = 5; // 聊天类型，直接聊天、回复、文件信息？
-  optional uint64 extend = 6; // 消息拓展内容（回复消息的原消息id）
+  optional int64 extend = 6; // 消息拓展内容（回复消息的原消息id）
 }

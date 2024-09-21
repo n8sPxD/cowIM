@@ -12,7 +12,12 @@ MsgForwarder:
 MsgSender:
   Brokers:
     - 127.0.0.1:9092
-  Topic: "init-topic"
+  Topic: "init_topic"
+
+MsgDBSaver:
+  Brokers:
+    - 127.0.0.1:9092
+  Topic: "msg_to_db"
 
 RedisConf:
   Host: "127.0.0.1:6379"
@@ -20,3 +25,5 @@ RedisConf:
 
 MongoConf:
   Host: "127.0.0.1:27017"
+
+WorkID: 1 # 雪花漂移id生成用

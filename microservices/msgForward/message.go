@@ -4,9 +4,9 @@ import (
 	"context"
 	"flag"
 
-	"github.com/n8sPxD/cowIM/microservices/message/internal/config"
-	"github.com/n8sPxD/cowIM/microservices/message/internal/mqs"
-	"github.com/n8sPxD/cowIM/microservices/message/internal/svc"
+	"github.com/n8sPxD/cowIM/microservices/msgForward/internal/config"
+	"github.com/n8sPxD/cowIM/microservices/msgForward/internal/mqs"
+	"github.com/n8sPxD/cowIM/microservices/msgForward/internal/svc"
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/logx"
 )

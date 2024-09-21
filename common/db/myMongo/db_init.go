@@ -5,20 +5,14 @@ import (
 )
 
 type DB struct {
-	MessageRecord  *mon.Model
-	TimeLine       *mon.Model
-	MessageContent *mon.Model
-	ChatRoom       *mon.Model
-	ChatRoomUser   *mon.Model
+	MessageRecord *mon.Model
+	TimeLine      *mon.Model
 }
 
 func MustNewMongo(url string, opts ...mon.Option) *DB {
 	return &DB{
-		MessageRecord:  newModelOrPanic(url, "im_server_db", "messages_records", opts...),
-		TimeLine:       newModelOrPanic(url, "im_server_db", "timeline", opts...),
-		MessageContent: newModelOrPanic(url, "im_server_db", "messages", opts...),
-		ChatRoom:       newModelOrPanic(url, "im_server_db", "chat_room", opts...),
-		ChatRoomUser:   newModelOrPanic(url, "im_server_db", "room_user", opts...),
+		MessageRecord: newModelOrPanic(url, "im_server_db", "messages_records", opts...),
+		TimeLine:      newModelOrPanic(url, "im_server_db", "timeline", opts...),
 	}
 }
 

@@ -34,7 +34,7 @@ func (l *MsgSender) Start() {
 	for {
 		msg, err := l.MsgSender.ReadMessage(l.ctx)
 		if err != nil {
-			logx.Error("[MsgSender.Start] Reading message error: ", err)
+			logx.Error("[MsgSender.Start] Reading msgForward error: ", err)
 			continue
 		}
 		go l.Consume(msg.Value)
@@ -61,7 +61,7 @@ func (l *MsgSender) Consume(protobuf []byte) {
 	case constant.BIG_GROUP_CHAT:
 		l.BigGroupChat()
 	default:
-		logx.Error("[MsgSender.Consume] Wrong message type, Type is: ", msg.Type)
+		logx.Error("[MsgSender.Consume] Wrong msgForward type, Type is: ", msg.Type)
 	}
 }
 
@@ -75,7 +75,7 @@ func (l *MsgSender) SingleChat(msg *front.Message, protobuf []byte) {
 			// TODO: 更改Redis信息
 			return
 		}
-		logx.Error("[MsgSender.SingleChat] Send message failed, error: ", err)
+		logx.Error("[MsgSender.SingleChat] Send msgForward failed, error: ", err)
 		return
 	}
 }

@@ -7,16 +7,16 @@ import (
 )
 
 type User struct {
-	ID         uint32      `gorm:"primarykey" json:"id"`
-	CreatedAt  time.Time   `json:"createdAt"`
-	UpdatedAt  time.Time   `json:"updatedAt"`
-	Username   string      `json:"username"`
-	Password   string      `json:"password"`
+	ID         uint32      `gorm:"primarykey"        json:"id"`
+	CreatedAt  time.Time   `                         json:"createdAt"`
+	UpdatedAt  time.Time   `                         json:"updatedAt"`
+	Username   string      `                         json:"username"`
+	Password   string      `                         json:"password"`
 	UserConfig *UserConfig `gorm:"foreignKey:UserID" json:"UserConfig"`
 }
 
 type UserConfig struct {
 	gorm.Model
-	UserID uint `json:"userID"`
-	User   User `gorm:"foreignKey:UserID" json:"-"`
+	UserID uint32 `json:"userID"`
+	User   User   `json:"-"      gorm:"foreignKey:UserID"`
 }
