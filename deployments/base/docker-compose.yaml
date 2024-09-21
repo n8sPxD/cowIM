@@ -1,0 +1,60 @@
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql-im
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=im_server_db
+    ports:
+      - "3306:3306"
+
+  redis:
+    image: redis:latest
+    container_name: redis-im
+    restart: always
+    ports:
+      - "6379:6379"
+
+  etcd:
+    image: bitnami/etcd:latest
+    container_name: etcd-im
+    restart: always
+    environment:
+      - ETCD_ADVERTISE_CLIENT_URLS=http://192.168.1.246:2379
+      - ALLOW_NONE_AUTHENTICATION=yes
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    command: [ "etcd" ]
+
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka-im
+    restart: always
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@127.0.0.1:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_NODE_ID=1
+      - BITNAMI_DEBUG=yes
+      - KAFKA_CFG_NUM_PARTITIONS=2
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092,EXTERNAL://kafka_b:9094
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      - HOSTNAME=kafka_b
+      - KAFKA_BROKER_ID=1
+      - BITNAMI_APP_NAME=kafka
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+
+  mongodb:
+    image: bitnami/mongodb:latest
+    container_name: mongo-im
+    restart: always
+    ports:
+      - "27017:27017"
