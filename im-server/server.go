@@ -14,7 +14,6 @@ import (
 	"github.com/yitter/idgenerator-go/idgen"
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/core/service"
 	"github.com/zeromicro/go-zero/core/threading"
 )
 
@@ -28,27 +27,25 @@ func main() {
 	idOptions := idgen.NewIdGeneratorOptions(c.WorkID)
 	idgen.SetIdGenerator(idOptions)
 
+	ctx := context.Background()
+	svcCtx := svc.NewServiceContext(c)
+
+	var mq *mqs.MsgSender
+	threading.GoSafe(func() {
+		mq = mqs.NewMsgSender(ctx, svcCtx)
+		mq.Start()
+	})
+
 	// 处理退出信号，平滑关闭
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-signalChan
+		mq.Close()
 		os.Exit(0)
 	}() // 处理退出信号，平滑关闭
 
-	ctx := context.Background()
-	svcCtx := svc.NewServiceContext(c)
-
-	threading.GoSafe(func() {
-		s := server.MustNewServer(c, ctx, svcCtx)
-		svcCtx.ConnectionManager = s.Manager
-		s.Start()
-	})
-
-	serviceGroup := service.NewServiceGroup()
-	defer serviceGroup.Stop()
-	for _, mq := range mqs.Consumers(c, ctx, svcCtx) {
-		serviceGroup.Add(mq)
-	}
-	serviceGroup.Start()
+	s := server.MustNewServer(c, ctx, svcCtx)
+	svcCtx.ConnectionManager = s.Manager
+	s.Start()
 }

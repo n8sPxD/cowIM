@@ -15,6 +15,7 @@ import (
 	"github.com/n8sPxD/cowIM/im-server/internal/config"
 	"github.com/n8sPxD/cowIM/im-server/svc"
 	"github.com/n8sPxD/cowIM/microservices/auth/rpc/types/authRpc"
+	"github.com/segmentio/kafka-go"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -54,10 +55,11 @@ func (s *Server) Start() {
 	}
 }
 
+func (s *Server) Close() {
+}
+
 // handleWebSocket 处理WebSocket连接
 func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
-	// TODO: 可行的优化：前端附带UserID进来，可以直接在Manager里判断是否在线，不用解析完JWT Token再检查在线
-
 	// 先鉴权，再进行消息通讯
 	// 从Authorization头部获取JWT令牌
 	authHeader := r.Header.Get("Authorization")
@@ -150,6 +152,7 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// 处理消息
 	for {
 		// 读消息
+		// 此处的消息为protobuf序列化后的消息
 		msg, err := s.Manager.ReadMessage(user.ID)
 		if err != nil {
 			// 用户断线
@@ -161,8 +164,12 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// 发送到消息队列处理
-		if err := s.svcCtx.MsgPusher.Push(s.ctx, string(msg)); err != nil {
-			logx.Error("[handleWebsocket] Message push to MQ failed, error: ", err)
+		mqMsg := kafka.Message{
+			Value: msg,
+		}
+		logx.Info("Pushing message to MQ...")
+		if err := s.svcCtx.MsgForwarder.WriteMessages(s.ctx, mqMsg); err != nil {
+			logx.Error("[handleWebsocket] Push message to MQ failed, error: ", err)
 			return
 		}
 	}

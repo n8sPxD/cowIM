@@ -16,3 +16,10 @@ const (
 	MSG_FILE_MSG
 	MSG_SYSTEM_MSG
 )
+
+// 群聊或者单聊
+const (
+	SINGLE_CHAT = iota
+	GROUP_CHAT
+	BIG_GROUP_CHAT
+)

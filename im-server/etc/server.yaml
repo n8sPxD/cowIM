@@ -12,7 +12,6 @@ Auth:
   AccessSecret: wcnm123
   AccessExpire: 1440  # 单位为分钟
 
-WorkID: 1
 
 AuthRpc:
   Etcd:
@@ -20,17 +19,14 @@ AuthRpc:
       - 127.0.0.1:2379
     Key: authrpc.rpc
 
-MsgPusherConf: # 从用户接受消息，转发到消息队列
+MsgForwarder:
   Brokers:
     - 127.0.0.1:9092
-  Topic: message_pusher
+  Topic: "messages"
 
-SendConsumerConf: # 处理Chat服务发来的消息，转发给用户
-  Name: message_sender_1
+WorkID: 1
+
+MsgSender:
   Brokers:
     - 127.0.0.1:9092
-  Group: message_send_pusher
-  Topic: message_sender
-  Offset: first
-  Consumers: 8
-  Processors: 8
+  Topic: "websocket-server-1" # 最后一位为WorkID

@@ -32,11 +32,12 @@
 - [ ] 群聊
 
 #### 参考与启发
-- https://www.bilibili.com/video/BV1KM411S7WT
-- http://www.52im.net/thread-4257-1-1.html
-- https://space.bilibili.com/30625295/channel/collectiondetail?sid=3179321
-- https://www.bilibili.com/video/BV1rU4y17769
-- https://github.com/zeromicro/zero-examples/tree/main/chat
-- https://www.bilibili.com/video/BV1se4ReWEHL
-- http://www.52im.net/thread-1616-1-1.html
-- https://xie.infoq.cn/article/19e95a78e2f5389588debfb1c
+- https://www.bilibili.com/video/BV1KM411S7WT (架构)
+- http://www.52im.net/thread-4257-1-1.html (架构)
+- https://space.bilibili.com/30625295/channel/collectiondetail?sid=3179321 (架构)
+- https://www.bilibili.com/video/BV1rU4y17769 (消息收发)
+- https://github.com/zeromicro/zero-examples/tree/main/chat (websocket)
+- https://www.bilibili.com/video/BV1se4ReWEHL (架构 timeline 读写扩散)
+- http://www.52im.net/thread-1616-1-1.html (读写扩散)
+- https://xie.infoq.cn/article/19e95a78e2f5389588debfb1c (推拉)
+- https://zhuanlan.zhihu.com/p/65032348 (timeline)

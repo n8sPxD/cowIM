@@ -9,7 +9,6 @@ import (
 	"github.com/n8sPxD/cowIM/microservices/message/internal/svc"
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/core/service"
 )
 
 var configFile = flag.String("f", "etc/message.yaml", "the config file")
@@ -23,12 +22,7 @@ func main() {
 
 	svcCtx := svc.NewServiceContext(c)
 	ctx := context.Background()
-	serviceGroup := service.NewServiceGroup()
-	defer serviceGroup.Stop()
 
-	for _, mq := range mqs.Consumers(c, ctx, svcCtx) {
-		serviceGroup.Add(mq)
-	}
-
-	serviceGroup.Start()
+	mq := mqs.NewMsgForwarder(ctx, svcCtx)
+	mq.Start()
 }

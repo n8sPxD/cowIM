@@ -1,10 +1,10 @@
-package mysql
+package myMysql
 
 import (
 	"fmt"
 	"sync"
 
-	models2 "github.com/n8sPxD/cowIM/common/db/mysql/models"
+	models2 "github.com/n8sPxD/cowIM/common/db/myMysql/models"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )

@@ -1,10 +1,10 @@
-package mysql
+package myMysql
 
 import (
 	"context"
 	"errors"
 
-	"github.com/n8sPxD/cowIM/common/db/mysql/models"
+	"github.com/n8sPxD/cowIM/common/db/myMysql/models"
 	"gorm.io/gorm"
 )
 

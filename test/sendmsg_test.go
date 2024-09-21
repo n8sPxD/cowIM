@@ -10,7 +10,8 @@ import (
 	"testing"
 
 	"github.com/gorilla/websocket"
-	__front "github.com/n8sPxD/cowIM/common/message/.front"
+	"github.com/n8sPxD/cowIM/common/constant"
+	"github.com/n8sPxD/cowIM/common/message/front"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -107,7 +108,16 @@ func connectWebSocket(jwtToken string) error {
 
 	// 示例：发送一条消息
 	messageToSend := "Hello, WebSocket Server!"
-	err = conn.WriteMessage(websocket.TextMessage, []byte(messageToSend))
+	sendMessage := front.Message{
+		From:    7,
+		To:      7,
+		Content: messageToSend,
+		Type:    constant.SINGLE_CHAT,
+		MsgType: constant.MSG_COMMON_MSG,
+		Extend:  nil,
+	}
+	realMsg, err := proto.Marshal(&sendMessage)
+	err = conn.WriteMessage(websocket.BinaryMessage, realMsg)
 	if err != nil {
 		return fmt.Errorf("发送消息失败: %v", err)
 	}
@@ -118,7 +128,7 @@ func connectWebSocket(jwtToken string) error {
 	if err != nil {
 		return fmt.Errorf("读取消息失败: %v", err)
 	}
-	var msg __front.Message
+	var msg front.Message
 	err = proto.Unmarshal(message, &msg)
 	if err != nil {
 		return fmt.Errorf("读取消息失败: %v", err)

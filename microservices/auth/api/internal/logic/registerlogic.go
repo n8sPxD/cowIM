@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/n8sPxD/cowIM/common/db/mysql/models"
+	"github.com/n8sPxD/cowIM/common/db/myMysql/models"
 	"github.com/n8sPxD/cowIM/common/encrypt"
 	"github.com/n8sPxD/cowIM/microservices/auth/api/internal/svc"
 	"github.com/n8sPxD/cowIM/microservices/auth/api/internal/types"

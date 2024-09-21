@@ -4,17 +4,19 @@ Log:
   Level: debug
   Stat: false
 
-MsgConsumerConf: #  从websocket server接受需要处理的消息
-  Name: message_consumer_1
+MsgForwarder:
   Brokers:
     - 127.0.0.1:9092
-  Group: message_consumer
-  Topic: message_pusher
-  Offset: first
-  Consumers: 8
-  Processors: 8
+  Topic: "messages"
 
-SendPusherConf: #  处理websocket server发来的消息，转发回websocket server
+MsgSender:
   Brokers:
     - 127.0.0.1:9092
-  Topic: message_sender
+  Topic: "init-topic"
+
+RedisConf:
+  Host: "127.0.0.1:6379"
+  Type: "node"
+
+MongoConf:
+  Host: "127.0.0.1:27017"

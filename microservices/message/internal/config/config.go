@@ -1,14 +1,21 @@
 package config
 
 import (
-	"github.com/zeromicro/go-queue/kq"
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/stores/redis"
 )
 
 type Config struct {
-	Log             logx.LogConf
-	MsgConsumerConf kq.KqConf
-	SendPusherConf  struct {
+	Log       logx.LogConf
+	RedisConf redis.RedisConf
+	MongoConf struct {
+		Host string
+	}
+	MsgForwarder struct {
+		Brokers []string
+		Topic   string
+	}
+	MsgSender struct {
 		Brokers []string
 		Topic   string
 	}

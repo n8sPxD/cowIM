@@ -1,11 +1,10 @@
 package internal
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/gorilla/websocket"
-	__front "github.com/n8sPxD/cowIM/common/message/.front"
-	"google.golang.org/protobuf/proto"
 )
 
 type Session struct {
@@ -52,25 +51,19 @@ func (cm *ConnectionManager) Get(userID uint32) (*Session, bool) {
 	return s, ok
 }
 
+var ClientGoingAway = errors.New("user is offline")
+
 // SendMessage 服务器发送或转发消息 msg 给指定 userID
-func (cm *ConnectionManager) SendMessage(userID uint32, msg *__front.Message) error {
-	cm.mutex.RLock()
-	s, ok := cm.connections[UserID(userID)]
-	cm.mutex.RUnlock()
+func (cm *ConnectionManager) SendMessage(userID uint32, msg []byte) error {
+	s, ok := cm.Get(userID)
 	if !ok {
 		// 用户不在线
-		return nil
-	}
-
-	data, err := proto.Marshal(msg)
-	if err != nil {
-		return err
+		return ClientGoingAway
 	}
 
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-
-	return s.Conn.WriteMessage(websocket.BinaryMessage, data)
+	return s.Conn.WriteMessage(websocket.BinaryMessage, msg)
 }
 
 // ReadMessage 服务器从 userID 接受消息
