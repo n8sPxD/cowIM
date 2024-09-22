@@ -31,6 +31,12 @@ func NewMsgSender(ctx context.Context, svcCtx *svc.ServiceContext) *MsgSender {
 }
 
 func (l *MsgSender) Start() {
+	// 设置kafka起始偏移量，在初始化NewReader的时候设置没用不知道为什么，只有这里有用
+	err := l.MsgSender.SetOffset(kafka.LastOffset)
+	if err != nil {
+		logx.Error("[MsgForwarder.Start] Set kafka offset failed, error: ", err)
+	}
+
 	for {
 		msg, err := l.MsgSender.ReadMessage(l.ctx)
 		if err != nil {

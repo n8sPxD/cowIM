@@ -156,13 +156,27 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		msg, err := s.Manager.ReadMessage(user.ID)
 		if err != nil {
 			// 用户断线
-			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
+			if websocket.IsCloseError(
+				err,
+				websocket.CloseNormalClosure,
+				websocket.CloseGoingAway,
+				websocket.CloseAbnormalClosure,
+			) {
 				logx.Infof("User %d disconnected", user.ID)
-				return
+
+				// 用户非正常无法读取信息
+			} else {
+				logx.Errorf(
+					"[handleWebsocket] Read message from user %v failed, error: %v",
+					user.ID,
+					err,
+				)
 			}
-			logx.Errorf("[handleWebsocket] Read message from %v failed, error: %v", user.ID, err)
+			logx.Debugf("[handleWebsocket] Removing user %d router status...", user.ID)
+			s.svcCtx.Redis.RemoveUserRouterStatus(s.ctx, user.ID)
 			return
 		}
+
 		// 发送到消息队列处理
 		mqMsg := kafka.Message{
 			Value: msg,

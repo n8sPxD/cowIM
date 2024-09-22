@@ -29,7 +29,7 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 func (l *LoginLogic) Login(req *types.LoginRequest) (*types.LoginResponse, error) {
 	userInfo, err := l.svcCtx.MySQL.GetUserInfo(l.ctx, req.ID)
 	if err != nil {
-		logx.Infof("User %s login failed, err: %v\n", req.ID, err)
+		logx.Infof("User %d login failed, err: %v\n", req.ID, err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("用户不存在或密码错误")
 		}

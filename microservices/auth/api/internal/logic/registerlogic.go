@@ -29,7 +29,7 @@ func (l *RegisterLogic) Register(req *types.RegisterRequest) (*types.RegisterRes
 	// Hash密码
 	password, err := encrypt.HashPassword(req.Password)
 	if err != nil {
-		logx.Error("Encrypt error:", err)
+		logx.Error("[Register] Encrypt error:", err)
 		return nil, errors.New("注册失败！好像是服务器发生了异常")
 	}
 
@@ -39,7 +39,8 @@ func (l *RegisterLogic) Register(req *types.RegisterRequest) (*types.RegisterRes
 		Password: password,
 	}
 	if err := l.svcCtx.MySQL.InsertUser(l.ctx, &user); err != nil {
-		return nil, err
+		logx.Error("[Register] Insert user to DB failed, error: ", err)
+		return nil, errors.New("注册失败！好像是服务器发生了异常")
 	}
 	return &types.RegisterResponse{ID: user.ID}, nil
 }

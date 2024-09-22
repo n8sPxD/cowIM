@@ -24,5 +24,6 @@ func main() {
 	ctx := context.Background()
 
 	mq := mqs.NewMsgToDB(ctx, svcCtx)
+	defer mq.Close()
 	mq.Start()
 }

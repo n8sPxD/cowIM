@@ -3,6 +3,7 @@ package mqs
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/segmentio/kafka-go"
 	"github.com/yitter/idgenerator-go/idgen"
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/stores/redis"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -28,17 +30,26 @@ func NewMsgForwarder(ctx context.Context, svcCtx *svc.ServiceContext) *MsgForwar
 		ctx:    ctx,
 		svcCtx: svcCtx,
 		MsgForwarder: kafka.NewReader(kafka.ReaderConfig{
-			Brokers:     svcCtx.Config.MsgForwarder.Brokers,
-			Topic:       svcCtx.Config.MsgForwarder.Topic,
-			StartOffset: kafka.LastOffset,
+			Brokers: svcCtx.Config.MsgForwarder.Brokers,
+			Topic:   svcCtx.Config.MsgForwarder.Topic,
 		}),
 	}
+}
+
+func (l *MsgForwarder) Close() {
+	l.MsgForwarder.Close()
 }
 
 func (l *MsgForwarder) Start() {
 	// 初始化id生成器
 	options := idgen.NewIdGeneratorOptions(l.svcCtx.Config.WorkID)
 	idgen.SetIdGenerator(options)
+
+	// 设置kafka起始偏移量，在初始化NewReader的时候设置没用不知道为什么，只有这里有用
+	err := l.MsgForwarder.SetOffset(kafka.LastOffset)
+	if err != nil {
+		logx.Error("[MsgForwarder.Start] Set kafka offset failed, error: ", err)
+	}
 
 	for {
 		msg, err := l.MsgForwarder.ReadMessage(l.ctx) // 这里的msg是kafka.Message
@@ -85,13 +96,13 @@ func (l *MsgForwarder) Consume(protobuf []byte, current time.Time) {
 func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
 	// 查询Redis中路由信息
 	status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, msg.To)
-	if err != nil {
-		logx.Error("[MsgForwarder.singleChat] Get router status from redis failed, error: ", err)
-		return
-	}
-	if status == nil {
+	if errors.Is(err, redis.Nil) {
 		// 没找到当前用户的路由信息，说明没上线
 		// TODO: 塞timeline里
+		return
+	}
+	if err != nil {
+		logx.Error("[MsgForwarder.singleChat] Get router status from redis failed, error: ", err)
 		return
 	}
 	// 转发消息到指定的websocket-server

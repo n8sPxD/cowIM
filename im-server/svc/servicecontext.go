@@ -1,6 +1,7 @@
 package svc
 
 import (
+	"github.com/n8sPxD/cowIM/common/db/myRedis"
 	"github.com/n8sPxD/cowIM/im-server/internal"
 	"github.com/n8sPxD/cowIM/im-server/internal/config"
 	"github.com/n8sPxD/cowIM/microservices/auth/rpc/auth"
@@ -14,6 +15,7 @@ type ServiceContext struct {
 	AuthRpc           authRpc.AuthClient
 	ConnectionManager *internal.ConnectionManager
 	MsgForwarder      *kafka.Writer
+	Redis             *myRedis.DB
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -24,5 +26,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			Addr:  kafka.TCP(c.MsgForwarder.Brokers...),
 			Topic: c.MsgForwarder.Topic,
 		},
+		Redis: myRedis.MustNewRedis(c.RedisConf),
 	}
 }

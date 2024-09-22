@@ -6,6 +6,8 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=123456
       - MYSQL_DATABASE=im_server_db
+    volumes:
+      - ~/docker-compose-volumes/mysql/data/:/var/lib/mysql
     ports:
       - "3306:3306"
 
@@ -56,5 +58,7 @@ services:
     image: bitnami/mongodb:latest
     container_name: mongo-im
     restart: always
+    volumes:
+      - ~/docker-compose-volumes/mongodb/data:/bitnami/mongodb
     ports:
       - "27017:27017"

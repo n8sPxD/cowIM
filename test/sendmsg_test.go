@@ -107,7 +107,7 @@ func connectWebSocket(jwtToken string) error {
 	fmt.Println("成功建立 WebSocket 连接")
 
 	// 示例：发送一条消息
-	messageToSend := "Hello, WebSocket Server!"
+	messageToSend := "哈哈，这是一条测试消息😄"
 	sendMessage := front.Message{
 		From:    1,
 		To:      1,
