@@ -28,7 +28,6 @@ func NewUserConnStatusLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Us
 }
 
 func (l *UserConnStatusLogic) UserConnStatus(in *authRpc.ConnRequest) (*authRpc.Empty, error) {
-	logx.Infof("[UserConnStatus] User %d authorize success", in.UserId)
 	// 路由信息登记
 	// Key: user_id			Value: { server_work_id: xxx, last_update: xxx }
 	// 用户路由信息，保存用户建立长连接的服务器IP和最后和服务器进行心跳检测的时间

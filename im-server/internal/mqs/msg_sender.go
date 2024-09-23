@@ -39,14 +39,18 @@ func NewMsgSender(ctx context.Context, svcCtx *svc.ServiceContext) *MsgSender {
 
 func (l *MsgSender) Start() {
 	for {
-		logx.Debug("[MsgSender.Start] Preparing read message...")
-		logx.Debug("[MsgSender.Start] Current offset: ", l.MsgSender.Offset())
 		msg, err := l.MsgSender.ReadMessage(l.ctx)
 		if err != nil {
 			logx.Error("[MsgSender.Start] Reading msgForward error: ", err)
 			continue
 		}
-		l.Consume(msg.Value)
+		logx.Debugf(
+			"[MsgForwarder.Start] Message at partition %d offset %d: %s\n",
+			msg.Partition,
+			msg.Offset,
+			string(msg.Value),
+		)
+		go l.Consume(msg.Value)
 	}
 }
 
@@ -64,18 +68,17 @@ func (l *MsgSender) Consume(protobuf []byte) {
 	}
 	switch msg.Type {
 	case constant.SINGLE_CHAT:
-		l.SingleChat(&msg, protobuf)
+		go l.SingleChat(&msg, protobuf)
 	case constant.GROUP_CHAT:
-		l.GroupChat(&msg)
+		go l.GroupChat(&msg)
 	case constant.BIG_GROUP_CHAT:
-		l.BigGroupChat()
+		go l.BigGroupChat()
 	default:
 		logx.Error("[MsgSender.Consume] Wrong msgForward type, Type is: ", msg.Type)
 	}
 }
 
 func (l *MsgSender) SingleChat(msg *front.Message, protobuf []byte) {
-	logx.Debug("[MsgSender.Singlechat] MsgType: SingleChat")
 	// 能传到这里来，代表Message服务中已经从Redis中获取到当前Recv用户在线
 	// 在线，以服务器主动推模式发送消息
 	err := l.svcCtx.ConnectionManager.SendMessage(msg.To, protobuf)

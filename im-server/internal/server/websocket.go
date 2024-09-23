@@ -162,7 +162,7 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				websocket.CloseGoingAway,
 				websocket.CloseAbnormalClosure,
 			) {
-				logx.Infof("User %d disconnected", user.ID)
+				logx.Infof("[handleWebsocket] User %d disconnected", user.ID)
 
 				// 用户非正常无法读取信息
 			} else {
@@ -172,7 +172,7 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 					err,
 				)
 			}
-			logx.Debugf("[handleWebsocket] Removing user %d router status...", user.ID)
+			logx.Infof("[handleWebsocket] Removing user %d from redis router status...", user.ID)
 			s.svcCtx.Redis.RemoveUserRouterStatus(s.ctx, user.ID)
 			return
 		}
@@ -181,11 +181,9 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		mqMsg := kafka.Message{
 			Value: msg,
 		}
-		logx.Debug("[handleWebsocket] Pushing message to MQ...")
 		if err := s.svcCtx.MsgForwarder.WriteMessages(s.ctx, mqMsg); err != nil {
 			logx.Error("[handleWebsocket] Push message to MQ failed, error: ", err)
 			return
 		}
-		logx.Debug("[handleWebsocket] Pushing over")
 	}
 }

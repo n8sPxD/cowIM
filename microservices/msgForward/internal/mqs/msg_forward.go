@@ -52,22 +52,18 @@ func (l *MsgForwarder) Start() {
 	idgen.SetIdGenerator(options)
 
 	for {
-		logx.Debug("[MsgForwarder.Start] Reading message...")
-		logx.Debug("[MsgForwarder.Start] Current offset: ", l.MsgForwarder.Offset())
 		msg, err := l.MsgForwarder.ReadMessage(l.ctx) // 这里的msg是kafka.Message
 		if err != nil {
 			logx.Error("[MsgForwarder.Start] Reading msgForward error: ", err)
 			break
 		}
-		logx.Infof(
-			"message at partition %d offset %d: %s = %s\n",
+		logx.Debugf(
+			"[MsgForwarder.Start] Message at partition %d offset %d: %s\n",
 			msg.Partition,
 			msg.Offset,
-			string(msg.Key),
 			string(msg.Value),
 		)
-		l.Consume(msg.Value, time.Now())
-		logx.Debug("[MsgForwarder.Start] Consuming...")
+		go l.Consume(msg.Value, time.Now())
 	}
 }
 
@@ -87,11 +83,11 @@ func (l *MsgForwarder) Consume(protobuf []byte, current time.Time) {
 	// 进行基于消息类型的消息处理
 	switch msg.Type {
 	case constant.SINGLE_CHAT:
-		l.singleChat(&msg, protobuf)
+		go l.singleChat(&msg, protobuf)
 	case constant.GROUP_CHAT:
-		l.groupChat(&msg)
+		go l.groupChat(&msg)
 	case constant.BIG_GROUP_CHAT:
-		l.bigGroupChat(&msg)
+		go l.bigGroupChat(&msg)
 	default:
 		logx.Error("[MsgForwarder.Consume] Wrong msgForward type, Type is: ", msg.Type)
 	}

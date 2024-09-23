@@ -24,10 +24,11 @@ func NewMsgToDB(ctx context.Context, svcCtx *svc.ServiceContext) *MsgToDB {
 		ctx:    ctx,
 		svcCtx: svcCtx,
 		MsgToDB: kafka.NewReader(kafka.ReaderConfig{
-			Brokers:        svcCtx.Config.MsgToDB.Brokers,
-			Topic:          svcCtx.Config.MsgToDB.Topic,
-			GroupID:        "msg-db",
-			StartOffset:    kafka.LastOffset,
+			Brokers:     svcCtx.Config.MsgToDB.Brokers,
+			Topic:       svcCtx.Config.MsgToDB.Topic,
+			GroupID:     "msg-db",
+			StartOffset: kafka.LastOffset,
+			// TODO: 入库服务对延迟要求不高，可以适当放宽参数条件
 			MinBytes:       1,                      // 最小拉取字节数
 			MaxBytes:       10e3,                   // 最大拉取字节数（10KB）
 			MaxWait:        100 * time.Millisecond, // 最大等待时间
