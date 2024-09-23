@@ -3,6 +3,7 @@ package mqs
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/n8sPxD/cowIM/common/constant"
 	"github.com/n8sPxD/cowIM/common/message/front"
@@ -24,26 +25,28 @@ func NewMsgSender(ctx context.Context, svcCtx *svc.ServiceContext) *MsgSender {
 		ctx:    ctx,
 		svcCtx: svcCtx,
 		MsgSender: kafka.NewReader(kafka.ReaderConfig{
-			Brokers: svcCtx.Config.MsgSender.Brokers,
-			Topic:   svcCtx.Config.MsgSender.Topic,
+			Brokers:        svcCtx.Config.MsgSender.Brokers,
+			Topic:          svcCtx.Config.MsgSender.Topic,
+			GroupID:        "msg-send",
+			StartOffset:    kafka.LastOffset,
+			MinBytes:       1,                      // 最小拉取字节数
+			MaxBytes:       10e3,                   // 最大拉取字节数（10KB）
+			MaxWait:        100 * time.Millisecond, // 最大等待时间
+			CommitInterval: 500 * time.Millisecond, // 提交间隔
 		}),
 	}
 }
 
 func (l *MsgSender) Start() {
-	// 设置kafka起始偏移量，在初始化NewReader的时候设置没用不知道为什么，只有这里有用
-	err := l.MsgSender.SetOffset(kafka.LastOffset)
-	if err != nil {
-		logx.Error("[MsgForwarder.Start] Set kafka offset failed, error: ", err)
-	}
-
 	for {
+		logx.Debug("[MsgSender.Start] Preparing read message...")
+		logx.Debug("[MsgSender.Start] Current offset: ", l.MsgSender.Offset())
 		msg, err := l.MsgSender.ReadMessage(l.ctx)
 		if err != nil {
 			logx.Error("[MsgSender.Start] Reading msgForward error: ", err)
 			continue
 		}
-		go l.Consume(msg.Value)
+		l.Consume(msg.Value)
 	}
 }
 
@@ -72,6 +75,7 @@ func (l *MsgSender) Consume(protobuf []byte) {
 }
 
 func (l *MsgSender) SingleChat(msg *front.Message, protobuf []byte) {
+	logx.Debug("[MsgSender.Singlechat] MsgType: SingleChat")
 	// 能传到这里来，代表Message服务中已经从Redis中获取到当前Recv用户在线
 	// 在线，以服务器主动推模式发送消息
 	err := l.svcCtx.ConnectionManager.SendMessage(msg.To, protobuf)

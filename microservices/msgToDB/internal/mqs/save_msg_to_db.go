@@ -3,6 +3,7 @@ package mqs
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/n8sPxD/cowIM/common/constant"
 	"github.com/n8sPxD/cowIM/common/db/myMongo/models"
@@ -23,9 +24,14 @@ func NewMsgToDB(ctx context.Context, svcCtx *svc.ServiceContext) *MsgToDB {
 		ctx:    ctx,
 		svcCtx: svcCtx,
 		MsgToDB: kafka.NewReader(kafka.ReaderConfig{
-			Brokers:     svcCtx.Config.MsgToDB.Brokers,
-			Topic:       svcCtx.Config.MsgToDB.Topic,
-			StartOffset: kafka.LastOffset,
+			Brokers:        svcCtx.Config.MsgToDB.Brokers,
+			Topic:          svcCtx.Config.MsgToDB.Topic,
+			GroupID:        "msg-db",
+			StartOffset:    kafka.LastOffset,
+			MinBytes:       1,                      // 最小拉取字节数
+			MaxBytes:       10e3,                   // 最大拉取字节数（10KB）
+			MaxWait:        100 * time.Millisecond, // 最大等待时间
+			CommitInterval: 500 * time.Millisecond, // 提交间隔
 		}),
 	}
 }
@@ -35,12 +41,6 @@ func (l *MsgToDB) Close() {
 }
 
 func (l *MsgToDB) Start() {
-	// 设置kafka起始偏移量，在初始化NewReader的时候设置没用不知道为什么，只有这里有用
-	err := l.MsgToDB.SetOffset(kafka.LastOffset)
-	if err != nil {
-		logx.Error("[MsgForwarder.Start] Set kafka offset failed, error: ", err)
-	}
-
 	for {
 		msg, err := l.MsgToDB.ReadMessage(l.ctx) // 这里的msg是kafka.Message
 		if err != nil {

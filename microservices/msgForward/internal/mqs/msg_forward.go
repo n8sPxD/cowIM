@@ -30,8 +30,14 @@ func NewMsgForwarder(ctx context.Context, svcCtx *svc.ServiceContext) *MsgForwar
 		ctx:    ctx,
 		svcCtx: svcCtx,
 		MsgForwarder: kafka.NewReader(kafka.ReaderConfig{
-			Brokers: svcCtx.Config.MsgForwarder.Brokers,
-			Topic:   svcCtx.Config.MsgForwarder.Topic,
+			Brokers:        svcCtx.Config.MsgForwarder.Brokers,
+			Topic:          svcCtx.Config.MsgForwarder.Topic,
+			GroupID:        "msg-fwd",
+			StartOffset:    kafka.LastOffset,
+			MinBytes:       1,                      // 最小拉取字节数
+			MaxBytes:       10e3,                   // 最大拉取字节数（10KB）
+			MaxWait:        100 * time.Millisecond, // 最大等待时间
+			CommitInterval: 500 * time.Millisecond, // 提交间隔
 		}),
 	}
 }
@@ -45,25 +51,23 @@ func (l *MsgForwarder) Start() {
 	options := idgen.NewIdGeneratorOptions(l.svcCtx.Config.WorkID)
 	idgen.SetIdGenerator(options)
 
-	// 设置kafka起始偏移量，在初始化NewReader的时候设置没用不知道为什么，只有这里有用
-	err := l.MsgForwarder.SetOffset(kafka.LastOffset)
-	if err != nil {
-		logx.Error("[MsgForwarder.Start] Set kafka offset failed, error: ", err)
-	}
-
 	for {
+		logx.Debug("[MsgForwarder.Start] Reading message...")
+		logx.Debug("[MsgForwarder.Start] Current offset: ", l.MsgForwarder.Offset())
 		msg, err := l.MsgForwarder.ReadMessage(l.ctx) // 这里的msg是kafka.Message
 		if err != nil {
 			logx.Error("[MsgForwarder.Start] Reading msgForward error: ", err)
-			continue
+			break
 		}
 		logx.Infof(
-			"message at offset %d: %s = %s\n",
+			"message at partition %d offset %d: %s = %s\n",
+			msg.Partition,
 			msg.Offset,
 			string(msg.Key),
 			string(msg.Value),
 		)
-		go l.Consume(msg.Value, time.Now())
+		l.Consume(msg.Value, time.Now())
+		logx.Debug("[MsgForwarder.Start] Consuming...")
 	}
 }
 
@@ -78,7 +82,7 @@ func (l *MsgForwarder) Consume(protobuf []byte, current time.Time) {
 	}
 
 	// 异步存库
-	go l.sendRecordMsgToDB(&msg, current)
+	l.sendRecordMsgToDB(&msg, current)
 
 	// 进行基于消息类型的消息处理
 	switch msg.Type {

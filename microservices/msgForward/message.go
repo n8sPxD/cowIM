@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"flag"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/n8sPxD/cowIM/microservices/msgForward/internal/config"
 	"github.com/n8sPxD/cowIM/microservices/msgForward/internal/mqs"
@@ -24,6 +27,15 @@ func main() {
 	ctx := context.Background()
 
 	mq := mqs.NewMsgForwarder(ctx, svcCtx)
-	defer mq.Close()
+
+	// 处理退出信号，平滑关闭
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-signalChan
+		mq.Close()
+		os.Exit(0)
+	}() // 处理退出信号，平滑关闭
+
 	mq.Start()
 }

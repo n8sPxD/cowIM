@@ -181,10 +181,11 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		mqMsg := kafka.Message{
 			Value: msg,
 		}
-		logx.Info("Pushing message to MQ...")
+		logx.Debug("[handleWebsocket] Pushing message to MQ...")
 		if err := s.svcCtx.MsgForwarder.WriteMessages(s.ctx, mqMsg); err != nil {
 			logx.Error("[handleWebsocket] Push message to MQ failed, error: ", err)
 			return
 		}
+		logx.Debug("[handleWebsocket] Pushing over")
 	}
 }
