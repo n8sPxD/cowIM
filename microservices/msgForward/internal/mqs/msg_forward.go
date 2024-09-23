@@ -68,7 +68,7 @@ func (l *MsgForwarder) Start() {
 }
 
 // Consume 接收从 Websocket Server的消息，处理后再进行转发
-func (l *MsgForwarder) Consume(protobuf []byte, current time.Time) {
+func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	// 传过来的消息是序列化过的，先反序列化
 	var msg front.Message
 	err := proto.Unmarshal(protobuf, &msg)
@@ -78,7 +78,7 @@ func (l *MsgForwarder) Consume(protobuf []byte, current time.Time) {
 	}
 
 	// 异步存库
-	l.sendRecordMsgToDB(&msg, current)
+	go l.sendRecordMsgToDB(&msg, now)
 
 	// 进行基于消息类型的消息处理
 	switch msg.Type {
