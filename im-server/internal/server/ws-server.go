@@ -14,6 +14,7 @@ import (
 	"github.com/n8sPxD/cowIM/common/constant"
 	"github.com/n8sPxD/cowIM/common/message/front"
 	"github.com/n8sPxD/cowIM/im-server/internal/config"
+	"github.com/n8sPxD/cowIM/im-server/internal/server/manager"
 	"github.com/n8sPxD/cowIM/im-server/svc"
 	"github.com/n8sPxD/cowIM/microservices/auth/rpc/types/authRpc"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -21,12 +22,12 @@ import (
 )
 
 type Server struct {
-	ctx      context.Context     // 上下文
-	svcCtx   *svc.ServiceContext // 依赖服务
-	config   config.Config       // Server的设置
-	Manager  *ConnectionManager  // 连接管理器
-	upgrader *websocket.Upgrader // Websocket协议升级器
-	messages chan string         // 本地消息队列，作用是消息聚合
+	ctx      context.Context            // 上下文
+	svcCtx   *svc.ServiceContext        // 依赖服务
+	config   config.Config              // Server的设置
+	Manager  *manager.ConnectionManager // 连接管理器
+	upgrader *websocket.Upgrader        // Websocket协议升级器
+	messages chan string                // 本地消息队列，作用是消息聚合
 }
 
 func MustNewServer(c config.Config, ctx context.Context, svcCtx *svc.ServiceContext) *Server {
@@ -34,7 +35,7 @@ func MustNewServer(c config.Config, ctx context.Context, svcCtx *svc.ServiceCont
 		ctx:     ctx,
 		svcCtx:  svcCtx,
 		config:  c,
-		Manager: NewConnectionManager(),
+		Manager: manager.NewConnectionManager(),
 		upgrader: &websocket.Upgrader{
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
@@ -86,8 +87,8 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 添加连接到管理器
-	s.Manager.Add(&Session{
-		ID:       UserID(id),
+	s.Manager.Add(&manager.Session{
+		ID:       manager.UserID(id),
 		Username: name,
 		Conn:     conn,
 	})

@@ -7,7 +7,7 @@ import (
 
 	"github.com/n8sPxD/cowIM/common/constant"
 	"github.com/n8sPxD/cowIM/common/message/front"
-	"github.com/n8sPxD/cowIM/im-server/internal/server"
+	"github.com/n8sPxD/cowIM/im-server/internal/server/manager"
 	"github.com/n8sPxD/cowIM/im-server/svc"
 	"github.com/segmentio/kafka-go"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -84,7 +84,7 @@ func (l *MsgSender) SingleChat(msg *front.Message, protobuf []byte) {
 	err := l.svcCtx.ConnectionManager.SendMessage(msg.To, protobuf)
 	if err != nil {
 		// Message服务中检测到用户在线，但是可能在消息中转的过程中又离线
-		if errors.Is(err, server.ClientGoingAway) {
+		if errors.Is(err, manager.ClientGoingAway) {
 			// TODO: 更改Redis信息
 			return
 		}
