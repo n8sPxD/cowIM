@@ -14,7 +14,7 @@ const (
 	MSG_IMAGE_MSG
 	MSG_VIDEO_MSG
 	MSG_FILE_MSG
-	MSG_SYSTEM_MSG
+	MSG_SYSTEM_MSG = 99
 )
 
 // 群聊或者单聊
@@ -22,9 +22,15 @@ const (
 	SINGLE_CHAT = iota
 	GROUP_CHAT
 	BIG_GROUP_CHAT
+	SYSTEM_INFO = 99
 )
 
 // 存表中区分表的类型
 const (
 	MESSAGE_RECORD = iota
+)
+
+// 特殊用户
+const (
+	SYSTEM = iota // 系统消息
 )

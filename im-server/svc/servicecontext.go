@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/n8sPxD/cowIM/common/db/myRedis"
-	"github.com/n8sPxD/cowIM/im-server/internal"
 	"github.com/n8sPxD/cowIM/im-server/internal/config"
+	"github.com/n8sPxD/cowIM/im-server/internal/server"
 	"github.com/n8sPxD/cowIM/microservices/auth/rpc/auth"
 	"github.com/n8sPxD/cowIM/microservices/auth/rpc/types/authRpc"
 	"github.com/segmentio/kafka-go"
@@ -16,7 +16,7 @@ import (
 type ServiceContext struct {
 	Config            config.Config
 	AuthRpc           authRpc.AuthClient
-	ConnectionManager *internal.ConnectionManager
+	ConnectionManager *server.ConnectionManager
 	MsgForwarder      *kafka.Writer
 	Redis             *myRedis.DB
 }

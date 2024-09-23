@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/n8sPxD/cowIM/common/constant"
@@ -115,6 +116,7 @@ func connectWebSocket(jwtToken string) error {
 		Type:    constant.SINGLE_CHAT,
 		MsgType: constant.MSG_COMMON_MSG,
 		Extend:  nil,
+		Time:    time.Now().Unix(),
 	}
 	realMsg, err := proto.Marshal(&sendMessage)
 	err = conn.WriteMessage(websocket.BinaryMessage, realMsg)
