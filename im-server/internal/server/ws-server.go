@@ -28,6 +28,7 @@ type Server struct {
 	Manager  *manager.ConnectionManager // 连接管理器
 	upgrader *websocket.Upgrader        // Websocket协议升级器
 	messages chan string                // 本地消息队列，作用是消息聚合
+	close    chan struct{}              // 关闭信号
 }
 
 func MustNewServer(c config.Config, ctx context.Context, svcCtx *svc.ServiceContext) *Server {
@@ -42,6 +43,7 @@ func MustNewServer(c config.Config, ctx context.Context, svcCtx *svc.ServiceCont
 			CheckOrigin:     func(r *http.Request) bool { return true },
 		},
 		messages: make(chan string, 100000),
+		close:    make(chan struct{}),
 	}
 }
 
@@ -98,18 +100,27 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// 维护用户登陆路由
 	go s.updateRouterStatus(id)
 
-	// 处理消息
-	for {
-		// 读消息
-		err := s.readMessageFromFrontend(id)
+	// 读消息
+	go func() {
+		err = s.readMessageFromFrontend(id)
 		if err != nil {
-			return
+			logx.Debug("[handleWebsocket] Read message failed, error: ", err)
+			s.close <- struct{}{}
 		}
-		// 发送到消息队列处理
+	}()
+	// 发送到消息队列处理
+	go func() {
 		err = s.sendMessageToBackend()
 		if err != nil {
-			return
+			logx.Debug("[handleWebsocket] Send message failed, error: ", err)
+			s.close <- struct{}{}
 		}
+	}()
+
+	for {
+		<-s.close
+		logx.Info("[handleWebsocket] User disconnect")
+		return
 	}
 }
 
