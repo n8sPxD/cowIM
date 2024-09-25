@@ -63,7 +63,9 @@ func (l *MsgToDB) Consume(rawjson []byte) {
 	// 根据类型来解析消息
 	switch ins.Type {
 	case constant.MESSAGE_RECORD:
-		go l.saveMessageRecord(ins.Payload)
+		go l.saveMessageRecord(ins.Payload[0]) // recordMessage 一次只会存一条
+	case constant.USER_TIMELINE:
+		go l.saveUserTimeline(ins.Payload)
 	default:
 		logx.Error("[MsgToDB.Consume] Invalid type, type is: ", ins.Type)
 	}
@@ -77,6 +79,25 @@ func (l *MsgToDB) saveMessageRecord(rawjson []byte) {
 		return
 	}
 	_, err = l.svcCtx.Mongo.MessageRecord.InsertOne(l.ctx, what)
+	if err != nil {
+		logx.Error("[MsgToDB.saveMessageRecord] Insert message to MongoDB failed, error: ", err)
+		return
+	}
+}
+
+func (l *MsgToDB) saveUserTimeline(rawjson []json.RawMessage) {
+	var huh []interface{}
+	for _, bytes := range rawjson {
+		var tmp models.UserTimeline
+		err := json.Unmarshal(bytes, &tmp)
+		if err != nil {
+			logx.Error("[MsgToDB.saveMessageRecord] Unmarshal message failed, error: ", err)
+			return
+		}
+		huh = append(huh, tmp)
+	}
+
+	_, err := l.svcCtx.Mongo.TimeLine.InsertMany(l.ctx, huh)
 	if err != nil {
 		logx.Error("[MsgToDB.saveMessageRecord] Insert message to MongoDB failed, error: ", err)
 		return

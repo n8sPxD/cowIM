@@ -111,7 +111,7 @@ func connectWebSocket(jwtToken string) error {
 	messageToSend := "哈哈，这是一条测试消息😄"
 	sendMessage := front.Message{
 		From:    1,
-		To:      1,
+		To:      2,
 		Content: messageToSend,
 		Type:    constant.SINGLE_CHAT,
 		MsgType: constant.MSG_COMMON_MSG,

@@ -2,15 +2,12 @@ package mqs
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/n8sPxD/cowIM/common/constant"
-	"github.com/n8sPxD/cowIM/common/db/myMongo/models"
 	"github.com/n8sPxD/cowIM/common/message/front"
-	"github.com/n8sPxD/cowIM/common/message/inside"
 	"github.com/n8sPxD/cowIM/microservices/msgForward/internal/svc"
 	"github.com/segmentio/kafka-go"
 	"github.com/yitter/idgenerator-go/idgen"
@@ -78,7 +75,8 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	}
 
 	// 异步存库
-	go l.sendRecordMsgToDB(&msg, now)
+	go l.sendRecordMsgToDB(&msg, now) // 漫游库
+	go l.sendTimelineToDB(&msg, now)  // timeline+同步库
 
 	// 进行基于消息类型的消息处理
 	switch msg.Type {
@@ -129,44 +127,4 @@ func (l *MsgForwarder) groupChat(msg *front.Message) {
 
 func (l *MsgForwarder) bigGroupChat(msg *front.Message) {
 	// TODO: 完善逻辑
-}
-
-// 封装消息，发送到存库服务中进行存库
-func (l *MsgForwarder) sendRecordMsgToDB(msg *front.Message, current time.Time) {
-	recordMsg := models.MessageRecord{
-		ID:         idgen.NextId(),
-		SenderID:   msg.From,
-		Type:       uint8(msg.Type),
-		ReceiverID: msg.To,
-		MsgType:    uint8(msg.MsgType),
-		Content:    msg.Content,
-		Timestamp:  current,
-	}
-	if msg.Extend != nil {
-		recordMsg.Extend = *msg.Extend
-	}
-
-	rawRecordMsg, err := json.Marshal(recordMsg)
-	if err != nil {
-		logx.Error("[MsgForwarder.Consume] Marshal MessageRecord failed, error: ", err)
-		return
-	}
-
-	packMsg := inside.Message{
-		Type:    constant.MESSAGE_RECORD,
-		Payload: rawRecordMsg,
-	}
-	rawPackMsg, err := json.Marshal(packMsg)
-	if err != nil {
-		logx.Error("[MsgForwarder.Consume] Marshal PackMessageRecord failed, error: ", err)
-		return
-	}
-
-	mqMsg := kafka.Message{
-		Value: rawPackMsg,
-	}
-	err = l.svcCtx.MsgDBSaver.WriteMessages(l.ctx, mqMsg)
-	if err != nil {
-		logx.Error("[MsgForwarder.Consume] Push message to DBSaver MQ failed, error: ", err)
-	}
 }

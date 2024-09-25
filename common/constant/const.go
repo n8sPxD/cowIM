@@ -28,6 +28,8 @@ const (
 // 存表中区分表的类型
 const (
 	MESSAGE_RECORD = iota
+	MESSAGE_SYNC
+	USER_TIMELINE
 )
 
 // 特殊用户
