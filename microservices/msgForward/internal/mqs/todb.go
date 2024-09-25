@@ -47,10 +47,14 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 			logx.Error("[sendTimelineToDB] Json marshal failed, error: ", err)
 			return
 		}
-		recverTLByte, err := json.Marshal(recverTL)
-		if err != nil {
-			logx.Error("[sendTimelineToDB] Json marshal failed, error: ", err)
-			return
+		// 如果是给自己发消息，不用存第二份
+		var recverTLByte []byte
+		if msg.To != msg.From {
+			recverTLByte, err = json.Marshal(recverTL)
+			if err != nil {
+				logx.Error("[sendTimelineToDB] Json marshal failed, error: ", err)
+				return
+			}
 		}
 
 		var packMsg inside.Message
@@ -58,8 +62,10 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 		packMsg.Payload = append(
 			packMsg.Payload,
 			senderTLByte,
-			recverTLByte,
 		)
+		if msg.From != msg.To {
+			packMsg.Payload = append(packMsg.Payload, recverTLByte)
+		}
 		packMsgByte, err := json.Marshal(packMsg)
 		if err != nil {
 			logx.Error("[sendTimelineToDB] Json marshal failed, error: ", err)
