@@ -70,14 +70,14 @@ func (g *Gateway) Start() error {
 	return g.server.ListenAndServe()
 }
 
-// UserData 存储解析后的用户信息
-type UserData struct {
+// Data 存储解析后的用户信息
+type Data struct {
 	ID       uint32
 	Username string
 }
 
 // jwtParse 解析 JWT Token 并返回用户数据
-func jwtParse(r *http.Request, w http.ResponseWriter) (*UserData, bool) {
+func jwtParse(r *http.Request, w http.ResponseWriter) (*Data, bool) {
 	// 提取 JWT Token
 	tokenString := r.Header.Get("Authorization")
 	if tokenString == "" {
@@ -107,11 +107,11 @@ func jwtParse(r *http.Request, w http.ResponseWriter) (*UserData, bool) {
 
 	// 鉴权成功，返回用户数据
 	logx.Infof(
-		"Authenticated user ID: %d, Username: %s",
+		"Authenticated user ID: %d, name: %s",
 		claims.PayLoad.ID,
 		claims.PayLoad.Username,
 	)
-	return &UserData{
+	return &Data{
 		ID:       claims.PayLoad.ID,
 		Username: claims.PayLoad.Username,
 	}, true
@@ -124,7 +124,7 @@ func handleCORS(next http.Handler) http.HandlerFunc {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
 		w.Header().
-			Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-User-ID, X-User-Username")
+			Set("Access-Control-Allow-Headers", "Content-Type, Authorization, UserID, Username")
 
 		// 如果是OPTIONS请求，提前返回
 		if r.Method == http.MethodOptions {
@@ -158,8 +158,8 @@ func (g *Gateway) reverseProxyHandler(target string) http.HandlerFunc {
 
 			// 在请求头中添加用户ID和用户名
 			if userData != nil {
-				r.Header.Set("X-User-ID", strconv.FormatUint(uint64(userData.ID), 10))
-				r.Header.Set("X-User-Username", userData.Username)
+				r.Header.Set("UserID", strconv.FormatUint(uint64(userData.ID), 10))
+				r.Header.Set("Username", userData.Username)
 			}
 		}
 

@@ -8,7 +8,7 @@ info (
 
 type (
 	ChatListRequest {
-		UserID uint32 `header:X-User-ID`
+		UserID uint32 `header:"UserID"`
 	}
 	ChatListInfo {
 		Username  string `json:"username"`

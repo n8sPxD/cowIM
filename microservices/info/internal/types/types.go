@@ -8,7 +8,7 @@ type ChatListInfo struct {
 }
 
 type ChatListRequest struct {
-	UserID uint32 `header:X-User-ID`
+	UserID uint32 `header:"UserID"`
 }
 
 type ChatListResponse struct {

@@ -5,6 +5,9 @@ Proxies:
   - Route: "/register"
     Target: "http://localhost:20001"
 
+  - Route: "/chatlist"
+    Target: "http://localhost:20002"
+
 Log:
   Encoding: plain
   TimeFormat: 2006-01-02 15:04:05
