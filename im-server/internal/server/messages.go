@@ -42,8 +42,7 @@ func (s *Server) readMessageFromFrontend(id uint32) error {
 			}
 			// 读不了用户的消息，说明后续也不能和用户进行通讯了，所以就和用户断开连接
 			logx.Infof("[readMessageFromFrontend] Removing user %d from redis router status...", id)
-			s.svcCtx.Redis.RemoveUserRouterStatus(s.ctx, id)
-			// TODO: 这里出错要么是没读到在线状态，不影响，要么就是redis挂了，再考虑后续怎么处理
+
 			return err
 		}
 		s.messages <- string(msg)

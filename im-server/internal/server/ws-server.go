@@ -119,7 +119,10 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		<-s.close
-		logx.Info("[handleWebsocket] User disconnect")
+		s.svcCtx.Redis.RemoveUserRouterStatus(
+			s.ctx,
+			id,
+		) // TODO: 这里出错要么是没读到在线状态，不影响，要么就是redis挂了，再考虑后续怎么处理
 		return
 	}
 }
