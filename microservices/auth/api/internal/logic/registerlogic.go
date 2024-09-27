@@ -37,10 +37,11 @@ func (l *RegisterLogic) Register(req *types.RegisterRequest) (*types.RegisterRes
 	user := models.User{
 		Username: req.Username,
 		Password: password,
+		Avatar:   req.Username[:0],
 	}
 	if err := l.svcCtx.MySQL.InsertUser(l.ctx, &user); err != nil {
 		logx.Error("[Register] Insert user to DB failed, error: ", err)
 		return nil, errors.New("注册失败！好像是服务器发生了异常")
 	}
-	return &types.RegisterResponse{ID: user.ID}, nil
+	return &types.RegisterResponse{ID: uint32(user.ID)}, nil
 }
