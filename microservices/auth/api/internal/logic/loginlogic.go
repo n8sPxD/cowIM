@@ -27,7 +27,7 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 }
 
 func (l *LoginLogic) Login(req *types.LoginRequest) (*types.LoginResponse, error) {
-	userInfo, err := l.svcCtx.MySQL.GetUserInfo(l.ctx, req.ID)
+	userInfo, err := l.svcCtx.MySQL.GetUserAuthInfo(l.ctx, req.ID)
 	if err != nil {
 		logx.Infof("User %d login failed, err: %v\n", req.ID, err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {

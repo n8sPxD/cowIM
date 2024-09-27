@@ -1,0 +1,27 @@
+syntax = "v1"
+
+info (
+	title:  "info"
+	desc:   "用户信息相关服务"
+	author: "n8spxd"
+)
+
+type (
+	ChatListRequest {
+		UserID uint32 `header:X-User-ID`
+	}
+	ChatListInfo {
+		Username  string `json:"username"`
+		Avatar    string `json:"avatar"`
+		RecentMsg string `json:"recentMsg"`
+	}
+	ChatListResponse {
+		List []ChatListInfo `json:"list"`
+	}
+)
+
+service infos {
+	@handler chatList // 对话列表
+	get /chatlist (ChatListRequest) returns (ChatListResponse)
+}
+

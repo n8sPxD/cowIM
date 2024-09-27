@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	models2 "github.com/n8sPxD/cowIM/common/db/myMysql/models"
+	"github.com/n8sPxD/cowIM/common/db/myMysql/models"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -25,8 +25,8 @@ func MustNewMySQL(url string, opts ...gorm.Option) *DB {
 
 func (db *DB) Migrate() error {
 	err := db.client.AutoMigrate(
-		&models2.User{},
-		&models2.UserConfig{},
+		&models.User{},
+		&models.UserConfig{},
 	)
 	return err
 }

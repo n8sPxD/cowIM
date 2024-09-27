@@ -1,8 +1,15 @@
 package models
 
-import (
-	"time"
-)
+import "time"
+
+// MessageSync 消息同步表，用于用户即时能查询的信息，不直接入库，由Timeline简介入库（做数据冗余）
+type MessageSync struct {
+	ID        int64     `bson:"_id"              json:"id"`
+	MsgType   uint8     `bson:"msg_type"         json:"msgType"`
+	Content   string    `bson:"content"          json:"content"`
+	Extend    int64     `bson:"extend,omitempty" json:"extend,omitempty"`
+	Timestamp time.Time `bson:"timestamp"        json:"timestamp"` // 用于删除过时消息
+}
 
 // MessageRecord 消息记录表，用于消息的持久化
 type MessageRecord struct {

@@ -1,16 +1,13 @@
 package models
 
 import (
-	"time"
-
 	"gorm.io/gorm"
 )
 
 type User struct {
-	ID         uint32      `gorm:"primarykey"        json:"id"`
-	CreatedAt  time.Time   `                         json:"createdAt"`
-	UpdatedAt  time.Time   `                         json:"updatedAt"`
-	Username   string      `                         json:"username"`
+	gorm.Model
+	Username   string      `gorm:"size:64"           json:"username"`
+	Avatar     string      `                         json:"avatar"`
 	Password   string      `                         json:"password"`
 	UserConfig *UserConfig `gorm:"foreignKey:UserID" json:"UserConfig"`
 }
