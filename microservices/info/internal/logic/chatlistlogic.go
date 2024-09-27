@@ -32,7 +32,7 @@ func (l *ChatListLogic) ChatList(req *types.ChatListRequest) (*types.ChatListRes
 		logx.Error("[ChatList] Get chat list from mongoDB failed, error: ", err)
 		return nil, errors.New("获取对话列表失败")
 	}
-	var retList []types.ChatListInfo
+	retList := make([]types.ChatListInfo, 0, len(chatList))
 	for _, chat := range chatList {
 		var (
 			info types.ChatListInfo
