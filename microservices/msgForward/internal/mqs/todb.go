@@ -23,10 +23,11 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 	if msg.Extend != nil {
 		syncMsg.Extend = *msg.Extend
 	}
+
 	senderTL := models.UserTimeline{
-		ID:       idgen.NextId(),
-		UserID:   msg.From,
-		SenderID: msg.From,
+		ID:         idgen.NextId(),
+		ReceiverID: msg.To,
+		SenderID:   msg.From,
 		// GroupID:   0,  	// 到下面去判断
 		Message:   syncMsg,
 		Timestamp: now,
@@ -35,26 +36,10 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 	// 分别处理群聊和单聊
 	switch msg.Type {
 	case constant.SINGLE_CHAT:
-		recverTL := models.UserTimeline{
-			ID:        idgen.NextId(),
-			UserID:    msg.To,
-			SenderID:  msg.From,
-			Message:   syncMsg,
-			Timestamp: now,
-		}
 		senderTLByte, err := json.Marshal(senderTL)
 		if err != nil {
 			logx.Error("[sendTimelineToDB] Json marshal failed, error: ", err)
 			return
-		}
-		// 如果是给自己发消息，不用存第二份
-		var recverTLByte []byte
-		if msg.To != msg.From {
-			recverTLByte, err = json.Marshal(recverTL)
-			if err != nil {
-				logx.Error("[sendTimelineToDB] Json marshal failed, error: ", err)
-				return
-			}
 		}
 
 		var packMsg inside.Message
@@ -63,9 +48,6 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 			packMsg.Payload,
 			senderTLByte,
 		)
-		if msg.From != msg.To {
-			packMsg.Payload = append(packMsg.Payload, recverTLByte)
-		}
 		packMsgByte, err := json.Marshal(packMsg)
 		if err != nil {
 			logx.Error("[sendTimelineToDB] Json marshal failed, error: ", err)

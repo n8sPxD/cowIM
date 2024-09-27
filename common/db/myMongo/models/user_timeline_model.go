@@ -4,12 +4,12 @@ import "time"
 
 // UserTimeline 用户时间线
 type UserTimeline struct {
-	ID        int64       `bson:"_id"                json:"id"`
-	UserID    uint32      `bson:"user_id"            json:"userID"`
-	SenderID  uint32      `bson:"sender_id"          json:"senderID"`
-	GroupID   uint32      `bson:"group_id,omitempty" json:"groupID,omitempty"`
-	Message   MessageSync `bson:"msgForward"         json:"msgForward"`
-	Timestamp time.Time   `bson:"timestamp"          json:"timestamp"` // 用于删除过时消息 + 实现Timeline模型(用户消息按时间线排列)
+	ID         int64       `bson:"_id"                json:"id"`
+	ReceiverID uint32      `bson:"receiver_id"        json:"receiverID"`
+	SenderID   uint32      `bson:"sender_id"          json:"senderID"`
+	GroupID    uint32      `bson:"group_id,omitempty" json:"groupID,omitempty"`
+	Message    MessageSync `bson:"msgForward"         json:"msgForward"`
+	Timestamp  time.Time   `bson:"timestamp"          json:"timestamp"` // 用于删除过时消息 + 实现Timeline模型(用户消息按时间线排列)
 }
 
 /*
