@@ -32,5 +32,5 @@ MsgSender:
   Topic: "websocket-server-1" # 最后一位为WorkID
 
 RedisConf:
-  Host: "127.0.0.1:6379"
+  Host: 127.0.0.1:6379
   Type: "node"

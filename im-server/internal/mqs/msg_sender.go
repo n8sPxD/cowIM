@@ -27,7 +27,7 @@ func NewMsgSender(ctx context.Context, svcCtx *svc.ServiceContext) *MsgSender {
 		MsgSender: kafka.NewReader(kafka.ReaderConfig{
 			Brokers:        svcCtx.Config.MsgSender.Brokers,
 			Topic:          svcCtx.Config.MsgSender.Topic,
-			GroupID:        "msg-send",
+			GroupID:        "msg-fwd",
 			StartOffset:    kafka.LastOffset,
 			MinBytes:       1,                      // 最小拉取字节数
 			MaxBytes:       10e3,                   // 最大拉取字节数（10KB）

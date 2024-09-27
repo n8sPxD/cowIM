@@ -7,20 +7,24 @@ import (
 )
 
 func (s *Server) sendMessageToBackend() error {
+	logx.Debug("[sendMessageToBackend] Sending message to MQ...")
 	// 发送到消息队列处理
 	for {
 		mqMsg := kafka.Message{
 			Value: []byte(<-s.messages),
 		}
+		logx.Debug("[sendMessageToBackend] Sending message: ", mqMsg)
 		if err := s.svcCtx.MsgForwarder.WriteMessages(s.ctx, mqMsg); err != nil {
 			logx.Error("[sendMessageToBackend] Push message to MQ failed, error: ", err)
 			return err
 		}
+		logx.Debug("[sendMessageToBackend] Send message success")
 	}
 }
 
 func (s *Server) readMessageFromFrontend(id uint32) error {
 	// 此处的消息为protobuf序列化后的消息
+	logx.Debug("[readMessageFromFrontend] Reading message from user ", id)
 	for {
 		msg, err := s.Manager.ReadMessage(id)
 		if err != nil {
@@ -45,6 +49,7 @@ func (s *Server) readMessageFromFrontend(id uint32) error {
 
 			return err
 		}
+		logx.Debug("[readMessageFromFrontend] message: ", msg)
 		s.messages <- string(msg)
 	}
 }
