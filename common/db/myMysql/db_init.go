@@ -27,6 +27,8 @@ func (db *DB) Migrate() error {
 	err := db.client.AutoMigrate(
 		&models.User{},
 		&models.UserConfig{},
+        &models.Group{},
+        &models.GroupConfig{},
 	)
 	return err
 }
