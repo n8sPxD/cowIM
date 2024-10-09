@@ -166,6 +166,7 @@
         }
     }
 
+    // 在聊天页面中使用 CowID 判断消息位置
     function displayMessages(messages) {
         const chatHeader = document.getElementById("chatHeader");
         const chatHistory = document.getElementById("chatHistory");
@@ -173,7 +174,7 @@
         chatHeader.innerHTML = `<p>联系人ID: ${messages[0].senderId}</p>`;
         chatHistory.innerHTML = "";
 
-        const myId = 3; // 假设这个是你的用户 ID
+        const myId = Number(localStorage.getItem('cowId')); // 从 localStorage 获取 CowID
 
         messages.forEach(message => {
             const messageDiv = document.createElement("div");

@@ -173,6 +173,10 @@
                         // 将令牌存储到 localStorage
                         localStorage.setItem('jwtToken', token);
                         console.log('登录成功，JWT 令牌已存储');
+
+                        // 将 CowID 存储到 localStorage
+                        localStorage.setItem('cowId', id);
+                        console.log('CowID 已存储');
                     } else {
                         throw new Error('未收到 JWT 令牌');
                     }
