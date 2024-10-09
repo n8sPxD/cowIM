@@ -5,7 +5,7 @@ Proxies:
   - Route: "/register"
     Target: "http://localhost:20001"
 
-  - Route: "/chatlist"
+  - Route: "/timelinesync"
     Target: "http://localhost:20002"
 
 Log:
