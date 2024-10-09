@@ -8,9 +8,10 @@ type MessageRecordResponse struct {
 }
 
 type TimelineSyncInfo struct {
-	SenderID uint32 `json:"senderId"`
-	GroupID  uint32 `json:"groupId,omitempty"`
-	Message  string `json:"message"`
+	SenderID  uint32 `json:"senderId"`
+	GroupID   uint32 `json:"groupId,omitempty"`
+	Message   string `json:"message"`
+	Timestamp int64  `json:"timestamp"`
 }
 
 type TimelineSyncRequest struct {

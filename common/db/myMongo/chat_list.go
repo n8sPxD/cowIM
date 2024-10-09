@@ -12,9 +12,10 @@ import (
 )
 
 type ChatListInfo struct {
-	SenderID  uint32 `json:"senderID"`
-	GroupID   uint32 `json:"groupID,omitempty"`
-	RecentMsg string `json:"recentMsg"`
+	SenderID  uint32    `json:"senderID"`
+	GroupID   uint32    `json:"groupID,omitempty"`
+	RecentMsg string    `json:"recentMsg"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 func (db *DB) GetRecentChatList(ctx context.Context, id uint32, latest time.Time) ([]ChatListInfo, error) {
@@ -82,6 +83,7 @@ func (db *DB) GetRecentChatList(ctx context.Context, id uint32, latest time.Time
 		chat.SenderID = timeline.SenderID
 		chat.RecentMsg = getMsgPreview(timeline)
 		chat.GroupID = timeline.GroupID // GroupID默认值为0
+		chat.Timestamp = timeline.Timestamp
 		chatList = append(chatList, chat)
 	}
 
