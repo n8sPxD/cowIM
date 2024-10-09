@@ -3,6 +3,7 @@ package myMongo
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/n8sPxD/cowIM/common/constant"
 	"github.com/n8sPxD/cowIM/common/db/myMongo/models"
@@ -15,15 +16,52 @@ type ChatListInfo struct {
 	RecentMsg string `json:"recentMsg"`
 }
 
-func (db *DB) GetRecentChatList(ctx context.Context, id uint32, maxLength int) ([]ChatListInfo, error) {
-	filter := mongo.Pipeline{
-		bson.D{{"$sort", bson.D{{"timestamp", -1}}}}, // 按照 created_at 字段倒序排序
-		bson.D{{"$group", bson.D{
+func (db *DB) GetRecentChatList(ctx context.Context, id uint32, maxLength int, latest time.Time) ([]ChatListInfo, error) {
+	// 初始化聚合管道
+	filter := mongo.Pipeline{}
+
+	// 首先，根据用户 ID 过滤文档
+	matchStage := bson.D{
+		{"$match", bson.D{
+			{"id", id},
+		}},
+	}
+	filter = append(filter, matchStage)
+
+	// 如果 latest 时间戳不为空，则添加 timestamp 的过滤条件
+	if !latest.IsZero() {
+		timestampMatch := bson.D{
+			{"$match", bson.D{
+				{"timestamp", bson.D{{"$gte", latest}}},
+			}},
+		}
+		filter = append(filter, timestampMatch)
+	}
+
+	// 按照 timestamp 倒序排序
+	sortStage := bson.D{
+		{"$sort", bson.D{
+			{"timestamp", -1},
+		}},
+	}
+	filter = append(filter, sortStage)
+
+	// 按照 id 分组，并获取每组的最新记录
+	groupStage := bson.D{
+		{"$group", bson.D{
 			{"_id", "$id"}, // 按照 id 字段分组
 			{"latestRecord", bson.D{{"$first", "$$ROOT"}}}, // 获取每组最新的记录
-		}}},
-		bson.D{{"$replaceRoot", bson.D{{"newRoot", "$latestRecord"}}}}, // 将嵌套文档替换为根文档
+		}},
 	}
+	filter = append(filter, groupStage)
+
+	// 将嵌套文档替换为根文档
+	replaceRootStage := bson.D{
+		{"$replaceRoot", bson.D{
+			{"newRoot", "$latestRecord"},
+		}},
+	}
+	filter = append(filter, replaceRootStage)
 
 	// 定义结果 slice
 	var timelines []models.UserTimeline
