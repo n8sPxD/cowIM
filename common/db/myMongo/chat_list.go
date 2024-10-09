@@ -24,13 +24,13 @@ func (db *DB) GetRecentChatList(ctx context.Context, id uint32, latest time.Time
 	// 首先，根据用户 ID 过滤文档
 	matchStage := bson.D{
 		{"$match", bson.D{
-			{"id", id},
+			{"receiver_id", id},
 		}},
 	}
 	filter = append(filter, matchStage)
 
 	// 如果 latest 时间戳不为空，则添加 timestamp 的过滤条件
-	if !latest.IsZero() {
+	if latest != time.Unix(0, 0) {
 		timestampMatch := bson.D{
 			{"$match", bson.D{
 				{"timestamp", bson.D{{"$gte", latest}}},
@@ -81,9 +81,7 @@ func (db *DB) GetRecentChatList(ctx context.Context, id uint32, latest time.Time
 		var chat ChatListInfo
 		chat.SenderID = timeline.SenderID
 		chat.RecentMsg = getMsgPreview(timeline)
-		if timeline.GroupID != 0 {
-			chat.GroupID = timeline.GroupID
-		}
+		chat.GroupID = timeline.GroupID // GroupID默认值为0
 		chatList = append(chatList, chat)
 	}
 

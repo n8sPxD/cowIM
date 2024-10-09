@@ -33,6 +33,8 @@ func (l *TimelineSyncLogic) TimelineSync(req *types.TimelineSyncRequest) (resp *
 		return nil, errors.New("获取消息失败")
 	}
 
+	logx.Debug("[TimelineSync] chats: ", chats)
+
 	// 将消息封装到resp中
 	infos := make([]types.TimelineSyncInfo, len(chats))
 	for i, chat := range chats {
