@@ -10,7 +10,7 @@ info (
 type (
 	TimelineSyncRequest {
 		ID        uint32 `header:"UserID"`
-		Timestamp int64  `header:Timestamp` // Unix 时间戳
+		Timestamp int64  `form:Timestamp` // Unix 时间戳
 	}
 	TimelineSyncInfo {
 		SenderID  uint32 `json:"senderId"`

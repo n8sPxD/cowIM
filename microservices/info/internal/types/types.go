@@ -16,7 +16,7 @@ type TimelineSyncInfo struct {
 
 type TimelineSyncRequest struct {
 	ID        uint32 `header:"UserID"`
-	Timestamp int64  `header:Timestamp` // Unix 时间戳
+	Timestamp int64  `form:Timestamp` // Unix 时间戳
 }
 
 type TimelineSyncResponse struct {
