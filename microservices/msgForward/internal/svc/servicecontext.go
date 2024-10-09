@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/n8sPxD/cowIM/common/db/myMongo"
+	"github.com/n8sPxD/cowIM/common/db/myMysql"
 	"github.com/n8sPxD/cowIM/common/db/myRedis"
 	"github.com/n8sPxD/cowIM/microservices/msgForward/internal/config"
 	"github.com/segmentio/kafka-go"
@@ -17,6 +18,7 @@ type ServiceContext struct {
 	Mongo      *myMongo.DB
 	MsgSender  *kafka.Writer
 	MsgDBSaver *kafka.Writer
+	MySQL      *myMysql.DB
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -44,5 +46,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			Async:        true,                  // 启用异步写入
 			MaxAttempts:  1,                     // 限制重试次数
 		},
+		MySQL: myMysql.MustNewMySQL(c.MySQL.DataSource),
 	}
 }

@@ -23,6 +23,8 @@ type Config struct {
 		Brokers []string
 		Topic   string
 	}
-
+	MySQL struct {
+		DataSource string
+	}
 	WorkID uint16
 }
