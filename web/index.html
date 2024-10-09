@@ -70,8 +70,8 @@
         <h2>Cow IM</h2>
         <form id="loginForm">
             <div>
-                <label for="username">用户名</label><br>
-                <input type="text" id="username" name="username" required>
+                <label for="id">CowID</label><br>
+                <input type="text" id="id" name="id" required>
             </div>
             <div>
                 <label for="password">密码</label><br>
@@ -101,7 +101,7 @@
     document.getElementById('loginForm').onsubmit = function (e) {
         e.preventDefault(); // 阻止表单的默认提交行为
 
-        const username = document.getElementById('username').value;
+        const id = document.getElementById('id').value;
         const password = document.getElementById('password').value;
 
         fetch('http://192.168.1.246:8080/login', {
@@ -109,7 +109,7 @@
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({username, password})
+            body: JSON.stringify({id, password})
         })
             .then(response => response.json())
             .then(data => {
