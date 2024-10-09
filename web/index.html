@@ -91,11 +91,54 @@
 <script src="./bundle.js"></script>
 
 <script>
-
     // 注册按钮跳转到注册页面
     document.getElementById('registerBtn').onclick = function () {
         window.location.href = '/register';  // 此处可跳转到注册页面的 URL
     };
+
+    // 打开或创建 IndexedDB 数据库
+    function openDatabase() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open('CowIMDB', 1);
+
+            request.onupgradeneeded = function(event) {
+                const db = event.target.result;
+                // 创建一个名为 'messages' 的对象存储空间，keyPath 为自增的 id
+                if (!db.objectStoreNames.contains('messages')) {
+                    db.createObjectStore('messages', { keyPath: 'id', autoIncrement: true });
+                }
+            };
+
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                resolve(db);
+            };
+
+            request.onerror = function(event) {
+                reject('IndexedDB 打开失败');
+            };
+        });
+    }
+
+    // 将消息存储到 IndexedDB
+    function storeMessages(db, messages) {
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['messages'], 'readwrite');
+            const store = transaction.objectStore('messages');
+
+            messages.forEach(msg => {
+                store.add(msg);
+            });
+
+            transaction.oncomplete = function() {
+                resolve();
+            };
+
+            transaction.onerror = function() {
+                reject('存储消息时出错');
+            };
+        });
+    }
 
     // 登录表单提交逻辑
     document.getElementById('loginForm').onsubmit = function (e) {
@@ -113,6 +156,7 @@
             return;
         }
 
+        // 登录请求
         fetch('http://192.168.1.246:8080/login', {
             method: 'POST',
             headers: {
@@ -123,19 +167,89 @@
             .then(response => response.json())
             .then(data => {
                 if (data.code === 0) {
-                    // 如果鉴权通过，跳转到聊天页面
-                    window.location.href = '/chat';
+                    // 从响应中提取 JWT 令牌
+                    const token = data.content.token;
+                    if (token) {
+                        // 将令牌存储到 localStorage
+                        localStorage.setItem('jwtToken', token);
+                        console.log('登录成功，JWT 令牌已存储');
+                    } else {
+                        throw new Error('未收到 JWT 令牌');
+                    }
+
+                    // 使用 JWT 令牌访问 timelinesync 接口
+                    return fetch('http://localhost:8080/timelinesync', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}` // 添加 Authorization 头
+                        }
+                    });
                 } else {
                     // 鉴权失败，弹出错误信息
-                    alert(data.content);
+                    throw new Error(data.content || '登录失败');
                 }
+            })
+            .then(response => response.json())
+            .then(timelineData => {
+                console.log("infos: ", timelineData.infos);
+                if (timelineData.infos && Array.isArray(timelineData.infos)) {
+                    // 打开数据库并存储消息
+                    return openDatabase().then(db => {
+                        return storeMessages(db, timelineData.infos).then(() => {
+                            db.close(); // 关闭数据库连接
+                        });
+                    });
+                } else {
+                    throw new Error('获取到的消息格式不正确');
+                }
+            })
+            .then(() => {
+                // 存储完成后，跳转到聊天页面
+                window.location.href = '/chat';
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('请求失败，请稍后再试');
+                alert(error.message || '请求失败，请稍后再试');
             });
     };
+
+    // 示例：在页面加载时自动使用存储的 JWT 令牌进行 timelinesync 请求
+    window.onload = function() {
+        const token = localStorage.getItem('jwtToken');
+        if (token) {
+            // 使用存储的令牌访问 timelinesync 接口
+            fetch('http://localhost:8080/timelinesync', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` // 添加 Authorization 头
+                }
+            })
+                .then(response => response.json())
+                .then(timelineData => {
+                    console.log("infos: ", timelineData.infos);
+                    if (timelineData.infos && Array.isArray(timelineData.infos)) {
+                        // 打开数据库并存储消息
+                        return openDatabase().then(db => {
+                            return storeMessages(db, timelineData.infos).then(() => {
+                                db.close(); // 关闭数据库连接
+                            });
+                        });
+                    } else {
+                        throw new Error('获取到的消息格式不正确');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // 如果令牌无效或过期，可以选择清除令牌并提示用户重新登录
+                    localStorage.removeItem('jwtToken');
+                    alert('会话已过期，请重新登录。');
+                });
+        }
+    };
 </script>
+
 
 </body>
 </html>

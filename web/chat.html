@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>即时通讯系统</title>
     <style>
+        /* 样式保持不变 */
         * {
             margin: 0;
             padding: 0;
@@ -20,14 +21,13 @@
         }
 
         .container {
-            width: 80vw; /* 相对于视口宽度的80% */
-            height: 70vh; /* 相对于视口高度的70% */
+            width: 80vw;
+            height: 70vh;
             display: flex;
             border: 1px solid #000;
             background-color: #fff;
             position: relative;
         }
-
 
         .conversation-list {
             width: 200px;
@@ -90,27 +90,35 @@
             width: 100%;
             height: 100%;
             padding: 10px;
-            border: none; /* 移除内部边框 */
-            outline: none; /* 移除点击时的轮廓 */
-            resize: none; /* 禁止用户手动拉伸 */
-            background-color: transparent; /* 去掉背景颜色 */
+            border: none;
+            outline: none;
+            resize: none;
+            background-color: transparent;
             font-size: 16px;
             line-height: 1.5;
         }
 
+        .contact {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+        }
 
+        .contact:hover {
+            background-color: #f0f0f0;
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="conversation-list">
+    <div class="conversation-list" id="conversationList">
         <p>会话列表</p>
     </div>
     <div class="chat-section">
-        <div class="chat-header">
-            <p>群聊A (50)</p>
+        <div class="chat-header" id="chatHeader">
+            <p>选择一个联系人</p>
         </div>
-        <div class="chat-history">
+        <div class="chat-history" id="chatHistory">
             <p>聊天记录</p>
         </div>
         <div class="message-input">
@@ -121,7 +129,62 @@
 </div>
 
 <script>
-    // 对话列表拉伸
+    // IndexedDB 相关代码
+    const request = indexedDB.open("CowIMDB", 1);
+
+    request.onsuccess = function(event) {
+        const db = event.target.result;
+        const transaction = db.transaction("messages", "readonly");
+        const objectStore = transaction.objectStore("messages");
+
+        const request = objectStore.getAll();
+
+        request.onsuccess = function(event) {
+            const messages = event.target.result;
+            displayContacts(messages);
+        };
+    };
+
+    function displayContacts(messages) {
+        const conversationList = document.getElementById("conversationList");
+        const uniqueSenders = {};
+
+        messages.forEach(message => {
+            if (!uniqueSenders[message.senderId]) {
+                uniqueSenders[message.senderId] = [];
+            }
+            uniqueSenders[message.senderId].push(message);
+        });
+
+        for (const senderId in uniqueSenders) {
+            const contactDiv = document.createElement("div");
+            contactDiv.className = "contact";
+            contactDiv.textContent = `联系人ID: ${senderId}`;
+            contactDiv.onclick = () => displayMessages(uniqueSenders[senderId]);
+
+            conversationList.appendChild(contactDiv);
+        }
+    }
+
+    function displayMessages(messages) {
+        const chatHeader = document.getElementById("chatHeader");
+        const chatHistory = document.getElementById("chatHistory");
+
+        chatHeader.innerHTML = `<p>联系人ID: ${messages[0].senderId}</p>`;
+        chatHistory.innerHTML = "";
+
+        const myId = 3; // 假设这个是你的用户 ID
+
+        messages.forEach(message => {
+            const messageDiv = document.createElement("div");
+            messageDiv.style.textAlign = message.senderId === myId ? "right" : "left";
+            messageDiv.textContent = message.message;
+            chatHistory.appendChild(messageDiv);
+        });
+    }
+
+
+    // 对话列表拉伸代码保持不变
     const conversationList = document.querySelector('.conversation-list');
 
     conversationList.addEventListener('mousedown', function(e) {
@@ -141,7 +204,7 @@
         document.removeEventListener('mouseup', stopResize);
     }
 
-    // 消息输入框的拉伸
+    // 消息输入框的拉伸代码保持不变
     const messageInput = document.querySelector('.message-input');
     const messageInputResizer = document.querySelector('.message-input-resizer');
 
@@ -156,13 +219,12 @@
     });
 
     function resizeMessageInput(e) {
-        const deltaY = initialMouseY - e.clientY; // 修改为反向计算
+        const deltaY = initialMouseY - e.clientY;
         const newHeight = initialHeight + deltaY;
-        if (newHeight > 50) {  // 限制最小高度
+        if (newHeight > 50) {
             messageInput.style.height = `${newHeight}px`;
         }
     }
-
 
     function stopMessageResize() {
         document.removeEventListener('mousemove', resizeMessageInput);
