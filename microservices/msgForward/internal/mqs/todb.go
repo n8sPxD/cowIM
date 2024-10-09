@@ -24,18 +24,17 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 		syncMsg.Extend = *msg.Extend
 	}
 
-	senderTL := models.UserTimeline{
-		ID:         idgen.NextId(),
-		ReceiverID: msg.To,
-		SenderID:   msg.From,
-		// GroupID:   0,  	// 到下面去判断
-		Message:   syncMsg,
-		Timestamp: now,
-	}
-
 	// 分别处理群聊和单聊
 	switch msg.Type {
 	case constant.SINGLE_CHAT:
+		senderTL := models.UserTimeline{
+			ID:         idgen.NextId(),
+			ReceiverID: msg.To,
+			SenderID:   msg.From,
+			// GroupID:   0,  	// 到下面去判断
+			Message:   syncMsg,
+			Timestamp: now,
+		}
 		senderTLByte, err := json.Marshal(senderTL)
 		if err != nil {
 			logx.Error("[sendTimelineToDB] Json marshal failed, error: ", err)
@@ -62,6 +61,49 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 		}
 
 	case constant.GROUP_CHAT:
+		// 先从MySQL查找群聊成员
+		members, err := l.svcCtx.MySQL.GetGroupMembers(l.ctx, uint(msg.To))
+		if err != nil {
+			logx.Error("[sendTimelineToDB] GetGroupMembers failed, error: ", err)
+			return
+		}
+
+		// 然后封装所有群员的消息
+		var pack inside.Message
+		pack.Type = constant.USER_TIMELINE
+		for _, member := range members {
+			current := models.UserTimeline{
+				ID:         idgen.NextId(),
+				ReceiverID: member,
+				SenderID:   msg.From,
+				GroupID:    msg.To,
+				Message:    syncMsg,
+				Timestamp:  now,
+			}
+			// json序列化
+			currentByte, err := json.Marshal(current)
+			if err != nil {
+				logx.Error("[sendTimelineToDB] Json marshal failed, error: ", err)
+				return
+			}
+			// 封装到打包中
+			pack.Payload = append(pack.Payload, currentByte)
+		}
+
+		packByte, err := json.Marshal(pack)
+		if err != nil {
+			logx.Error("[sendTimelineToDB] Json marshal failed, error: ", err)
+			return
+		}
+
+		mqMsg := kafka.Message{
+			Value: packByte,
+		}
+		err = l.svcCtx.MsgDBSaver.WriteMessages(l.ctx, mqMsg)
+		if err != nil {
+			logx.Error("[sendTimelineToDB] Push message to DBSaver MQ failed, error: ", err)
+		}
+
 	case constant.BIG_GROUP_CHAT:
 	case constant.SYSTEM_INFO:
 	default:
