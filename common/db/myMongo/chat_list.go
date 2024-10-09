@@ -13,10 +13,11 @@ import (
 
 type ChatListInfo struct {
 	SenderID  uint32 `json:"senderID"`
+	GroupID   uint32 `json:"groupID,omitempty"`
 	RecentMsg string `json:"recentMsg"`
 }
 
-func (db *DB) GetRecentChatList(ctx context.Context, id uint32, maxLength int, latest time.Time) ([]ChatListInfo, error) {
+func (db *DB) GetRecentChatList(ctx context.Context, id uint32, latest time.Time) ([]ChatListInfo, error) {
 	// 初始化聚合管道
 	filter := mongo.Pipeline{}
 
@@ -77,23 +78,27 @@ func (db *DB) GetRecentChatList(ctx context.Context, id uint32, maxLength int, l
 
 	// 遍历查询结果，处理消息
 	for _, timeline := range timelines {
-		chatList = append(chatList, ChatListInfo{
-			SenderID:  timeline.SenderID,
-			RecentMsg: getMsgPreview(timeline, maxLength),
-		})
+		var chat ChatListInfo
+		chat.SenderID = timeline.SenderID
+		chat.RecentMsg = getMsgPreview(timeline)
+		if timeline.GroupID != 0 {
+			chat.GroupID = timeline.GroupID
+		}
+		chatList = append(chatList, chat)
 	}
 
 	return chatList, nil
 }
 
-func getMsgPreview(msg models.UserTimeline, maxLength int) string {
+func getMsgPreview(msg models.UserTimeline) string {
 	content := msg.Message.Content
 	switch msg.Message.MsgType {
 	case constant.MSG_COMMON_MSG:
-		if len(content) <= maxLength {
+		runes := []rune(content)
+		if len(runes) <= 50 {
 			return content
 		}
-		return content[:maxLength]
+		return string(runes[:50]) + "..."
 	default:
 		return ""
 	}
