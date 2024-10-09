@@ -14,7 +14,8 @@ type TimelineSyncInfo struct {
 }
 
 type TimelineSyncRequest struct {
-	ID string `header:"UserID"`
+	ID        string `header:"UserID"`
+	Timestamp int64  `header:Timestamp` // Unix 时间戳
 }
 
 type TimelineSyncResponse struct {
