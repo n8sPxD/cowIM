@@ -14,8 +14,13 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		[]rest.Route{
 			{
 				Method:  http.MethodGet,
-				Path:    "/chatlist",
-				Handler: chatListHandler(serverCtx),
+				Path:    "/messagerecord",
+				Handler: messageRecordHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/timelinesync",
+				Handler: timelineSyncHandler(serverCtx),
 			},
 		},
 	)

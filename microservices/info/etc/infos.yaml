@@ -2,15 +2,5 @@ Name: infos
 Host: 0.0.0.0
 Port: 20002
 
-Log:
-  Encoding: plain
-  TimeFormat: 2006-01-02 15:04:05
-  Level: debug
-  Stat: false
-
-MySQL:
-  DataSource: root:123456@tcp(127.0.0.1:3306)/im_server_db?charset=utf8mb4&parseTime=True&loc=Local
-
 Mongo:
-  Host: mongodb://127.0.0.1:27017
-
+  Host: "mongodb://127.0.0.1:27017"

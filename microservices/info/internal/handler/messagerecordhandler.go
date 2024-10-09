@@ -9,16 +9,16 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-func chatListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+func messageRecordHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.ChatListRequest
+		var req types.MessageRecordRequest
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
-		l := logic.NewChatListLogic(r.Context(), svcCtx)
-		resp, err := l.ChatList(&req)
+		l := logic.NewMessageRecordLogic(r.Context(), svcCtx)
+		resp, err := l.MessageRecord(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

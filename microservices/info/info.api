@@ -1,27 +1,35 @@
 syntax = "v1"
 
 info (
-	title:  "info"
-	desc:   "用户信息相关服务"
-	author: "n8spxd"
+	title:   "info"
+	desc:    "信息查询相关，例如聊天记录"
+	author:  "n8spxd"
+	version: "v1"
 )
 
 type (
-	ChatListRequest {
-		UserID uint32 `header:"UserID"`
+	TimelineSyncRequest {
+		ID string `header:"UserID"`
 	}
-	ChatListInfo {
-		Username  string `json:"username"`
-		Avatar    string `json:"avatar"`
-		RecentMsg string `json:"recentMsg"`
+	TimelineSyncInfo {
+		SenderID uint32 `json:"senderId"`
+		GroupID  uint32 `json:"groupId,omitempty"`
+		Message  string `json:"message"`
 	}
-	ChatListResponse {
-		List []ChatListInfo `json:"list"`
+	TimelineSyncResponse {
+		Infos []TimelineSyncInfo `json:"infos"`
 	}
+	MessageRecordRequest  {}
+	MessageRecordResponse  {}
 )
 
 service infos {
-	@handler chatList // 对话列表
-	get /chatlist (ChatListRequest) returns (ChatListResponse)
+	// 用户上线，推送新的消息
+	@handler timelineSync
+	get /timelinesync (TimelineSyncRequest) returns (TimelineSyncResponse)
+
+	// 拉取历史所有消息记录
+	@handler messageRecord
+	get /messagerecord (MessageRecordRequest) returns (MessageRecordResponse)
 }
 

@@ -1,15 +1,10 @@
 package config
 
-import (
-	"github.com/zeromicro/go-zero/rest"
-)
+import "github.com/zeromicro/go-zero/rest"
 
 type Config struct {
 	rest.RestConf
 	Mongo struct {
 		Host string
-	}
-	MySQL struct {
-		DataSource string
 	}
 }
