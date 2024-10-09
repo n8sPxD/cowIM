@@ -16,7 +16,7 @@ type (
 		ID uint32 `json:"id"`
 	}
 	LoginRequest {
-		ID       string `json:"id"`
+		ID       uint32 `json:"id"`
 		Password string `json:"password"`
 	}
 	LoginResponse {

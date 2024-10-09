@@ -101,8 +101,17 @@
     document.getElementById('loginForm').onsubmit = function (e) {
         e.preventDefault(); // 阻止表单的默认提交行为
 
-        const id = document.getElementById('id').value;
+        const idInput = document.getElementById('id').value;
         const password = document.getElementById('password').value;
+
+        // 将 CowID 转换为整数
+        const id = Number(idInput);
+
+        // 验证 CowID 是否为有效的 uint32
+        if (!Number.isInteger(id) || id < 0 || id > 4294967295) {
+            alert('请提供一个有效的 CowID（0 到 4294967295 之间的整数）。');
+            return;
+        }
 
         fetch('http://192.168.1.246:8080/login', {
             method: 'POST',

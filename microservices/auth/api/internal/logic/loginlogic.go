@@ -3,7 +3,6 @@ package logic
 import (
 	"context"
 	"errors"
-	"strconv"
 
 	"github.com/n8sPxD/cowIM/common/encrypt"
 	"github.com/n8sPxD/cowIM/common/jwt"
@@ -28,10 +27,9 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 }
 
 func (l *LoginLogic) Login(req *types.LoginRequest) (*types.LoginResponse, error) {
-	id, _ := strconv.Atoi(req.ID)
-	userInfo, err := l.svcCtx.MySQL.GetUserAuthInfo(l.ctx, uint32(id))
+	userInfo, err := l.svcCtx.MySQL.GetUserAuthInfo(l.ctx, req.ID)
 	if err != nil {
-		logx.Infof("User %d login failed, err: %v\n", id, err)
+		logx.Infof("User %d login failed, err: %v\n", req.ID, err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("用户不存在或密码错误")
 		}
@@ -45,12 +43,12 @@ func (l *LoginLogic) Login(req *types.LoginRequest) (*types.LoginResponse, error
 
 	// 生成并分发token
 	token, err := jwt.GenToken(
-		jwt.PayLoad{ID: uint32(id), Username: userInfo.Username},
+		jwt.PayLoad{ID: req.ID, Username: userInfo.Username},
 		l.svcCtx.Config.Auth.AccessSecret,
 		l.svcCtx.Config.Auth.AccessExpire,
 	)
 	if err != nil {
-		logx.Errorf("User %s generate token error, err: %v\n", id, err)
+		logx.Errorf("User %s generate token error, err: %v\n", req.ID, err)
 		return nil, errors.New("登陆失败！请稍后再试")
 	}
 

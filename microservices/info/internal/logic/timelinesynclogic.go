@@ -3,7 +3,6 @@ package logic
 import (
 	"context"
 	"errors"
-	"strconv"
 	"time"
 
 	"github.com/n8sPxD/cowIM/microservices/info/internal/svc"
@@ -27,9 +26,8 @@ func NewTimelineSyncLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Time
 
 // TimelineSync 以用户本地最新消息为起始点，获取服务器中更新的消息
 func (l *TimelineSyncLogic) TimelineSync(req *types.TimelineSyncRequest) (resp *types.TimelineSyncResponse, err error) {
-	id, _ := strconv.Atoi(req.ID)
 	// 获取消息
-	chats, err := l.svcCtx.Mongo.GetRecentChatList(l.ctx, uint32(id), time.Unix(req.Timestamp, 0))
+	chats, err := l.svcCtx.Mongo.GetRecentChatList(l.ctx, req.ID, time.Unix(req.Timestamp, 0))
 	if err != nil {
 		logx.Error("[TimelineSync] Get recent chat from db failed, err: ", err)
 		return nil, errors.New("获取消息失败")
