@@ -16,7 +16,7 @@ type (
 		ID uint32 `json:"id"`
 	}
 	LoginRequest {
-		ID       uint32 `json:"id"`
+		ID       string `json:"id"`
 		Password string `json:"password"`
 	}
 	LoginResponse {
@@ -25,9 +25,11 @@ type (
 )
 
 service auth {
+	// 注册
 	@handler register
 	post /register (RegisterRequest) returns (RegisterResponse)
 
+	// 登陆
 	@handler login
 	post /login (LoginRequest) returns (LoginResponse)
 }

@@ -2,7 +2,7 @@
 package types
 
 type LoginRequest struct {
-	ID       uint32 `json:"id"`
+	ID       string `json:"id"`
 	Password string `json:"password"`
 }
 
