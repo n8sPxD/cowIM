@@ -8,7 +8,7 @@ type User struct {
 	gorm.Model
 	Username   string      `gorm:"size:64"           json:"username"`
 	Avatar     string      `                         json:"avatar"`
-	Password   string      `                         json:"password"`
+	Password   string      `                         json:"-"`
 	UserConfig *UserConfig `gorm:"foreignKey:UserID" json:"UserConfig"`
 }
 
