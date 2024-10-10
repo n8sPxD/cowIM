@@ -23,8 +23,7 @@ func NewGetAvailableWSServerLogic(ctx context.Context, svcCtx *svc.ServiceContex
 	}
 }
 
-func (l *GetAvailableWSServerLogic) GetAvailableWSServer(req *types.WebsocketServerGetRequest) (resp *types.WebsocketServerGetResponse, err error) {
-	// todo: add your logic here and delete this line
-
-	return
+func (l *GetAvailableWSServerLogic) GetAvailableWSServer(req *types.WebsocketServerGetRequest) *types.WebsocketServerGetResponse {
+	// 直接从etcd获取服务器ip返回
+	return &types.WebsocketServerGetResponse{IP: l.svcCtx.DiscoveryHub.GetServiceEndpoint(l.ctx)}
 }
