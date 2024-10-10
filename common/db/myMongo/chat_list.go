@@ -38,7 +38,7 @@ func (db *DB) GetRecentChatList(ctx context.Context, id uint32, latest time.Time
 	if latest != time.Unix(0, 0) {
 		timestampMatch := bson.D{
 			{"$match", bson.D{
-				{"timestamp", bson.D{{"$gte", latest}}},
+				{"timestamp", bson.D{{"$gt", latest}}},
 			}},
 		}
 		filter = append(filter, timestampMatch)
