@@ -134,8 +134,7 @@
             request.onsuccess = function(event) {
                 const cursor = event.target.result;
                 if (cursor) {
-                    // 获取时间戳，确保它是秒级别的 Unix 时间戳并转换为整数（int64）
-                    const timestamp = Math.floor(new Date(cursor.value.timestamp).getTime() / 1000);
+                    const timestamp = Math.floor(new Date(cursor.value.timestamp).getTime());
                     resolve(timestamp);
                 } else {
                     resolve(0); // 如果没有消息，则返回 0
