@@ -1,0 +1,29 @@
+syntax = "v1"
+
+info (
+	title:   "user"
+	desc:    "用户相关表，例如用户设置、好友"
+	author:  "n8spxd"
+	version: "v1"
+)
+
+type (
+	AddFriendRequest {
+		UserID   uint32 `json:"UserID"`
+		FriendID uint32 `json:"friendId"`
+	}
+	AddFriendResponse  {}
+	GetFriendsRequest {
+		UserID uint32 `json:"UserID"`
+	}
+	GetFriendsResponse  {}
+)
+
+service user {
+	@handler addFriends
+	post /friends (AddFriendRequest) returns (AddFriendResponse)
+
+	@handler getFriends
+	get /friends (GetFriendsRequest) returns (GetFriendsResponse)
+}
+
