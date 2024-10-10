@@ -150,7 +150,11 @@
         const uniqueConversations = {}; // 存储唯一会话
         const myId = Number(localStorage.getItem('cowId')); // 当前用户 ID
 
-        messages.forEach(message => {
+        // 过滤出当前用户参与的消息（sender 或 receiver 为当前用户）
+        const filteredMessages = messages.filter(message => message.senderId === myId || message.receiverId === myId);
+
+        // 根据会话 ID 进行归类
+        filteredMessages.forEach(message => {
             const conversationId = generateConversationId(message.senderId, message.receiverId, myId);
 
             if (!uniqueConversations[conversationId]) {
@@ -164,11 +168,11 @@
 
         for (const conversationId in uniqueConversations) {
             const firstMessage = uniqueConversations[conversationId][0];
-            const contactDiv = document.createElement("div");
-            contactDiv.className = "contact";
 
             // 找到联系人 ID（senderId 和 receiverId 中不是当前用户的那个）
             const contactId = firstMessage.senderId === myId ? firstMessage.receiverId : firstMessage.senderId;
+            const contactDiv = document.createElement("div");
+            contactDiv.className = "contact";
             contactDiv.textContent = `联系人ID: ${contactId}`;
 
             // 点击联系人，显示该会话的消息
@@ -249,6 +253,7 @@
         document.removeEventListener('mouseup', stopMessageResize);
     }
 </script>
+
 
 </body>
 </html>
