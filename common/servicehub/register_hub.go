@@ -88,3 +88,7 @@ func (hub *RegisterHub) Unregister(ctx context.Context, service string, endpoint
 		return nil
 	}
 }
+
+func (hub *RegisterHub) Close() {
+	hub.client.Close()
+}
