@@ -9,9 +9,16 @@ type AddFriendRequest struct {
 type AddFriendResponse struct {
 }
 
+type FriendInfo struct {
+	FriendID uint32 `json:"friendId"`
+	Username uint32 `json:"username"`
+	Avatar   string `json:"avatar"`
+}
+
 type GetFriendsRequest struct {
 	UserID uint32 `json:"UserID"`
 }
 
 type GetFriendsResponse struct {
+	Friends []FriendInfo `json:"friends"`
 }

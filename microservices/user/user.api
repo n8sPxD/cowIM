@@ -16,7 +16,14 @@ type (
 	GetFriendsRequest {
 		UserID uint32 `json:"UserID"`
 	}
-	GetFriendsResponse  {}
+	FriendInfo {
+		FriendID uint32 `json:"friendId"`
+		Username uint32 `json:"username"`
+		Avatar   string `json:"avatar"`
+	}
+	GetFriendsResponse {
+		Friends []FriendInfo `json:"friends"`
+	}
 )
 
 service user {
