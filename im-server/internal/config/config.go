@@ -23,4 +23,7 @@ type Config struct {
 		Topic   string
 	}
 	RedisConf redis.RedisConf
+	Etcd      struct {
+		Hosts []string
+	}
 }

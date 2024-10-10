@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/n8sPxD/cowIM/common/db/myRedis"
+	"github.com/n8sPxD/cowIM/common/servicehub"
 	"github.com/n8sPxD/cowIM/im-server/internal/config"
 	"github.com/n8sPxD/cowIM/im-server/internal/server/manager"
 	"github.com/n8sPxD/cowIM/microservices/auth/rpc/auth"
@@ -19,6 +20,7 @@ type ServiceContext struct {
 	ConnectionManager *manager.ConnectionManager
 	MsgForwarder      *kafka.Writer
 	Redis             *myRedis.DB
+	RegisterHub       *servicehub.RegisterHub
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -35,6 +37,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			Async:        true,                  // 启用异步写入
 			MaxAttempts:  1,                     // 限制重试次数
 		},
-		Redis: myRedis.MustNewRedis(c.RedisConf),
+		Redis:       myRedis.MustNewRedis(c.RedisConf),
+		RegisterHub: servicehub.NewRegisterHub(c.Etcd.Hosts, 3),
 	}
 }
