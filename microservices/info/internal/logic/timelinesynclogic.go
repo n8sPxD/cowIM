@@ -26,7 +26,7 @@ func NewTimelineSyncLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Time
 
 type TimelineSyncInfo struct {
 	SenderID   uint32    `json:"senderId"`
-	ReceiverID uint32    `json:"receiverID"`
+	ReceiverID uint32    `json:"receiverId"`
 	GroupID    uint32    `json:"groupId,omitempty"`
 	Message    string    `json:"message"`
 	Timestamp  time.Time `json:"timestamp"`

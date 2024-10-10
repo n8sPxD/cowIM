@@ -106,6 +106,7 @@
                 if (!db.objectStoreNames.contains('messages')) {
                     const objectStore = db.createObjectStore('messages', { keyPath: 'id', autoIncrement: true });
                     objectStore.createIndex('senderId', 'senderId', { unique: false });
+                    objectStore.createIndex('receiverId', 'receiverId', { unique: false });
                     objectStore.createIndex('groupId', 'groupId', { unique: false });
                     objectStore.createIndex('timestamp', 'timestamp', { unique: false });
                 }

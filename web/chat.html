@@ -147,34 +147,46 @@
 
     function displayContacts(messages) {
         const conversationList = document.getElementById("conversationList");
-        const uniqueSenders = {};
+        const uniqueConversations = {}; // 存储唯一会话
+        const myId = Number(localStorage.getItem('cowId')); // 当前用户 ID
 
         messages.forEach(message => {
-            if (!uniqueSenders[message.senderId]) {
-                uniqueSenders[message.senderId] = [];
+            const conversationId = generateConversationId(message.senderId, message.receiverId, myId);
+
+            if (!uniqueConversations[conversationId]) {
+                uniqueConversations[conversationId] = [];
             }
-            uniqueSenders[message.senderId].push(message);
+            uniqueConversations[conversationId].push(message);
         });
 
-        for (const senderId in uniqueSenders) {
+        // 清空当前的联系人列表
+        conversationList.innerHTML = '';
+
+        for (const conversationId in uniqueConversations) {
+            const firstMessage = uniqueConversations[conversationId][0];
             const contactDiv = document.createElement("div");
             contactDiv.className = "contact";
-            contactDiv.textContent = `联系人ID: ${senderId}`;
-            contactDiv.onclick = () => displayMessages(uniqueSenders[senderId]);
+
+            // 找到联系人 ID（senderId 和 receiverId 中不是当前用户的那个）
+            const contactId = firstMessage.senderId === myId ? firstMessage.receiverId : firstMessage.senderId;
+            contactDiv.textContent = `联系人ID: ${contactId}`;
+
+            // 点击联系人，显示该会话的消息
+            contactDiv.onclick = () => displayMessages(uniqueConversations[conversationId], contactId);
 
             conversationList.appendChild(contactDiv);
         }
     }
 
-    // 在聊天页面中使用 CowID 判断消息位置
-    function displayMessages(messages) {
+    // 在聊天页面中使用 CowID 判断消息位置，并显示消息内容
+    function displayMessages(messages, contactId) {
         const chatHeader = document.getElementById("chatHeader");
         const chatHistory = document.getElementById("chatHistory");
 
-        chatHeader.innerHTML = `<p>联系人ID: ${messages[0].senderId}</p>`;
+        chatHeader.innerHTML = `<p>联系人ID: ${contactId}</p>`;
         chatHistory.innerHTML = "";
 
-        const myId = Number(localStorage.getItem('cowId')); // 从 localStorage 获取 CowID
+        const myId = Number(localStorage.getItem('cowId')); // 当前用户 ID
 
         messages.forEach(message => {
             const messageDiv = document.createElement("div");
@@ -184,6 +196,11 @@
         });
     }
 
+    // 生成会话 ID，确保 senderId 和 receiverId 的顺序不影响会话归类
+    function generateConversationId(senderId, receiverId, myId) {
+        const sortedIds = [senderId, receiverId].sort((a, b) => a - b);
+        return `${sortedIds[0]}_${sortedIds[1]}`;
+    }
 
     // 对话列表拉伸代码保持不变
     const conversationList = document.querySelector('.conversation-list');
@@ -232,5 +249,6 @@
         document.removeEventListener('mouseup', stopMessageResize);
     }
 </script>
+
 </body>
 </html>

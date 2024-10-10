@@ -68,6 +68,7 @@ func (db *DB) GetRecentChatList(ctx context.Context, id uint32, latest time.Time
 	for _, timeline := range timelines {
 		var chat ChatListInfo
 		chat.SenderID = timeline.SenderID
+		chat.ReceiverID = timeline.ReceiverID
 		chat.RecentMsg = getMsgPreview(timeline)
 		chat.GroupID = timeline.GroupID // GroupID默认值为0
 		chat.Timestamp = timeline.Timestamp
