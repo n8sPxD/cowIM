@@ -78,30 +78,32 @@
         .message-input {
             height: 100px;
             position: relative;
-            background-color: transparent;
+            background-color: #f1f1f1;
             padding: 10px;
-        }
-
-        .message-input-resizer {
-            position: absolute;
-            top: -5px;
-            left: 0;
-            right: 0;
-            height: 10px;
-            cursor: ns-resize;
-            background-color: transparent;
+            display: flex;
+            align-items: center;
         }
 
         .message-input textarea {
-            width: 100%;
-            height: 100%;
+            flex: 1;
+            height: 80px;
             padding: 10px;
-            border: none;
-            outline: none;
+            border: 1px solid #ccc;
+            border-radius: 4px;
             resize: none;
-            background-color: transparent;
             font-size: 16px;
             line-height: 1.5;
+        }
+
+        .send-button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
         }
 
         .contact {
@@ -114,6 +116,8 @@
             background-color: #f0f0f0;
         }
     </style>
+    <!-- 引入 protobuf.js 库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/protobufjs/7.2.3/protobuf.min.js"></script>
 </head>
 <body>
 <div class="container">
@@ -132,8 +136,8 @@
             <p>聊天记录</p>
         </div>
         <div class="message-input">
-            <div class="message-input-resizer"></div>
-            <textarea placeholder="输入消息..."></textarea>
+            <textarea id="messageInput" placeholder="输入消息..."></textarea>
+            <button class="send-button" id="sendButton">发送</button>
         </div>
     </div>
 </div>
@@ -141,6 +145,16 @@
 <script>
     // 全局 WebSocket 变量，用于在页面关闭时断开连接
     let socket;
+
+    // 定义 Protobuf 消息结构
+    let MessageProto;
+    protobuf.load("./message.proto")
+        .then(root => {
+            MessageProto = root.lookupType("Message");
+        })
+        .catch(err => {
+            console.error("Failed to load protobuf schema:", err);
+        });
 
     // 设置 WebSocket 连接函数
     function setupWebSocket() {
@@ -172,14 +186,24 @@
                         }
                     }, 5000); // 5秒超时
 
+                    socket.binaryType = "arraybuffer"; // 设置二进制类型为 ArrayBuffer
+
                     socket.onopen = () => {
                         clearTimeout(connectionTimeout); // 连接成功，清除超时计时器
                         console.log('WebSocket connection established to:', wsUrl);
                     };
 
                     socket.onmessage = (event) => {
-                        console.log('Received message:', event.data);
-                        // 在这里处理收到的消息
+                        if (typeof event.data === 'string') {
+                            console.log('Received text message:', event.data);
+                            // 处理文本消息（如果有的话）
+                        } else {
+                            // 处理二进制消息
+                            const receivedMessage = MessageProto.decode(new Uint8Array(event.data));
+                            console.log('Received binary message:', receivedMessage);
+                            // 在这里处理收到的消息，例如更新聊天记录
+                            appendMessage(receivedMessage);
+                        }
                     };
 
                     socket.onclose = () => {
@@ -276,6 +300,9 @@
             messageDiv.textContent = message.message;
             chatHistory.appendChild(messageDiv);
         });
+
+        // 保存当前选中的联系人ID，用于发送消息
+        chatHistory.dataset.currentContactId = contactId;
     }
 
     function generateConversationId(senderId, receiverId, myId) {
@@ -343,6 +370,102 @@
     document.getElementById('recentButton').onclick = function() {
         displayContacts(originalMessages);
     };
+
+    // 发送消息功能
+    document.getElementById('sendButton').onclick = sendMessage;
+
+    // 监听回车键发送消息
+    document.getElementById('messageInput').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // 阻止换行
+            sendMessage();
+        }
+    });
+
+    const CHAT_TYPE = {
+        SINGLE_CHAT: 0,
+        GROUP_CHAT: 1,
+        BIG_GROUP_CHAT: 2,
+        SYSTEM_INFO: 99
+    };
+
+    function sendMessage() {
+        const messageInput = document.getElementById('messageInput');
+        const content = messageInput.value.trim();
+        if (content === "") {
+            return; // 不发送空消息
+        }
+
+        const chatHistory = document.getElementById("chatHistory");
+        const contactId = chatHistory.dataset.currentContactId;
+        if (!contactId) {
+            alert("请选择一个联系人进行聊天");
+            return;
+        }
+
+        const myId = Number(localStorage.getItem('cowId'));
+        const currentTime = Date.now();
+
+        // 判断是单聊还是群聊
+        const chatType = determineChatType(contactId);
+
+        // 构建消息对象
+        const messagePayload = {
+            from: myId,
+            to: Number(contactId),
+            content: content,
+            type: chatType, // 使用常量代替魔法值
+            msg_type: 1, // 假设 1 代表直接聊天，需根据实际情况调整
+            time: currentTime
+        };
+
+        // 验证消息负载是否符合定义
+        const errMsg = MessageProto.verify(messagePayload);
+        if (errMsg) {
+            throw Error(errMsg);
+        }
+
+        // 创建消息实例
+        const message = MessageProto.create(messagePayload);
+
+        // 编码消息为二进制
+        const buffer = MessageProto.encode(message).finish();
+
+        // 发送消息通过 WebSocket
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(buffer);
+            console.log('Sent message:', messagePayload);
+
+            // 本地显示发送的消息
+            appendMessage(messagePayload, true);
+
+            // 清空输入框
+            messageInput.value = '';
+        } else {
+            alert('WebSocket 连接未建立，请稍后再试');
+        }
+    }
+
+    // 判断聊天类型的函数
+    function determineChatType(contactId) {
+        // 根据 contactId 判断是单聊还是群聊
+        // 这里假设 contactId 为群聊时为负值，需根据实际情况调整
+        return contactId < 0 ? CHAT_TYPE.GROUP_CHAT : CHAT_TYPE.SINGLE_CHAT;
+    }
+
+
+    // 在聊天记录中追加消息
+    function appendMessage(message, isOwnMessage = false) {
+        const chatHistory = document.getElementById("chatHistory");
+
+        const messageDiv = document.createElement("div");
+        messageDiv.style.textAlign = isOwnMessage ? "right" : "left";
+        messageDiv.textContent = message.content;
+        chatHistory.appendChild(messageDiv);
+
+        // 自动滚动到最新消息
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
 </script>
 
 </body>
