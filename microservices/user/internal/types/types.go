@@ -11,7 +11,7 @@ type AddFriendResponse struct {
 
 type FriendInfo struct {
 	FriendID uint32 `json:"friendId"`
-	Username uint32 `json:"username"`
+	Username string `json:"username"`
 	Avatar   string `json:"avatar"`
 }
 
