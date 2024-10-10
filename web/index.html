@@ -239,45 +239,6 @@
                 alert(error.message || '请求失败，请稍后再试');
             });
     };
-
-    // 示例：在页面加载时自动使用存储的 JWT 令牌进行 timelinesync 请求
-    window.onload = function() {
-        const token = localStorage.getItem('jwtToken');
-        if (token) {
-            openDatabase().then(db => {
-                return getLatestTimestamp(db).then(latestTimestamp => {
-                    db.close();
-                    const url = new URL('http://localhost:8080/timelinesync');
-                    url.searchParams.append('timestamp', latestTimestamp);
-
-                    return fetch(url, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                });
-            })
-                .then(response => response.json())
-                .then(timelineData => {
-                    console.log("infos: ", timelineData.infos);
-                    if (timelineData.infos && Array.isArray(timelineData.infos)) {
-                        return openDatabase().then(db => {
-                            return storeMessages(db, timelineData.infos).then(() => {
-                                db.close();
-                            });
-                        });
-                    } else {
-                        throw new Error('获取到的消息格式不正确');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    localStorage.removeItem('jwtToken');
-                    alert('会话已过期，请重新登录。');
-                });
-        }
-    };
 </script>
 
 </body>
