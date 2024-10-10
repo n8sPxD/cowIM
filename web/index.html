@@ -123,7 +123,7 @@
         });
     }
 
-    // 获取最新的消息的 timestamp
+    // 获取最新的消息的 timestamp 并确保是以秒为单位的 Unix 时间戳
     function getLatestTimestamp(db) {
         return new Promise((resolve, reject) => {
             const transaction = db.transaction(['messages'], 'readonly');
@@ -134,9 +134,11 @@
             request.onsuccess = function(event) {
                 const cursor = event.target.result;
                 if (cursor) {
-                    resolve(cursor.value.timestamp.getTime() / 1000);
+                    // 获取时间戳，确保它是秒级别的 Unix 时间戳并转换为整数（int64）
+                    const timestamp = Math.floor(new Date(cursor.value.timestamp).getTime() / 1000);
+                    resolve(timestamp);
                 } else {
-                    resolve(0);
+                    resolve(0); // 如果没有消息，则返回 0
                 }
             };
 
@@ -153,7 +155,7 @@
             const store = transaction.objectStore('messages');
 
             messages.forEach(msg => {
-                msg.timestamp = new Date(msg.timestamp);
+                msg.timestamp = new Date(msg.timestamp); // 确保将消息的 timestamp 转换为 Date 对象
                 store.add(msg);
             });
 
@@ -204,7 +206,11 @@
                     return openDatabase().then(db => {
                         return getLatestTimestamp(db).then(latestTimestamp => {
                             db.close();
+
+                            // 构建带有查询参数的 URL
                             const url = new URL('http://localhost:8080/timelinesync');
+                            console.log("timestamp: ", latestTimestamp)
+
                             url.searchParams.append('timestamp', latestTimestamp);
 
                             return fetch(url, {
