@@ -1,0 +1,22 @@
+syntax = "v1"
+
+info (
+	title:   "wsget"
+	desc:    "获取可用ws服务器地址"
+	author:  "n8spxd"
+	version: "v1"
+)
+
+type WebsocketServerGetRequest {
+	UserID uint32 `header:"UserID"`
+}
+
+type WebsocketServerGetResponse {
+	IP string `json:"ip"`
+}
+
+service wsget {
+	@handler getAvailableWSServer
+	get /ws (WebsocketServerGetRequest) returns (WebsocketServerGetResponse)
+}
+
