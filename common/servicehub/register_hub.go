@@ -19,15 +19,15 @@ type RegisterHub struct {
 }
 
 var (
-	serviceHub *RegisterHub
-	hubOnce    sync.Once
+	registerHub *RegisterHub
+	hubOnce     sync.Once
 )
 
 const KEY_PREFIX = "ws.server"
 
 // NewRegisterHub 单例模式创建一个RegisterHub
 func NewRegisterHub(etcdServers []string, heartbeatFrequency int64) *RegisterHub {
-	if serviceHub == nil {
+	if registerHub == nil {
 		hubOnce.Do(func() {
 			if client, err := clientv3.New(
 				clientv3.Config{
@@ -36,14 +36,14 @@ func NewRegisterHub(etcdServers []string, heartbeatFrequency int64) *RegisterHub
 				}); err != nil {
 				logx.Error("[GetRegisterHub] Connect to etcd failed, error: ", err)
 			} else {
-				serviceHub = &RegisterHub{
+				registerHub = &RegisterHub{
 					client:             client,
 					heartbeatFrequency: heartbeatFrequency,
 				}
 			}
 		})
 	}
-	return serviceHub
+	return registerHub
 }
 
 // Register 注册加续租
