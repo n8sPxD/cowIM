@@ -11,7 +11,7 @@ func (db *DB) InsertFriend(ctx context.Context, userID, friendID uint32) error {
 		UserID:   userID,
 		FriendID: friendID,
 	}
-	return db.client.WithContext(ctx).Create(relation).Error
+	return db.client.WithContext(ctx).Create(&relation).Error
 }
 
 func (db *DB) GetFriends(ctx context.Context, userID uint32) ([]models.User, error) {
