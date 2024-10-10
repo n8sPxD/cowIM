@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>即时通讯系统</title>
     <style>
-        /* 样式保持不变 */
         * {
             margin: 0;
             padding: 0;
@@ -29,22 +28,29 @@
             position: relative;
         }
 
+        .sidebar {
+            width: 50px;
+            border-right: 1px solid #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 10px;
+        }
+
+        .sidebar button {
+            margin-bottom: 10px;
+            padding: 5px;
+            cursor: pointer;
+        }
+
         .conversation-list {
             width: 200px;
             border-right: 1px solid #000;
             padding: 10px;
             position: relative;
             overflow: auto;
-        }
-
-        .conversation-list::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 10px;
-            height: 100%;
-            cursor: ew-resize;
+            transition: width 0.3s;
         }
 
         .chat-section {
@@ -111,6 +117,10 @@
 </head>
 <body>
 <div class="container">
+    <div class="sidebar">
+        <button id="recentButton">最近会话</button>
+        <button id="friendsButton">好友</button>
+    </div>
     <div class="conversation-list" id="conversationList">
         <p>会话列表</p>
     </div>
@@ -129,7 +139,8 @@
 </div>
 
 <script>
-    // IndexedDB 相关代码
+    let originalMessages = [];
+
     const request = indexedDB.open("CowIMDB", 1);
 
     request.onsuccess = function(event) {
@@ -141,19 +152,18 @@
 
         request.onsuccess = function(event) {
             const messages = event.target.result;
+            originalMessages = messages;  // 保存原始的会话列表消息
             displayContacts(messages);
         };
     };
 
     function displayContacts(messages) {
         const conversationList = document.getElementById("conversationList");
-        const uniqueConversations = {}; // 存储唯一会话
-        const myId = Number(localStorage.getItem('cowId')); // 当前用户 ID
+        const uniqueConversations = {};
+        const myId = Number(localStorage.getItem('cowId'));
 
-        // 过滤出当前用户参与的消息（sender 或 receiver 为当前用户）
         const filteredMessages = messages.filter(message => message.senderId === myId || message.receiverId === myId);
 
-        // 根据会话 ID 进行归类
         filteredMessages.forEach(message => {
             const conversationId = generateConversationId(message.senderId, message.receiverId, myId);
 
@@ -163,26 +173,21 @@
             uniqueConversations[conversationId].push(message);
         });
 
-        // 清空当前的联系人列表
         conversationList.innerHTML = '';
 
         for (const conversationId in uniqueConversations) {
             const firstMessage = uniqueConversations[conversationId][0];
-
-            // 找到联系人 ID（senderId 和 receiverId 中不是当前用户的那个）
             const contactId = firstMessage.senderId === myId ? firstMessage.receiverId : firstMessage.senderId;
             const contactDiv = document.createElement("div");
             contactDiv.className = "contact";
             contactDiv.textContent = `联系人ID: ${contactId}`;
 
-            // 点击联系人，显示该会话的消息
             contactDiv.onclick = () => displayMessages(uniqueConversations[conversationId], contactId);
 
             conversationList.appendChild(contactDiv);
         }
     }
 
-    // 在聊天页面中使用 CowID 判断消息位置，并显示消息内容
     function displayMessages(messages, contactId) {
         const chatHeader = document.getElementById("chatHeader");
         const chatHistory = document.getElementById("chatHistory");
@@ -190,7 +195,7 @@
         chatHeader.innerHTML = `<p>联系人ID: ${contactId}</p>`;
         chatHistory.innerHTML = "";
 
-        const myId = Number(localStorage.getItem('cowId')); // 当前用户 ID
+        const myId = Number(localStorage.getItem('cowId'));
 
         messages.forEach(message => {
             const messageDiv = document.createElement("div");
@@ -200,60 +205,72 @@
         });
     }
 
-    // 生成会话 ID，确保 senderId 和 receiverId 的顺序不影响会话归类
     function generateConversationId(senderId, receiverId, myId) {
         const sortedIds = [senderId, receiverId].sort((a, b) => a - b);
         return `${sortedIds[0]}_${sortedIds[1]}`;
     }
 
-    // 对话列表拉伸代码保持不变
-    const conversationList = document.querySelector('.conversation-list');
+    document.getElementById('friendsButton').onclick = function() {
+        const jwtToken = localStorage.getItem('jwtToken');
 
-    conversationList.addEventListener('mousedown', function(e) {
-        if (e.offsetX > conversationList.clientWidth - 10) {
-            document.addEventListener('mousemove', resizeConversationList);
-            document.addEventListener('mouseup', stopResize);
-        }
-    });
+        fetch('http://localhost:8080/friends', {
+            method: 'GET',
+            headers: {
+                'Authorization': jwtToken,
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 0) {
+                    displayFriends(data.content.friends);
+                } else {
+                    console.error('Failed to fetch friends list');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    };
 
-    function resizeConversationList(e) {
-        const newWidth = e.clientX - conversationList.getBoundingClientRect().left;
-        conversationList.style.width = `${newWidth}px`;
+    function displayFriends(friends) {
+        const conversationList = document.getElementById("conversationList");
+        conversationList.innerHTML = '';
+
+        friends.forEach(friend => {
+            const friendDiv = document.createElement("div");
+            friendDiv.className = "contact";
+            friendDiv.textContent = `用户名: ${friend.username} (ID: ${friend.friendId})`;
+
+            friendDiv.onclick = () => displayMessagesFromLocal(friend.friendId);
+
+            conversationList.appendChild(friendDiv);
+        });
     }
 
-    function stopResize() {
-        document.removeEventListener('mousemove', resizeConversationList);
-        document.removeEventListener('mouseup', stopResize);
+    function displayMessagesFromLocal(contactId) {
+        const request = indexedDB.open("CowIMDB", 1);
+
+        request.onsuccess = function(event) {
+            const db = event.target.result;
+            const transaction = db.transaction("messages", "readonly");
+            const objectStore = transaction.objectStore("messages");
+
+            const request = objectStore.getAll();
+
+            request.onsuccess = function(event) {
+                const messages = event.target.result.filter(message =>
+                    (message.senderId === contactId || message.receiverId === contactId) &&
+                    (message.senderId === Number(localStorage.getItem('cowId')) || message.receiverId === Number(localStorage.getItem('cowId')))
+                );
+                displayMessages(messages, contactId);
+            };
+        };
     }
 
-    // 消息输入框的拉伸代码保持不变
-    const messageInput = document.querySelector('.message-input');
-    const messageInputResizer = document.querySelector('.message-input-resizer');
-
-    let initialMouseY = 0;
-    let initialHeight = 0;
-
-    messageInputResizer.addEventListener('mousedown', function(e) {
-        initialMouseY = e.clientY;
-        initialHeight = messageInput.offsetHeight;
-        document.addEventListener('mousemove', resizeMessageInput);
-        document.addEventListener('mouseup', stopMessageResize);
-    });
-
-    function resizeMessageInput(e) {
-        const deltaY = initialMouseY - e.clientY;
-        const newHeight = initialHeight + deltaY;
-        if (newHeight > 50) {
-            messageInput.style.height = `${newHeight}px`;
-        }
-    }
-
-    function stopMessageResize() {
-        document.removeEventListener('mousemove', resizeMessageInput);
-        document.removeEventListener('mouseup', stopMessageResize);
-    }
+    // 新增的“最近会话”按钮功能
+    document.getElementById('recentButton').onclick = function() {
+        displayContacts(originalMessages);
+    };
 </script>
-
 
 </body>
 </html>
