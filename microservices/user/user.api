@@ -9,12 +9,12 @@ info (
 
 type (
 	AddFriendRequest {
-		UserID   uint32 `json:"UserID"`
+		UserID   uint32 `header:"UserID"`
 		FriendID uint32 `json:"friendId"`
 	}
 	AddFriendResponse  {}
 	GetFriendsRequest {
-		UserID uint32 `json:"UserID"`
+		UserID uint32 `header:"UserID"`
 	}
 	FriendInfo {
 		FriendID uint32 `json:"friendId"`

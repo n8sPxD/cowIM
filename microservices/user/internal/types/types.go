@@ -2,7 +2,7 @@
 package types
 
 type AddFriendRequest struct {
-	UserID   uint32 `json:"UserID"`
+	UserID   uint32 `header:"UserID"`
 	FriendID uint32 `json:"friendId"`
 }
 
@@ -16,7 +16,7 @@ type FriendInfo struct {
 }
 
 type GetFriendsRequest struct {
-	UserID uint32 `json:"UserID"`
+	UserID uint32 `header:"UserID"`
 }
 
 type GetFriendsResponse struct {
