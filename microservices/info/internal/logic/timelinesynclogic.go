@@ -25,10 +25,11 @@ func NewTimelineSyncLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Time
 }
 
 type TimelineSyncInfo struct {
-	SenderID  uint32    `json:"senderId"`
-	GroupID   uint32    `json:"groupId,omitempty"`
-	Message   string    `json:"message"`
-	Timestamp time.Time `json:"timestamp"`
+	SenderID   uint32    `json:"senderId"`
+	ReceiverID uint32    `json:"receiverID"`
+	GroupID    uint32    `json:"groupId,omitempty"`
+	Message    string    `json:"message"`
+	Timestamp  time.Time `json:"timestamp"`
 }
 
 type TimelineSyncResponse struct {
@@ -52,6 +53,7 @@ func (l *TimelineSyncLogic) TimelineSync(req *types.TimelineSyncRequest) (resp *
 		var info TimelineSyncInfo
 		info.Message = chat.RecentMsg
 		info.SenderID = chat.SenderID
+		info.ReceiverID = chat.ReceiverID
 		info.GroupID = chat.GroupID
 		info.Timestamp = chat.Timestamp
 		infos[i] = info

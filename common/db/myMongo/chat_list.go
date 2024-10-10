@@ -12,20 +12,24 @@ import (
 )
 
 type ChatListInfo struct {
-	SenderID  uint32    `json:"senderID"`
-	GroupID   uint32    `json:"groupID,omitempty"`
-	RecentMsg string    `json:"recentMsg"`
-	Timestamp time.Time `json:"timestamp"`
+	SenderID   uint32    `json:"senderID"`
+	ReceiverID uint32    `json:"receiverID"`
+	GroupID    uint32    `json:"groupID,omitempty"`
+	RecentMsg  string    `json:"recentMsg"`
+	Timestamp  time.Time `json:"timestamp"`
 }
 
 func (db *DB) GetRecentChatList(ctx context.Context, id uint32, latest time.Time) ([]ChatListInfo, error) {
 	// 初始化聚合管道
 	filter := mongo.Pipeline{}
 
-	// 首先，根据用户 ID 过滤文档
+	// 构造 $or 逻辑，匹配 receiver_id 或 sender_id
 	matchStage := bson.D{
 		{"$match", bson.D{
-			{"receiver_id", id},
+			{"$or", bson.A{
+				bson.D{{"receiver_id", id}},
+				bson.D{{"sender_id", id}},
+			}},
 		}},
 	}
 	filter = append(filter, matchStage)
@@ -47,23 +51,6 @@ func (db *DB) GetRecentChatList(ctx context.Context, id uint32, latest time.Time
 		}},
 	}
 	filter = append(filter, sortStage)
-
-	// 按照 id 分组，并获取每组的最新记录
-	groupStage := bson.D{
-		{"$group", bson.D{
-			{"_id", "$id"}, // 按照 id 字段分组
-			{"latestRecord", bson.D{{"$first", "$$ROOT"}}}, // 获取每组最新的记录
-		}},
-	}
-	filter = append(filter, groupStage)
-
-	// 将嵌套文档替换为根文档
-	replaceRootStage := bson.D{
-		{"$replaceRoot", bson.D{
-			{"newRoot", "$latestRecord"},
-		}},
-	}
-	filter = append(filter, replaceRootStage)
 
 	// 定义结果 slice
 	var timelines []models.UserTimeline
