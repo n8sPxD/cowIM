@@ -3,6 +3,8 @@ package servicehub
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/n8sPxD/cowIM/common/lb"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -10,8 +12,34 @@ import (
 )
 
 type DiscoveryHub struct {
-	client       clientv3.Client
+	client       *clientv3.Client
 	loadBalancer lb.LoadBalancer
+}
+
+var (
+	discoveryHub  *DiscoveryHub
+	discoveryOnce sync.Once
+)
+
+// NewDiscoveryHub 单例模式创建一个DiscoveryHub
+func NewDiscoveryHub(etcdServers []string, heartbeatFrequency int64) *DiscoveryHub {
+	if discoveryHub == nil {
+		discoveryOnce.Do(func() {
+			if client, err := clientv3.New(
+				clientv3.Config{
+					Endpoints:   etcdServers,
+					DialTimeout: 3 * time.Second,
+				}); err != nil {
+				logx.Error("[GetDiscoveryHub] Connect to etcd failed, error: ", err)
+			} else {
+				discoveryHub = &DiscoveryHub{
+					client:       client,
+					loadBalancer: lb.NewLoadBalancer(lb.ROUNDROBIN),
+				}
+			}
+		})
+	}
+	return discoveryHub
 }
 
 func (hub *DiscoveryHub) GetServiceEndpoints(ctx context.Context) []string {

@@ -19,8 +19,8 @@ type RegisterHub struct {
 }
 
 var (
-	registerHub *RegisterHub
-	hubOnce     sync.Once
+	registerHub  *RegisterHub
+	registerOnce sync.Once
 )
 
 const KEY_PREFIX = "ws.server"
@@ -28,7 +28,7 @@ const KEY_PREFIX = "ws.server"
 // NewRegisterHub 单例模式创建一个RegisterHub
 func NewRegisterHub(etcdServers []string, heartbeatFrequency int64) *RegisterHub {
 	if registerHub == nil {
-		hubOnce.Do(func() {
+		registerOnce.Do(func() {
 			if client, err := clientv3.New(
 				clientv3.Config{
 					Endpoints:   etcdServers,
