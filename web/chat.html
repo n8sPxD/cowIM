@@ -439,12 +439,75 @@
             // 本地显示发送的消息
             appendMessage(messagePayload, true);
 
+            // 将消息存储到 IndexedDB
+            saveMessageToDB({
+                senderId: myId,
+                receiverId: Number(contactId),
+                content: content,
+                timestamp: currentTime
+            });
+
             // 清空输入框
             messageInput.value = '';
         } else {
             alert('WebSocket 连接未建立，请稍后再试');
         }
     }
+
+    function openDatabase() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open('CowIMDB', 1);
+
+            request.onupgradeneeded = function(event) {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains('messages')) {
+                    const objectStore = db.createObjectStore('messages', { keyPath: 'id', autoIncrement: true });
+                    objectStore.createIndex('senderId', 'senderId', { unique: false });
+                    objectStore.createIndex('receiverId', 'receiverId', { unique: false });
+                    objectStore.createIndex('groupId', 'groupId', { unique: false });
+                    objectStore.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+            };
+
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                resolve(db);
+            };
+
+            request.onerror = function(event) {
+                reject('IndexedDB 打开失败');
+            };
+        });
+    }
+
+    // 保存消息到 IndexedDB
+    function saveMessageToDB(message) {
+        openDatabase().then(db => {
+            const transaction = db.transaction(['messages'], 'readwrite');
+            const objectStore = transaction.objectStore('messages');
+
+            // 将 Unix 时间戳转换为类似 "Thu Oct 10 2024 02:05:03 GMT+0800" 的格式
+            const formattedTimestamp = new Date(message.timestamp);
+
+            const request = objectStore.add({
+                senderId: message.senderId,
+                receiverId: message.receiverId,
+                message: message.content,
+                timestamp: formattedTimestamp // 存储格式化后的时间
+            });
+
+            request.onsuccess = function() {
+                console.log('Message saved to IndexedDB:', message);
+            };
+
+            request.onerror = function(event) {
+                console.error('Error saving message to IndexedDB:', event);
+            };
+        }).catch(error => {
+            console.error('Failed to open IndexedDB:', error);
+        });
+    }
+
 
     // 判断聊天类型的函数
     function determineChatType(contactId) {
