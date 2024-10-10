@@ -139,6 +139,79 @@
 </div>
 
 <script>
+    // 全局 WebSocket 变量，用于在页面关闭时断开连接
+    let socket;
+
+    // 设置 WebSocket 连接函数
+    function setupWebSocket() {
+        const token = localStorage.getItem('jwtToken');
+
+        if (!token) {
+            alert('JWT Token 不存在，请先登录');
+            return;
+        }
+
+        return fetch('http://localhost:8080/wsget', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 0 && data.content && data.content.ip) {
+                    // 将 JWT Token 作为查询参数附加到 WebSocket URL
+                    const wsUrl = `ws://${data.content.ip}/ws?token=${encodeURIComponent(token)}`;
+                    socket = new WebSocket(wsUrl);
+
+                    // 设置超时判断，5秒后如果没有连接成功则弹出提示
+                    let connectionTimeout = setTimeout(() => {
+                        if (socket.readyState !== WebSocket.OPEN) {
+                            alert('无法连接到 WebSocket 服务器，请稍后重试');
+                            socket.close();
+                        }
+                    }, 5000); // 5秒超时
+
+                    socket.onopen = () => {
+                        clearTimeout(connectionTimeout); // 连接成功，清除超时计时器
+                        console.log('WebSocket connection established to:', wsUrl);
+                    };
+
+                    socket.onmessage = (event) => {
+                        console.log('Received message:', event.data);
+                        // 在这里处理收到的消息
+                    };
+
+                    socket.onclose = () => {
+                        console.log('WebSocket connection closed');
+                    };
+
+                    socket.onerror = (error) => {
+                        console.error('WebSocket error:', error);
+                    };
+                } else {
+                    throw new Error('获取 WebSocket 服务器地址失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error during WebSocket setup:', error);
+                alert('WebSocket 连接失败，请稍后重试');
+            });
+    }
+
+    // 页面加载完成后执行 WebSocket 连接
+    window.onload = () => {
+        setupWebSocket();
+    };
+
+    // 页面卸载（关闭或刷新）时断开 WebSocket 连接
+    window.onbeforeunload = () => {
+        if (socket) {
+            socket.close();
+            console.log('WebSocket connection closed due to page unload');
+        }
+    };
+
     let originalMessages = [];
 
     const request = indexedDB.open("CowIMDB", 1);
