@@ -2,18 +2,13 @@ package myMysql
 
 import (
 	"context"
-	"errors"
 
 	"github.com/n8sPxD/cowIM/common/db/myMysql/models"
-	"gorm.io/gorm"
 )
 
 // InsertUser 创建新的用户，并判断用户名重复
 func (db *DB) InsertUser(ctx context.Context, user *models.User) error {
 	if err := db.client.WithContext(ctx).Create(user).Error; err != nil {
-		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			return gorm.ErrDuplicatedKey
-		}
 		return err
 	}
 	return db.client.WithContext(ctx).Create(&models.UserConfig{UserID: uint32(user.ID)}).Error
@@ -29,9 +24,6 @@ func (db *DB) GetUserAuthInfo(ctx context.Context, id uint32) (*models.User, err
 		Take(&user).
 		Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, gorm.ErrRecordNotFound
-		}
 		return nil, err
 	}
 	return &user, nil
@@ -47,9 +39,6 @@ func (db *DB) GetUserBaseInfo(ctx context.Context, id uint32) (*models.User, err
 		Take(&user).
 		Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, gorm.ErrRecordNotFound
-		}
 		return nil, err
 	}
 	return &user, nil
@@ -65,9 +54,6 @@ func (db *DB) GetUserPassword(ctx context.Context, id uint32) (*string, error) {
 		Take(&password).
 		Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, gorm.ErrRecordNotFound
-		}
 		return nil, err
 	}
 	return &password, nil
@@ -81,9 +67,6 @@ func (db *DB) GetUser(ctx context.Context, id uint32) (*models.User, error) {
 		Where("id = ?", id).
 		Take(&user).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, gorm.ErrRecordNotFound
-		}
 		return nil, err
 	}
 	return &user, nil
