@@ -1,3 +1,6 @@
 Name: user
 Host: 0.0.0.0
-Port: 8888
+Port: 20003
+
+MySQL:
+  DataSource: root:123456@tcp(127.0.0.1:3306)/im_server_db?charset=utf8mb4&parseTime=True&loc=Local
