@@ -50,8 +50,8 @@ func (db *DB) GetFriends(ctx context.Context, userID uint32) ([]models.User, err
 
 	err := db.client.
 		Select("username", "id").
-		Where("id = (?)", sub1).
-		Or("id = (?)", sub2).
+		Where("id in (?)", sub1).
+		Or("id in (?)", sub2).
 		Find(&friends).
 		Error
 	if err != nil {
