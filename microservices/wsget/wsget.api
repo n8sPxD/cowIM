@@ -17,6 +17,6 @@ type WebsocketServerGetResponse {
 
 service wsget {
 	@handler getAvailableWSServer
-	get /ws (WebsocketServerGetRequest) returns (WebsocketServerGetResponse)
+	get /wsget (WebsocketServerGetRequest) returns (WebsocketServerGetResponse)
 }
 
