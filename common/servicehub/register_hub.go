@@ -61,6 +61,7 @@ func (hub *RegisterHub) Register(ctx context.Context, service string, endpoint s
 				logx.Error("[Register] Put service to etcd failed, error: ", err)
 				return lease.ID, err
 			} else {
+				logx.Debugf("[Register] Service %s lease success", service)
 				return lease.ID, nil
 			}
 		}
@@ -72,7 +73,6 @@ func (hub *RegisterHub) Register(ctx context.Context, service string, endpoint s
 			logx.Error("[Register] Keep alive failed, error: ", err)
 			return 0, err
 		} else {
-			logx.Infof("[Register] Server %s lease at %s success", service, endpoint)
 			return leaseID, nil
 		}
 	}

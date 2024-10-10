@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/n8sPxD/cowIM/common/constant"
 	"github.com/n8sPxD/cowIM/common/message/front"
+	"github.com/n8sPxD/cowIM/common/servicehub"
 	"github.com/n8sPxD/cowIM/im-server/internal/config"
 	"github.com/n8sPxD/cowIM/im-server/internal/server/manager"
 	"github.com/n8sPxD/cowIM/im-server/svc"
@@ -22,13 +23,14 @@ import (
 )
 
 type Server struct {
-	ctx      context.Context            // 上下文
-	svcCtx   *svc.ServiceContext        // 依赖服务
-	config   config.Config              // Server的设置
-	Manager  *manager.ConnectionManager // 连接管理器
-	upgrader *websocket.Upgrader        // Websocket协议升级器
-	messages chan string                // 本地消息队列，作用是消息聚合
-	close    chan struct{}              // 关闭信号
+	ctx         context.Context            // 上下文
+	svcCtx      *svc.ServiceContext        // 依赖服务
+	config      config.Config              // Server的设置
+	Manager     *manager.ConnectionManager // 连接管理器
+	upgrader    *websocket.Upgrader        // Websocket协议升级器
+	messages    chan string                // 本地消息队列，作用是消息聚合
+	close       chan struct{}              // 关闭信号
+	registerHub *servicehub.RegisterHub    // 注册中心
 }
 
 func MustNewServer(c config.Config, ctx context.Context, svcCtx *svc.ServiceContext) *Server {
@@ -42,8 +44,9 @@ func MustNewServer(c config.Config, ctx context.Context, svcCtx *svc.ServiceCont
 			WriteBufferSize: 1024,
 			CheckOrigin:     func(r *http.Request) bool { return true },
 		},
-		messages: make(chan string, 100000),
-		close:    make(chan struct{}),
+		messages:    make(chan string, 100000),
+		close:       make(chan struct{}),
+		registerHub: servicehub.NewRegisterHub(svcCtx.Config.Etcd.Hosts, 3),
 	}
 }
 
@@ -51,6 +54,9 @@ func (s *Server) Start() {
 	// 创建路由
 	r := mux.NewRouter()
 	r.HandleFunc("/ws", s.handleWebSocket)
+
+	// 注册服务
+	s.register()
 
 	// 启动HTTP服务器
 	addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
