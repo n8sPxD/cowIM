@@ -8,7 +8,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/zeromicro/go-queue v1.2.2
 	github.com/zeromicro/go-zero v1.7.2
-	go.etcd.io/etcd/client/v3 v3.5.15
+	go.etcd.io/etcd/client/v3 v3.5.16
 	go.mongodb.org/mongo-driver v1.16.1
 	golang.org/x/crypto v0.26.0
 	gorm.io/driver/mysql v1.5.7
@@ -69,8 +69,8 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/yitter/idgenerator-go v1.3.3 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
-	go.etcd.io/etcd/api/v3 v3.5.15 // indirect
-	go.etcd.io/etcd/client/pkg/v3 v3.5.15 // indirect
+	go.etcd.io/etcd/api/v3 v3.5.16 // indirect
+	go.etcd.io/etcd/client/pkg/v3 v3.5.16 // indirect
 	go.opentelemetry.io/otel v1.24.0 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.17.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.24.0 // indirect
