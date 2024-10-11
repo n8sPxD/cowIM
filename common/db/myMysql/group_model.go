@@ -15,11 +15,11 @@ func (db *DB) InsertGroup(ctx context.Context, group *models.Group) error {
 		}
 		return err
 	}
-	return db.client.WithContext(ctx).Create(&models.GroupConfig{GroupID: uint32(group.ID)}).Error
+	return db.client.WithContext(ctx).Create(&models.GroupConfig{GroupID: group.ID}).Error
 }
 
-func (db *DB) GetGroupMembers(ctx context.Context, id uint) ([]models.User, error) {
-	var members []models.User
+func (db *DB) GetGroupMembers(ctx context.Context, id uint) ([]models.GroupMember, error) {
+	var members []models.GroupMember
 	err := db.client.WithContext(ctx).
 		Model(&models.Group{}).
 		Preload("GroupMembers").
@@ -27,8 +27,13 @@ func (db *DB) GetGroupMembers(ctx context.Context, id uint) ([]models.User, erro
 		Where("id = ?", id).
 		Find(&members).
 		Error
-	if err != nil {
-		return nil, err
-	}
-	return members, nil
+	return members, err
+}
+
+func (db *DB) InsertGroupMember(ctx context.Context, groupID uint32, member uint32) error {
+	return nil
+}
+
+func (db *DB) InsertGroupMembers(ctx context.Context, groupID uint32, members []uint32) error {
+	return nil
 }
