@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"errors"
 
 	"github.com/n8sPxD/cowIM/microservices/group/api/internal/svc"
 	"github.com/n8sPxD/cowIM/microservices/group/api/internal/types"
@@ -23,8 +24,12 @@ func NewGroupJoinedLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Group
 	}
 }
 
-func (l *GroupJoinedLogic) GroupJoined(req *types.GroupJoinedRequest) (resp *types.GroupJoinedResponse, err error) {
-	// todo: add your logic here and delete this line
-
-	return
+func (l *GroupJoinedLogic) GroupJoined(req *types.GroupJoinedRequest) (*types.GroupJoinedResponse, error) {
+	// 直接查数据库
+	groups, err := l.svcCtx.MySQL.GetGroupIDJoined(l.ctx, req.UserID)
+	if err != nil {
+		logx.Error("[GroupJoined] Get groups from MySQL failed, error: ", err)
+		return nil, errors.New("获取群组信息失败")
+	}
+	return &types.GroupJoinedResponse{GroupID: groups}, nil
 }
