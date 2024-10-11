@@ -27,6 +27,12 @@ type (
 		Members []uint32 `json:"members"`
 	}
 	GroupInviteResponse  {}
+	GroupJoinedRequest {
+		UserID uint32 `header:UserID`
+	}
+	GroupJoinedResponse {
+		GroupID []uint32 `json:"groupId"`
+	}
 )
 
 service group {
@@ -38,5 +44,8 @@ service group {
 
 	@handler groupInvite // 拉人进群
 	post /group/invite (GroupInviteRequest) returns (GroupInviteResponse)
+
+	@handler groupJoined // 当前用户已经加入过的群组
+	get /groups (GroupJoinedRequest) returns (GroupJoinedResponse)
 }
 

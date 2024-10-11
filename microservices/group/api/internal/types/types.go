@@ -26,3 +26,11 @@ type GroupInviteRequest struct {
 
 type GroupInviteResponse struct {
 }
+
+type GroupJoinedRequest struct {
+	UserID uint32 `header:UserID`
+}
+
+type GroupJoinedResponse struct {
+	GroupID []uint32 `json:"groupId"`
+}
