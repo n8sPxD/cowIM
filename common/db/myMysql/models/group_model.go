@@ -4,9 +4,9 @@ import "gorm.io/gorm"
 
 type Group struct {
 	gorm.Model
-	Groupname   string       `json:"groupname"`
-	Members     []uint32     `json:"members"`
-	GroupConfig *GroupConfig `gorm:"foreignKey:GroupID" json:"groupConfig"`
+	GroupName    string       `json:"groupName"`
+	GroupMembers []User       `gorm:"many2many:group_user" json:"groupMembers"`
+	GroupConfig  *GroupConfig `json:"groupConfig"`
 }
 
 type GroupConfig struct {
