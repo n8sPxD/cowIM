@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/n8sPxD/cowIM/common/constant"
 	"github.com/n8sPxD/cowIM/common/db/myMysql/models"
 	"gorm.io/gorm"
 )
@@ -31,9 +32,23 @@ func (db *DB) GetGroupMembers(ctx context.Context, id uint) ([]models.GroupMembe
 }
 
 func (db *DB) InsertGroupMember(ctx context.Context, groupID uint32, member uint32) error {
-	return nil
+	membercol := models.GroupMember{
+		GroupID: uint(groupID),
+		UserID:  uint(member),
+		Role:    constant.GROUP_COMMON,
+	}
+	return db.client.WithContext(ctx).Create(&membercol).Error
 }
 
 func (db *DB) InsertGroupMembers(ctx context.Context, groupID uint32, members []uint32) error {
-	return nil
+	membercols := make([]models.GroupMember, 0, len(members))
+	for i := range membercols {
+		tmp := models.GroupMember{
+			GroupID: uint(groupID),
+			UserID:  uint(members[i]),
+			Role:    constant.GROUP_COMMON,
+		}
+		membercols[i] = tmp
+	}
+	return db.client.WithContext(ctx).Create(&membercols).Error
 }

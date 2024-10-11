@@ -36,3 +36,10 @@ const (
 const (
 	SYSTEM = iota // 系统消息
 )
+
+// 群聊权限
+const (
+	GROUP_MASTER = iota
+	GROUP_ADMIN
+	GROUP_COMMON
+)
