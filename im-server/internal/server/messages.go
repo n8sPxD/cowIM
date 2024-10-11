@@ -13,7 +13,7 @@ func (s *Server) sendMessageToBackend() error {
 		mqMsg := kafka.Message{
 			Value: []byte(<-s.messages),
 		}
-		logx.Debug("[sendMessageToBackend] Sending message: ", mqMsg)
+		logx.Debug("[sendMessageToBackend] Sending message: ", string(mqMsg.Value))
 		if err := s.svcCtx.MsgForwarder.WriteMessages(s.ctx, mqMsg); err != nil {
 			logx.Error("[sendMessageToBackend] Push message to MQ failed, error: ", err)
 			return err
