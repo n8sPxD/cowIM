@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package message;
+option go_package = "./inside";
+
+message Message {
+  uint32 to = 1;
+  bytes protobuf = 2;
+}
