@@ -30,13 +30,13 @@ type (
 )
 
 service group {
-	@handler groupCreate
+	@handler groupCreate // 创建群聊
 	post /group (GroupCreateRequest) returns (GroupCreateResponse)
 
-	@handler groupInfo
+	@handler groupInfo // 获取群聊相关信息
 	get /group (GroupInfoRequest) returns (GroupInfoResponse)
 
-	@handler groupInvite
+	@handler groupInvite // 拉人进群
 	post /group/invite (GroupInviteRequest) returns (GroupInviteResponse)
 }
 
