@@ -8,6 +8,7 @@ import (
 
 	"github.com/n8sPxD/cowIM/common/constant"
 	"github.com/n8sPxD/cowIM/common/message/front"
+	"github.com/n8sPxD/cowIM/common/message/inside"
 	"github.com/n8sPxD/cowIM/common/utils"
 	"github.com/n8sPxD/cowIM/microservices/msgForward/internal/svc"
 	"github.com/segmentio/kafka-go"
@@ -84,7 +85,7 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	case constant.SINGLE_CHAT:
 		go l.singleChat(&msg, protobuf)
 	case constant.GROUP_CHAT:
-		go l.groupChat(&msg, protobuf)
+		go l.groupChat(&msg)
 	case constant.BIG_GROUP_CHAT:
 		go l.bigGroupChat(&msg)
 	default:
@@ -92,6 +93,8 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	}
 }
 
+// 单聊处理
+// 需要传入原消息是因为单聊中的from和to无需更改,直接原样转发即可
 func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
 	// 查询Redis中路由信息
 	status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, msg.To)
@@ -104,13 +107,25 @@ func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
 		logx.Error("[MsgForwarder.singleChat] Get router status from redis failed, error: ", err)
 		return
 	}
+
 	// 转发消息到指定的websocket-server
 	// 先确定Topic
 	workID := status.WorkID
 	l.svcCtx.MsgSender.Topic = fmt.Sprintf("websocket-server-%d", workID)
-	// 封装消息
+
+	// 封装inside.Message
+	wsmsg := inside.Message{
+		To:       msg.To,
+		Protobuf: protobuf,
+	}
+	wsmsgByte, err := proto.Marshal(&wsmsg)
+	if err != nil {
+		logx.Errorf(utils.FmtFuncName(), " Marshal message failed, error: ", err)
+		return
+	}
+	// 封装mq消息
 	mqMsg := kafka.Message{
-		Value: protobuf,
+		Value: wsmsgByte,
 	}
 	err = l.svcCtx.MsgSender.WriteMessages(l.ctx, mqMsg)
 	if err != nil {
@@ -122,7 +137,8 @@ func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
 	}
 }
 
-func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
+// 群聊处理
+func (l *MsgForwarder) groupChat(msg *front.Message) {
 	// 先获取群里所有成员
 	members, err := l.svcCtx.MySQL.GetGroupMembers(l.ctx, uint(msg.To))
 	if err != nil {
@@ -147,7 +163,7 @@ func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 		workID := status.WorkID
 		l.svcCtx.MsgSender.Topic = fmt.Sprintf("websocket-server-%d", workID)
 		mqmsg := kafka.Message{
-			Value: protobuf,
+			// TODO: 塞序列化好的消息
 		}
 		// 发消息
 		if err := l.svcCtx.MsgSender.WriteMessages(l.ctx, mqmsg); err != nil {
