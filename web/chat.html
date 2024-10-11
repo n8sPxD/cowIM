@@ -597,6 +597,7 @@
 
     function displayGroups(groupIds) {
         const conversationList = document.getElementById("conversationList");
+        conversationList.innerHTML = ''; // 清空当前的联系人列表
 
         groupIds.forEach(groupId => {
             const groupDiv = document.createElement("div");
