@@ -209,8 +209,8 @@
 
                             // 将新消息保存到 IndexedDB
                             saveMessageToDB({
-                                senderId: receivedMessage.from,
-                                receiverId: receivedMessage.to,
+                                senderID: receivedMessage.from,
+                                receiverID: receivedMessage.to,
                                 content: receivedMessage.content,
                                 timestamp: receivedMessage.time
                             });
@@ -279,10 +279,10 @@
         const uniqueConversations = {};
         const myId = Number(sessionStorage.getItem('cowId'));
 
-        const filteredMessages = messages.filter(message => message.senderId === myId || message.receiverId === myId);
+        const filteredMessages = messages.filter(message => message.senderID === myId || message.receiverID === myId);
 
         filteredMessages.forEach(message => {
-            const conversationId = generateConversationId(message.senderId, message.receiverId, myId);
+            const conversationId = generateConversationId(message.senderID, message.receiverID, myId);
 
             if (!uniqueConversations[conversationId]) {
                 uniqueConversations[conversationId] = [];
@@ -294,7 +294,7 @@
 
         for (const conversationId in uniqueConversations) {
             const firstMessage = uniqueConversations[conversationId][0];
-            const contactId = firstMessage.senderId === myId ? firstMessage.receiverId : firstMessage.senderId;
+            const contactId = firstMessage.senderID === myId ? firstMessage.receiverID : firstMessage.senderID;
             const contactDiv = document.createElement("div");
             contactDiv.className = "contact";
             contactDiv.textContent = `联系人ID: ${contactId}`;
@@ -315,9 +315,9 @@
 
         messages.forEach(message => {
             const messageDiv = document.createElement("div");
-            const isMessageFromMe = message.senderId === myId;
+            const isMessageFromMe = message.senderID === myId;
             messageDiv.style.textAlign = isMessageFromMe ? "right" : "left";
-            messageDiv.textContent = message.message;
+            messageDiv.textContent = message.msgForward.content;
             chatHistory.appendChild(messageDiv);
         });
 
@@ -325,8 +325,8 @@
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 
-    function generateConversationId(senderId, receiverId, myId) {
-        const sortedIds = [senderId, receiverId].sort((a, b) => a - b);
+    function generateConversationId(senderID, receiverID, myId) {
+        const sortedIds = [senderID, receiverID].sort((a, b) => a - b);
         return `${sortedIds[0]}_${sortedIds[1]}`;
     }
 
@@ -379,8 +379,8 @@
             request.onsuccess = function (event) {
                 const myId = Number(sessionStorage.getItem('cowId'));
                 const messages = event.target.result.filter(message =>
-                    (message.senderId === contactId || message.receiverId === contactId) &&
-                    (message.senderId === myId || message.receiverId === myId)
+                    (message.senderID === contactId || message.receiverID === contactId) &&
+                    (message.senderID === myId || message.receiverID === myId)
                 );
                 displayMessages(messages, contactId);
             };
@@ -444,7 +444,7 @@
                 type: SINGLE_CHAT,      // 单聊类型
                 msg_type: 1,            // 假设 1 代表直接聊天，根据实际情况调整
                 timestamp: currentTime,
-                group: 0                // 单聊时 groupId 为空，填 0
+                group: 0                // 单聊时 groupID 为空，填 0
             };
         } else if (chatType === GROUP_CHAT || chatType === BIG_GROUP_CHAT) {
             // 群聊的消息结构
@@ -455,7 +455,7 @@
                 type: chatType,         // 根据群聊或大群聊选择 type
                 msg_type: 1,            // 假设 1 代表直接聊天，根据实际情况调整
                 timestamp: currentTime,
-                group: Number(contactId) // 群聊时 groupId 为群组ID
+                group: Number(contactId) // 群聊时 groupID 为群组ID
             };
         } else {
             alert("无法识别的聊天类型");
@@ -514,8 +514,8 @@
             const formattedTimestamp = new Date(message.timestamp);
 
             const request = objectStore.add({
-                senderId: message.senderId,
-                receiverId: message.receiverId,
+                senderID: message.senderID,
+                receiverID: message.receiverID,
                 message: message.content,
                 timestamp: formattedTimestamp // 存储格式化后的时间
             });
@@ -546,7 +546,7 @@
         const myId = Number(sessionStorage.getItem('cowId')); // 获取当前用户的 ID
 
         // 判断消息是发送方还是接收方
-        const isMessageFromMe = message.senderId === myId;
+        const isMessageFromMe = message.senderID === myId;
 
         const messageDiv = document.createElement("div");
         messageDiv.style.textAlign = isMessageFromMe ? "left" : "right";  // 根据是否是自己的消息决定对齐方向
@@ -571,8 +571,8 @@
             .then(response => response.json())
             .then(data => {
                 if (data.code === 0) {
-                    saveGroupsToDB(data.content.groupId);
-                    displayGroups(data.content.groupId);
+                    saveGroupsToDB(data.content.groupID);
+                    displayGroups(data.content.groupID);
                 } else {
                     console.error('获取群组列表失败');
                 }
@@ -580,23 +580,23 @@
             .catch(error => console.error('Error:', error));
     };
 
-    function saveGroupsToDB(groupIds) {
+    function saveGroupsToDB(groupIDs) {
         const myId = Number(sessionStorage.getItem('cowId'));
 
         openDatabase().then(db => {
             const transaction = db.transaction(['groups'], 'readwrite');
             const objectStore = transaction.objectStore('groups');
 
-            groupIds.forEach(groupId => {
+            groupIDs.forEach(groupID => {
                 const request = objectStore.add({
                     cowid: myId,
-                    groupid: groupId,
+                    groupid: groupID,
                     groupname: "",
                     groupmembers: ""
                 });
 
                 request.onsuccess = function() {
-                    console.log('Group saved to IndexedDB:', groupId);
+                    console.log('Group saved to IndexedDB:', groupID);
                 };
 
                 request.onerror = function(event) {
@@ -608,22 +608,22 @@
         });
     }
 
-    function displayGroups(groupIds) {
+    function displayGroups(groupIDs) {
         const conversationList = document.getElementById("conversationList");
         conversationList.innerHTML = ''; // 清空当前的联系人列表
 
-        groupIds.forEach(groupId => {
+        groupIDs.forEach(groupID => {
             const groupDiv = document.createElement("div");
             groupDiv.className = "contact";
-            groupDiv.textContent = `群组ID: ${groupId}`;
+            groupDiv.textContent = `群组ID: ${groupID}`;
 
-            groupDiv.onclick = () => displayMessagesFromGroup(groupId);
+            groupDiv.onclick = () => displayMessagesFromGroup(groupID);
 
             conversationList.appendChild(groupDiv);
         });
     }
 
-    function displayMessagesFromGroup(groupId) {
+    function displayMessagesFromGroup(groupID) {
         const request = indexedDB.open("CowIMDB", 1);
 
         request.onsuccess = function (event) {
@@ -634,8 +634,8 @@
             const request = objectStore.getAll();
 
             request.onsuccess = function (event) {
-                const messages = event.target.result.filter(message => message.groupId === groupId);
-                displayMessages(messages, groupId);
+                const messages = event.target.result.filter(message => message.groupID === groupID);
+                displayMessages(messages, groupID);
             };
         };
     }

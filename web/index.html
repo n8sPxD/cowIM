@@ -105,9 +105,9 @@
                 const db = event.target.result;
                 if (!db.objectStoreNames.contains('messages')) {
                     const objectStore = db.createObjectStore('messages', { keyPath: 'id', autoIncrement: true });
-                    objectStore.createIndex('senderId', 'senderId', { unique: false });
-                    objectStore.createIndex('receiverId', 'receiverId', { unique: false });
-                    objectStore.createIndex('groupId', 'groupId', { unique: false });
+                    objectStore.createIndex('senderID', 'senderID', { unique: false });
+                    objectStore.createIndex('receiverID', 'receiverID', { unique: false });
+                    objectStore.createIndex('groupID', 'groupID', { unique: false });
                     objectStore.createIndex('timestamp', 'timestamp', { unique: false });
                 }
                 if (!db.objectStoreNames.contains('groups')) {
