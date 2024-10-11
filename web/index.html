@@ -110,6 +110,10 @@
                     objectStore.createIndex('groupId', 'groupId', { unique: false });
                     objectStore.createIndex('timestamp', 'timestamp', { unique: false });
                 }
+                if (!db.objectStoreNames.contains('groups')) {
+                    const groupStore = db.createObjectStore('groups', { keyPath: 'groupid' });
+                    groupStore.createIndex('cowid', 'cowid', { unique: false });
+                }
             };
 
             request.onsuccess = function(event) {

@@ -125,6 +125,7 @@
     <div class="sidebar">
         <button id="recentButton">最近会话</button>
         <button id="friendsButton">好友</button>
+        <button id="groupsButton">群组</button>
     </div>
     <div class="conversation-list" id="conversationList">
         <p>会话列表</p>
@@ -308,22 +309,17 @@
         const chatHeader = document.getElementById("chatHeader");
         const chatHistory = document.getElementById("chatHistory");
 
-        chatHeader.innerHTML = `<p>联系人ID: ${contactId}</p>`;
+        chatHeader.innerHTML = `<p>群组ID: ${contactId}</p>`;
         chatHistory.innerHTML = "";
-
-        const myId = Number(sessionStorage.getItem('cowId'));
 
         messages.forEach(message => {
             const messageDiv = document.createElement("div");
-            messageDiv.style.textAlign = message.senderId === myId ? "right" : "left";
+            messageDiv.style.textAlign = "left"; // 假设群组消息左对齐
             messageDiv.textContent = message.message;
             chatHistory.appendChild(messageDiv);
         });
 
-        // 保存当前选中的联系人ID，用于发送消息
         chatHistory.dataset.currentContactId = contactId;
-
-        // 聊天记录滚到最下面
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 
@@ -481,23 +477,12 @@
         return new Promise((resolve, reject) => {
             const request = indexedDB.open('CowIMDB', 1);
 
-            request.onupgradeneeded = function(event) {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains('messages')) {
-                    const objectStore = db.createObjectStore('messages', { keyPath: 'id', autoIncrement: true });
-                    objectStore.createIndex('senderId', 'senderId', { unique: false });
-                    objectStore.createIndex('receiverId', 'receiverId', { unique: false });
-                    objectStore.createIndex('timestamp', 'timestamp', { unique: false });
-                }
-            };
-
-
-            request.onsuccess = function (event) {
+            request.onsuccess = function(event) {
                 const db = event.target.result;
                 resolve(db);
             };
 
-            request.onerror = function (event) {
+            request.onerror = function(event) {
                 reject('IndexedDB 打开失败');
             };
         });
@@ -551,6 +536,89 @@
         // 自动滚动到最新消息
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
+
+    // 群组按钮事件
+    document.getElementById('groupsButton').onclick = function () {
+        const jwtToken = sessionStorage.getItem('jwtToken');
+
+        fetch('http://localhost:8080/groups', {
+            method: 'GET',
+            headers: {
+                'Authorization': jwtToken,
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 0) {
+                    saveGroupsToDB(data.content.groupId);
+                    displayGroups(data.content.groupId);
+                } else {
+                    console.error('获取群组列表失败');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    };
+
+    function saveGroupsToDB(groupIds) {
+        const myId = Number(sessionStorage.getItem('cowId'));
+
+        openDatabase().then(db => {
+            const transaction = db.transaction(['groups'], 'readwrite');
+            const objectStore = transaction.objectStore('groups');
+
+            groupIds.forEach(groupId => {
+                const request = objectStore.add({
+                    cowid: myId,
+                    groupid: groupId,
+                    groupname: "",
+                    groupmembers: ""
+                });
+
+                request.onsuccess = function() {
+                    console.log('Group saved to IndexedDB:', groupId);
+                };
+
+                request.onerror = function(event) {
+                    console.error('Error saving group to IndexedDB:', event);
+                };
+            });
+        }).catch(error => {
+            console.error('Failed to open IndexedDB:', error);
+        });
+    }
+
+    function displayGroups(groupIds) {
+        const conversationList = document.getElementById("conversationList");
+
+        groupIds.forEach(groupId => {
+            const groupDiv = document.createElement("div");
+            groupDiv.className = "contact";
+            groupDiv.textContent = `群组ID: ${groupId}`;
+
+            groupDiv.onclick = () => displayMessagesFromGroup(groupId);
+
+            conversationList.appendChild(groupDiv);
+        });
+    }
+
+    function displayMessagesFromGroup(groupId) {
+        const request = indexedDB.open("CowIMDB", 1);
+
+        request.onsuccess = function (event) {
+            const db = event.target.result;
+            const transaction = db.transaction("messages", "readonly");
+            const objectStore = transaction.objectStore("messages");
+
+            const request = objectStore.getAll();
+
+            request.onsuccess = function (event) {
+                const messages = event.target.result.filter(message => message.groupId === groupId);
+                displayMessages(messages, groupId);
+            };
+        };
+    }
+
 
 </script>
 
