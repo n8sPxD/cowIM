@@ -40,7 +40,7 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 			return
 		}
 
-		var packMsg inside.Message
+		var packMsg inside.MessageToDB
 		packMsg.Type = constant.USER_TIMELINE
 		packMsg.Payload = append(
 			packMsg.Payload,
@@ -68,7 +68,7 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 		}
 
 		// 然后封装所有群员的消息
-		var pack inside.Message
+		var pack inside.MessageToDB
 		pack.Type = constant.USER_TIMELINE
 		for _, member := range members {
 			current := models.UserTimeline{
@@ -134,7 +134,7 @@ func (l *MsgForwarder) sendRecordMsgToDB(msg *front.Message, now time.Time) {
 		return
 	}
 
-	var packMsg inside.Message
+	var packMsg inside.MessageToDB
 	packMsg.Type = constant.MESSAGE_RECORD
 	packMsg.Payload = append(packMsg.Payload, recordMsgByte)
 

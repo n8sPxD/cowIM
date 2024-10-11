@@ -53,10 +53,10 @@ func (l *MsgToDB) Start() {
 }
 
 func (l *MsgToDB) Consume(rawjson []byte) {
-	var ins inside.Message
+	var ins inside.MessageToDB
 	err := json.Unmarshal(rawjson, &ins)
 	if err != nil {
-		logx.Error("[MsgToDB.Consume] Unmarshal inside.Message failed, error: ", err)
+		logx.Error("[MsgToDB.Consume] Unmarshal inside.MessageToDB failed, error: ", err)
 		return
 	}
 
