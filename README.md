@@ -14,8 +14,10 @@
 ##### 即时通讯系统
 ```sh
 % cd deployments/run
+
 # 确保运行之前给予执行权限
 # chmod +x *.sh
+
 % ./auth_api.sh
 % ./auth_rpc.sh
 ...
