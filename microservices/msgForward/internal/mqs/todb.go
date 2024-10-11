@@ -74,7 +74,7 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 		for _, member := range members {
 			current := models.UserTimeline{
 				ID:         idgen.NextId(),
-				ReceiverID: member,
+				ReceiverID: uint32(member.UserID),
 				SenderID:   msg.From,
 				GroupID:    msg.To,
 				Message:    syncMsg,
