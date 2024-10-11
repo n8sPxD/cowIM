@@ -27,7 +27,7 @@ func NewGroupCreateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Group
 
 func (l *GroupCreateLogic) GroupCreate(req *types.GroupCreateRequest) (resp *types.GroupCreateResponse, err error) {
 	group := models.Group{
-		Groupname: req.Groupname,
+		GroupName: req.Groupname,
 	}
 	if err := l.svcCtx.MySQL.InsertGroup(l.ctx, &group); err != nil {
 		logx.Error("[Create] Insert group to DB failed, error: ", err)
