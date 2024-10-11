@@ -1,9 +1,8 @@
 # cowIM
-
-个人绞尽脑汁设计的即时通讯系统
+个人绞尽脑汁设计的即时通讯系统，目前处于开发阶段，勉强能跑，能够在前端进行一对一聊天
 
 ### 架构图
-<img src="docs/pics/cowIm架构v6.png" alt="架构图">
+<img src="docs/pics/cowIm架构v7.png" alt="架构图">
 
 ### 如何运行
 当前未开发完毕，构建处于测试阶段，比较复杂，后续采取服务容器化后会改进
@@ -23,7 +22,6 @@
 ...
 ```
 
-
 ### 目前实现与进度
 #### 业务(后端)
  - [x] 单聊
@@ -34,7 +32,22 @@
  - [x] 群聊创建
  - [ ] 群聊查询
 
-#### 参考与启发
+### 目录说明
+```
+.
+├── common          # 公共组件
+├── deployments     # 服务部署
+├── docs            # 文档以及图片
+├── gateway         # http网关
+├── im-server       # websocket server
+├── microservices   # 微服务们
+├── test            # 测试代码
+└── web             # 前端代码文件
+```
+
+
+
+### 参考与启发
 - https://www.bilibili.com/video/BV1KM411S7WT (架构)
 - http://www.52im.net/thread-4257-1-1.html (架构)
 - https://space.bilibili.com/30625295/channel/collectiondetail?sid=3179321 (架构)
