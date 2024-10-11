@@ -31,9 +31,8 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 			ID:         idgen.NextId(),
 			ReceiverID: msg.To,
 			SenderID:   msg.From,
-			// GroupID:   0,  	// 到下面去判断
-			Message:   syncMsg,
-			Timestamp: now,
+			Message:    syncMsg,
+			Timestamp:  now,
 		}
 		senderTLByte, err := json.Marshal(senderTL)
 		if err != nil {

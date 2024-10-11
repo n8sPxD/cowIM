@@ -8,6 +8,7 @@ import (
 
 	"github.com/n8sPxD/cowIM/common/constant"
 	"github.com/n8sPxD/cowIM/common/message/front"
+	"github.com/n8sPxD/cowIM/common/utils"
 	"github.com/n8sPxD/cowIM/microservices/msgForward/internal/svc"
 	"github.com/segmentio/kafka-go"
 	"github.com/yitter/idgenerator-go/idgen"
@@ -83,7 +84,7 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	case constant.SINGLE_CHAT:
 		go l.singleChat(&msg, protobuf)
 	case constant.GROUP_CHAT:
-		go l.groupChat(&msg)
+		go l.groupChat(&msg, protobuf)
 	case constant.BIG_GROUP_CHAT:
 		go l.bigGroupChat(&msg)
 	default:
@@ -96,7 +97,7 @@ func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
 	status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, msg.To)
 	if errors.Is(err, redis.Nil) {
 		// 没找到当前用户的路由信息，说明没上线
-		// TODO: 塞timeline里
+		// 之前已经存过timeline了，所以不需要做任何处理
 		return
 	}
 	if err != nil {
@@ -121,8 +122,39 @@ func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
 	}
 }
 
-func (l *MsgForwarder) groupChat(msg *front.Message) {
-	// TODO: 完善逻辑
+func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
+	// 先获取群里所有成员
+	members, err := l.svcCtx.MySQL.GetGroupMembers(l.ctx, uint(msg.To))
+	if err != nil {
+		logx.Error(utils.FmtFuncName(), " Get group members from mysql failed, error: ", err)
+		return
+	}
+	// TODO: 可以优化，先处理所有消息，然后把对应服务器的消息以切片形式发送，避免重复调用WriteMessages
+	for _, member := range members {
+		receiver := member.UserID
+		// 先查用户在不在线
+		status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, uint32(receiver))
+		if errors.Is(err, redis.Nil) {
+			// 不在线，直接跳过
+			continue
+		} else if err != nil {
+			// redis出问题了
+			logx.Error(utils.FmtFuncName(), " Get router status from redis failed, error: ", err)
+			continue
+		}
+		// 用户在线，发消息
+		// 确定Topic
+		workID := status.WorkID
+		l.svcCtx.MsgSender.Topic = fmt.Sprintf("websocket-server-%d", workID)
+		mqmsg := kafka.Message{
+			Value: protobuf,
+		}
+		// 发消息
+		if err := l.svcCtx.MsgSender.WriteMessages(l.ctx, mqmsg); err != nil {
+			logx.Error(utils.FmtFuncName(), " Push msgForward to Websocket-server MQ failed, error: ", err)
+			continue
+		}
+	}
 }
 
 func (l *MsgForwarder) bigGroupChat(msg *front.Message) {
