@@ -308,13 +308,15 @@
     function displayMessages(messages, contactId) {
         const chatHeader = document.getElementById("chatHeader");
         const chatHistory = document.getElementById("chatHistory");
+        const myId = Number(sessionStorage.getItem('cowId'));
 
         chatHeader.innerHTML = `<p>群组ID: ${contactId}</p>`;
         chatHistory.innerHTML = "";
 
         messages.forEach(message => {
             const messageDiv = document.createElement("div");
-            messageDiv.style.textAlign = "left"; // 假设群组消息左对齐
+            const isMessageFromMe = message.senderId === myId;
+            messageDiv.style.textAlign = isMessageFromMe ? "right" : "left";
             messageDiv.textContent = message.message;
             chatHistory.appendChild(messageDiv);
         });
@@ -375,9 +377,10 @@
             const request = objectStore.getAll();
 
             request.onsuccess = function (event) {
+                const myId = Number(sessionStorage.getItem('cowId'));
                 const messages = event.target.result.filter(message =>
                     (message.senderId === contactId || message.receiverId === contactId) &&
-                    (message.senderId === Number(sessionStorage.getItem('cowId')) || message.receiverId === Number(sessionStorage.getItem('cowId')))
+                    (message.senderId === myId || message.receiverId === myId)
                 );
                 displayMessages(messages, contactId);
             };
@@ -527,9 +530,13 @@
 
     function appendMessage(message, isOwnMessage = false) {
         const chatHistory = document.getElementById("chatHistory");
+        const myId = Number(sessionStorage.getItem('cowId')); // 获取当前用户的 ID
+
+        // 判断消息是发送方还是接收方
+        const isMessageFromMe = message.senderId === myId;
 
         const messageDiv = document.createElement("div");
-        messageDiv.style.textAlign = isOwnMessage ? "right" : "left";
+        messageDiv.style.textAlign = isMessageFromMe ? "left" : "right";  // 根据是否是自己的消息决定对齐方向
         messageDiv.textContent = message.content;
         chatHistory.appendChild(messageDiv);
 
