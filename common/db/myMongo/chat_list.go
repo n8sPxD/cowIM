@@ -11,15 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type ChatListInfo struct {
-	SenderID   uint32    `json:"senderID"`
-	ReceiverID uint32    `json:"receiverID"`
-	GroupID    uint32    `json:"groupID,omitempty"`
-	RecentMsg  string    `json:"recentMsg"`
-	Timestamp  time.Time `json:"timestamp"`
-}
-
-func (db *DB) GetRecentChatList(ctx context.Context, id uint32, latest time.Time) ([]ChatListInfo, error) {
+func (db *DB) GetRecentChatList(ctx context.Context, id uint32, latest time.Time) ([]models.UserTimeline, error) {
 	// 初始化聚合管道
 	filter := mongo.Pipeline{}
 
@@ -61,21 +53,7 @@ func (db *DB) GetRecentChatList(ctx context.Context, id uint32, latest time.Time
 		return nil, fmt.Errorf("failed to retrieve user timeline: %w", err)
 	}
 
-	// 创建 ChatListInfo slice，预分配空间
-	chatList := make([]ChatListInfo, 0, len(timelines))
-
-	// 遍历查询结果，处理消息
-	for _, timeline := range timelines {
-		var chat ChatListInfo
-		chat.SenderID = timeline.SenderID
-		chat.ReceiverID = timeline.ReceiverID
-		chat.RecentMsg = getMsgPreview(timeline)
-		chat.GroupID = timeline.GroupID // GroupID默认值为0
-		chat.Timestamp = timeline.Timestamp
-		chatList = append(chatList, chat)
-	}
-
-	return chatList, nil
+	return timelines, nil
 }
 
 func getMsgPreview(msg models.UserTimeline) string {
