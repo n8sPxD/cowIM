@@ -410,6 +410,9 @@
         SYSTEM_INFO: 99
     };
 
+    const SINGLE_CHAT = 0;
+    const GROUP_CHAT = 1;
+
     function sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const content = messageInput.value.trim();
@@ -428,31 +431,48 @@
         const currentTime = Date.now();
 
         // 判断是单聊还是群聊
-        const chatType = determineChatType(contactId);
+        const chatType = determineChatType(contactId); // 返回单聊或群聊的类型
 
-        // 构建消息对象
-        const messagePayload = {
-            from: myId,
-            to: Number(contactId),
-            content: content,
-            type: chatType, // 使用常量代替魔法值
-            msg_type: 1, // 假设 1 代表直接聊天，需根据实际情况调整
-            timestamp: currentTime
-        };
+        let messagePayload;
 
-        // 验证消息负载是否符合定义
+        if (chatType === SINGLE_CHAT) {
+            // 单聊的消息结构
+            messagePayload = {
+                from: myId,
+                to: Number(contactId),  // 单聊接收者的ID
+                content: content,
+                type: SINGLE_CHAT,      // 单聊类型
+                msg_type: 1,            // 假设 1 代表直接聊天，根据实际情况调整
+                timestamp: currentTime,
+                group: 0                // 单聊时 groupId 为空，填 0
+            };
+        } else if (chatType === GROUP_CHAT || chatType === BIG_GROUP_CHAT) {
+            // 群聊的消息结构
+            messagePayload = {
+                from: myId,
+                to: Number(contactId),  // 群聊时 to 为群组ID
+                content: content,
+                type: chatType,         // 根据群聊或大群聊选择 type
+                msg_type: 1,            // 假设 1 代表直接聊天，根据实际情况调整
+                timestamp: currentTime,
+                group: Number(contactId) // 群聊时 groupId 为群组ID
+            };
+        } else {
+            alert("无法识别的聊天类型");
+            return;
+        }
+
+        // 验证消息负载是否符合 protobuf 定义
         const errMsg = MessageProto.verify(messagePayload);
         if (errMsg) {
             throw Error(errMsg);
         }
 
-        // 创建消息实例
+        // 创建消息实例并编码为二进制
         const message = MessageProto.create(messagePayload);
-
-        // 编码消息为二进制
         const buffer = MessageProto.encode(message).finish();
 
-        // 发送消息通过 WebSocket
+        // 通过 WebSocket 发送消息
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(buffer);
             console.log('Sent message:', messagePayload);
@@ -460,20 +480,13 @@
             // 本地显示发送的消息，不刷新整个聊天记录
             appendMessage(messagePayload, true);
 
-            // 将消息存储到 IndexedDB
-            saveMessageToDB({
-                senderId: myId,
-                receiverId: Number(contactId),
-                content: content,
-                timestamp: currentTime
-            });
-
             // 清空输入框
             messageInput.value = '';
         } else {
             alert('WebSocket 连接未建立，请稍后再试');
         }
     }
+
 
 
     function openDatabase() {
@@ -524,7 +537,7 @@
     function determineChatType(contactId) {
         // 根据 contactId 判断是单聊还是群聊
         // 这里假设 contactId 为群聊时为负值，需根据实际情况调整
-        return contactId < 0 ? CHAT_TYPE.GROUP_CHAT : CHAT_TYPE.SINGLE_CHAT;
+        return GROUP_CHAT
     }
 
 
