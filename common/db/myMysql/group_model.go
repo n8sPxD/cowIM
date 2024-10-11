@@ -52,3 +52,16 @@ func (db *DB) InsertGroupMembers(ctx context.Context, groupID uint32, members []
 	}
 	return db.client.WithContext(ctx).Create(&membercols).Error
 }
+
+func (db *DB) GetGroupsJoined(ctx context.Context, userID uint32) ([]models.Group, error) {
+	var groups []models.Group
+	err := db.client.
+		WithContext(ctx).
+		Model(&models.Group{}).
+		Preload("GroupMembers").
+		Joins("JOIN group_members ON groups.id = group_members.group_id").
+		Where("group_members.user_id = ?", userID).
+		Find(&groups).
+		Error
+	return groups, err
+}
