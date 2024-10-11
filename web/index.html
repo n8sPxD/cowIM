@@ -194,9 +194,9 @@
                 if (data.code === 0) {
                     const token = data.content.token;
                     if (token) {
-                        localStorage.setItem('jwtToken', token);
+                        sessionStorage.setItem('jwtToken', token);
                         console.log('登录成功，JWT 令牌已存储');
-                        localStorage.setItem('cowId', id);
+                        sessionStorage.setItem('cowId', id);
                         console.log('CowID 已存储');
                     } else {
                         throw new Error('未收到 JWT 令牌');
