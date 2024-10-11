@@ -5,31 +5,32 @@
 ### 架构图
 <img src="docs/pics/cowIm架构v6.png" alt="架构图">
 
-### 目前实现与进度
-#### 底层及架构
-- [x] 自定义应用层协议
-<br><br/>
-- HTTP 网关 // 计划替换成品API网关
-- [x] 反向代理
-- [x] 鉴权
-- [ ] 用户黑名单
-- [x] CORS
-- [ ] 网络隔离
-<br><br/>
-- Websocket Server
-- [x] 鉴权
-- [x] 客户端连接信息保存
-- [ ] 网络隔离
+### 如何运行
+当前未开发完毕，构建处于测试阶段，比较复杂，后续采取服务容器化后会改进
+##### 基础服务
+```sh
+% docker-compose -f deployments/base/docker-compose.yaml up -d
+```
+##### 即时通讯系统
+```sh
+% cd deployments/run
+# 确保运行之前给予执行权限
+# chmod +x *.sh
+% ./auth_api.sh
+% ./auth_rpc.sh
+...
+```
 
-#### 业务
-- [x] 注册
-- [x] 登陆
-- [ ] 好友列表获取
-- [ ] 消息记录
-- [ ] 群聊列表获取
-- [ ] 最近会话列表
-- [x] 单聊
-- [ ] 群聊
+
+### 目前实现与进度
+#### 业务(后端)
+ - [x] 单聊
+ - [ ] 群聊
+ - [x] 好友添加
+ - [x] 好友查询
+ - [ ] 好友管理
+ - [x] 群聊创建
+ - [ ] 群聊查询
 
 #### 参考与启发
 - https://www.bilibili.com/video/BV1KM411S7WT (架构)
