@@ -85,7 +85,7 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	case constant.SINGLE_CHAT:
 		go l.singleChat(&msg, protobuf)
 	case constant.GROUP_CHAT:
-		go l.groupChat(&msg)
+		go l.groupChat(&msg, protobuf)
 	case constant.BIG_GROUP_CHAT:
 		go l.bigGroupChat(&msg)
 	default:
@@ -94,7 +94,6 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 }
 
 // 单聊处理
-// 需要传入原消息是因为单聊中的from和to无需更改,直接原样转发即可
 func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
 	// 查询Redis中路由信息
 	status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, msg.To)
@@ -138,7 +137,7 @@ func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
 }
 
 // 群聊处理
-func (l *MsgForwarder) groupChat(msg *front.Message) {
+func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 	// 先获取群里所有成员
 	members, err := l.svcCtx.MySQL.GetGroupMembers(l.ctx, uint(msg.To))
 	if err != nil {
@@ -158,12 +157,26 @@ func (l *MsgForwarder) groupChat(msg *front.Message) {
 			logx.Error(utils.FmtFuncName(), " Get router status from redis failed, error: ", err)
 			continue
 		}
+
 		// 用户在线，发消息
 		// 确定Topic
 		workID := status.WorkID
 		l.svcCtx.MsgSender.Topic = fmt.Sprintf("websocket-server-%d", workID)
+
+		// 封装inside.Message
+		wsmsg := inside.Message{
+			To:       msg.To,
+			Protobuf: protobuf,
+		}
+		wsmsgByte, err := proto.Marshal(&wsmsg)
+		if err != nil {
+			logx.Errorf(utils.FmtFuncName(), " Marshal message failed, error: ", err)
+			return
+		}
+
+		// 封装mq消息
 		mqmsg := kafka.Message{
-			// TODO: 塞序列化好的消息
+			Value: wsmsgByte,
 		}
 		// 发消息
 		if err := l.svcCtx.MsgSender.WriteMessages(l.ctx, mqmsg); err != nil {
