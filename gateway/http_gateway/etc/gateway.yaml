@@ -14,6 +14,9 @@ Proxies:
   - Route: "/wsget"
     Target: "http://localhost:20004"
 
+  - Route: "/groups"
+    Target: "http://localhost:20005"
+
 Log:
   Encoding: plain
   TimeFormat: 2006-01-02 15:04:05
