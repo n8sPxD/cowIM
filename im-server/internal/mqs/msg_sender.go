@@ -5,8 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/n8sPxD/cowIM/common/constant"
-	"github.com/n8sPxD/cowIM/common/message/front"
+	"github.com/n8sPxD/cowIM/common/message/inside"
 	"github.com/n8sPxD/cowIM/im-server/internal/server/manager"
 	"github.com/n8sPxD/cowIM/im-server/svc"
 	"github.com/segmentio/kafka-go"
@@ -60,29 +59,14 @@ func (l *MsgSender) Close() {
 
 // Consume 接受从 后端消息处理服务 发来的消息，并转发给对应的用户
 func (l *MsgSender) Consume(protobuf []byte) {
-	var msg front.Message
-	err := proto.Unmarshal(protobuf, &msg)
-	if err != nil {
+	var msg inside.Message
+	if err := proto.Unmarshal(protobuf, &msg); err != nil {
 		logx.Error("[MsgSender.Consume] Protobuf unmarshal failed, error: ", err)
 		return
 	}
-	switch msg.Type {
-	case constant.SINGLE_CHAT:
-		go l.SingleChat(&msg, protobuf)
-	case constant.GROUP_CHAT:
-		go l.GroupChat(&msg)
-	case constant.BIG_GROUP_CHAT:
-		go l.BigGroupChat()
-	default:
-		logx.Error("[MsgSender.Consume] Wrong msgForward type, Type is: ", msg.Type)
-	}
-}
-
-func (l *MsgSender) SingleChat(msg *front.Message, protobuf []byte) {
 	// 能传到这里来，代表Message服务中已经从Redis中获取到当前Recv用户在线
 	// 在线，以服务器主动推模式发送消息
-	err := l.svcCtx.ConnectionManager.SendMessage(msg.To, protobuf)
-	if err != nil {
+	if err := l.svcCtx.ConnectionManager.SendMessage(msg.To, msg.Protobuf); err != nil {
 		// Message服务中检测到用户在线，但是可能在消息中转的过程中又离线
 		if errors.Is(err, manager.ClientGoingAway) {
 			// TODO: 更改Redis信息
@@ -91,12 +75,4 @@ func (l *MsgSender) SingleChat(msg *front.Message, protobuf []byte) {
 		logx.Error("[MsgSender.SingleChat] Send msgForward failed, error: ", err)
 		return
 	}
-}
-
-func (l *MsgSender) GroupChat(msg *front.Message) {
-	// TODO: 完善逻辑
-}
-
-func (l *MsgSender) BigGroupChat() {
-	// TODO: 完善逻辑
 }
