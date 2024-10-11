@@ -9,16 +9,16 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-func infoHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+func groupInviteHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.GroupInfoRequest
+		var req types.GroupInviteRequest
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
-		l := logic.NewInfoLogic(r.Context(), svcCtx)
-		resp, err := l.Info(&req)
+		l := logic.NewGroupInviteLogic(r.Context(), svcCtx)
+		resp, err := l.GroupInvite(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

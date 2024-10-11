@@ -9,21 +9,21 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type InfoLogic struct {
+type GroupInviteLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-func NewInfoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *InfoLogic {
-	return &InfoLogic{
+func NewGroupInviteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GroupInviteLogic {
+	return &GroupInviteLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *InfoLogic) Info(req *types.GroupInfoRequest) (resp *types.GroupInfoResponse, err error) {
+func (l *GroupInviteLogic) GroupInvite(req *types.GroupInviteRequest) (resp *types.GroupInviteResponse, err error) {
 	// todo: add your logic here and delete this line
 
 	return

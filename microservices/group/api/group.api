@@ -21,13 +21,22 @@ type (
 		Groupname    string   `json:"groupname"`
 		GroupMembers []uint32 `json:"groupMembers"`
 	}
+	GroupInviteRequest {
+		UserID  uint32   `header:UserID`
+		GroupID uint32   `json:"groupId"`
+		Members []uint32 `json:"members"`
+	}
+	GroupInviteResponse  {}
 )
 
 service group {
-	@handler create
+	@handler groupCreate
 	post /group (GroupCreateRequest) returns (GroupCreateResponse)
 
-	@handler info
+	@handler groupInfo
 	get /group (GroupInfoRequest) returns (GroupInfoResponse)
+
+	@handler groupInvite
+	post /group/invite (GroupInviteRequest) returns (GroupInviteResponse)
 }
 

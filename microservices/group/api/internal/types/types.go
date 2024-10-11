@@ -17,3 +17,12 @@ type GroupInfoResponse struct {
 	Groupname    string   `json:"groupname"`
 	GroupMembers []uint32 `json:"groupMembers"`
 }
+
+type GroupInviteRequest struct {
+	UserID  uint32   `header:UserID`
+	GroupID uint32   `json:"groupId"`
+	Members []uint32 `json:"members"`
+}
+
+type GroupInviteResponse struct {
+}

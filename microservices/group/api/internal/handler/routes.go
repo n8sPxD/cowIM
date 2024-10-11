@@ -15,12 +15,17 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			{
 				Method:  http.MethodPost,
 				Path:    "/group",
-				Handler: createHandler(serverCtx),
+				Handler: groupCreateHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodGet,
 				Path:    "/group",
-				Handler: infoHandler(serverCtx),
+				Handler: groupInfoHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/group/invite",
+				Handler: groupInviteHandler(serverCtx),
 			},
 		},
 	)
