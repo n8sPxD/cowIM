@@ -4,13 +4,22 @@ import "gorm.io/gorm"
 
 type Group struct {
 	gorm.Model
-	GroupName    string       `json:"groupName"`
-	GroupMembers []User       `gorm:"many2many:group_user" json:"groupMembers"`
-	GroupConfig  *GroupConfig `json:"groupConfig"`
+	GroupName    string         `json:"groupName"`
+	GroupMembers []*GroupMember `json:"groupMembers"`
+	GroupConfig  *GroupConfig   `json:"groupConfig"`
 }
 
 type GroupConfig struct {
 	gorm.Model
-	GroupID uint32 `json:"groupID"`
-	Group   Group  `gorm:"foreignKey:GroupID" json:"-"`
+	GroupID uint  `json:"groupID"`
+	Group   Group `gorm:"foreignKey:GroupID" json:"-"`
+}
+
+type GroupMember struct {
+	gorm.Model
+	GroupID     uint   `json:"groupID"`
+	Group       Group  `gorm:"foreignKey:GroupID" json:"-"`
+	UserID      uint   `json:"userID"`
+	IngroupName string `json:"ingroupName"`
+	Role        int8   `json:"role"`
 }
