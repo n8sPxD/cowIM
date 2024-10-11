@@ -78,21 +78,22 @@
         .message-input {
             height: 100px;
             position: relative;
-            background-color: #f1f1f1;
             padding: 10px;
             display: flex;
             align-items: center;
+            background-color: transparent;
         }
 
         .message-input textarea {
             flex: 1;
             height: 80px;
             padding: 10px;
-            border: 1px solid #ccc;
+            border-color: black;
             border-radius: 4px;
             resize: none;
             font-size: 16px;
             line-height: 1.5;
+            background-color: transparent;
         }
 
         .send-button {
@@ -158,7 +159,7 @@
 
     // 设置 WebSocket 连接函数
     function setupWebSocket() {
-        const token = localStorage.getItem('jwtToken');
+        const token = sessionStorage.getItem('jwtToken');
 
         if (!token) {
             alert('JWT Token 不存在，请先登录');
@@ -275,7 +276,7 @@
     function displayContacts(messages) {
         const conversationList = document.getElementById("conversationList");
         const uniqueConversations = {};
-        const myId = Number(localStorage.getItem('cowId'));
+        const myId = Number(sessionStorage.getItem('cowId'));
 
         const filteredMessages = messages.filter(message => message.senderId === myId || message.receiverId === myId);
 
@@ -310,7 +311,7 @@
         chatHeader.innerHTML = `<p>联系人ID: ${contactId}</p>`;
         chatHistory.innerHTML = "";
 
-        const myId = Number(localStorage.getItem('cowId'));
+        const myId = Number(sessionStorage.getItem('cowId'));
 
         messages.forEach(message => {
             const messageDiv = document.createElement("div");
@@ -321,6 +322,9 @@
 
         // 保存当前选中的联系人ID，用于发送消息
         chatHistory.dataset.currentContactId = contactId;
+
+        // 聊天记录滚到最下面
+        chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 
     function generateConversationId(senderId, receiverId, myId) {
@@ -329,7 +333,7 @@
     }
 
     document.getElementById('friendsButton').onclick = function () {
-        const jwtToken = localStorage.getItem('jwtToken');
+        const jwtToken = sessionStorage.getItem('jwtToken');
 
         fetch('http://localhost:8080/friends', {
             method: 'GET',
@@ -377,7 +381,7 @@
             request.onsuccess = function (event) {
                 const messages = event.target.result.filter(message =>
                     (message.senderId === contactId || message.receiverId === contactId) &&
-                    (message.senderId === Number(localStorage.getItem('cowId')) || message.receiverId === Number(localStorage.getItem('cowId')))
+                    (message.senderId === Number(sessionStorage.getItem('cowId')) || message.receiverId === Number(sessionStorage.getItem('cowId')))
                 );
                 displayMessages(messages, contactId);
             };
@@ -421,7 +425,7 @@
             return;
         }
 
-        const myId = Number(localStorage.getItem('cowId'));
+        const myId = Number(sessionStorage.getItem('cowId'));
         const currentTime = Date.now();
 
         // 判断是单聊还是群聊
