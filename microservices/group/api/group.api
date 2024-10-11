@@ -22,13 +22,12 @@ type (
 		GroupMembers []uint32 `json:"groupMembers"`
 	}
 	GroupInviteRequest {
-		UserID  uint32   `header:UserID`
 		GroupID uint32   `json:"groupId"`
 		Members []uint32 `json:"members"`
 	}
 	GroupInviteResponse  {}
 	GroupJoinedRequest {
-		UserID uint32 `header:UserID`
+		UserID uint32 `header:"UserID""`
 	}
 	GroupJoinedResponse {
 		GroupID []uint32 `json:"groupId"`
