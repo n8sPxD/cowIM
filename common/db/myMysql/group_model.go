@@ -31,6 +31,17 @@ func (db *DB) GetGroupMembers(ctx context.Context, id uint) ([]models.GroupMembe
 	return members, err
 }
 
+func (db *DB) GetGroupMemberIDs(ctx context.Context, id uint) ([]uint, error) {
+	var ids []uint
+	err := db.client.WithContext(ctx).
+		Model(&models.GroupMember{}).
+		Select("user_id").
+		Where("group_id = ?", id).
+		Find(&ids).
+		Error
+	return ids, err
+}
+
 func (db *DB) InsertGroupMember(ctx context.Context, groupID uint32, member uint32) error {
 	membercol := models.GroupMember{
 		GroupID: uint(groupID),
