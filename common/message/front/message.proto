@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package message;
+package message1;
 option go_package = "./front"; // front 代表是前端发过来的格式,后端的消息格式不长这样单独处理
 
 message Message {

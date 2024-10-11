@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package message;
+package message2;
 option go_package = "./inside";
 
 message Message {
