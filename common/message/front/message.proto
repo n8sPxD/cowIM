@@ -1,14 +1,42 @@
 syntax = "proto3";
 
 package message;
-option go_package="./front"; // front 代表是前端发过来的格式,后端的消息格式不长这样单独处理
+option go_package = "./front"; // front 代表是前端发过来的格式,后端的消息格式不长这样单独处理
 
 message Message {
   uint32 from = 1; // 发送者
   uint32 to = 2; // 接受者
-  string content = 3; // 消息内容
-  uint32 type = 4; // 群组还是单聊，群组是500人以下群还是500人以上群？
-  uint32 msg_type = 5; // 聊天类型，直接聊天、回复、文件信息？
-  optional int64 extend = 6; // 消息拓展内容（回复消息的原消息id）
-  int64 time = 7;
+  optional uint32 group = 3; // 群组ID
+  string content = 4; // 消息内容
+  uint32 type = 5; // 群组还是单聊，群组是500人以下群还是500人以上群？这个字段其实是冗余的，只是方便后端判断
+  uint32 msg_type = 6; // 聊天类型，直接聊天、回复、文件信息？
+  optional int64 extend = 7; // 消息拓展内容（回复消息的原消息id）
+  int64 timestamp = 8; // 时间戳
 }
+
+/*
+  群聊例子：
+    群聊C中有A和B
+      A --> C
+      前端发送消息：
+      {
+        from = A
+        to = C
+        group = C
+        content = xxx
+        type = GROUP
+        msg_type = COMMON
+        timestamp = xxx
+      }
+
+      B接受消息:
+      {
+        from = A
+        to = B
+        group = C
+        content = xxx
+        type = GROUP
+        msg_type = COMMON
+        timestamp = xxx
+      }
+ */
