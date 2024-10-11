@@ -111,6 +111,9 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 }
 
 // 封装消息，发送到存库服务中进行存库
+// 对于单聊消息，正常存储
+// 对于群组消息， SenderID对应 front.Message 中的from
+// ReceiverID 对应 front.Message 中的 to，group也可以
 func (l *MsgForwarder) sendRecordMsgToDB(msg *front.Message, now time.Time) {
 	recordMsg := models.MessageRecord{
 		ID:         idgen.NextId(),
