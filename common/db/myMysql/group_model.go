@@ -19,17 +19,17 @@ func (db *DB) InsertGroup(ctx context.Context, group *models.Group) error {
 	return db.client.WithContext(ctx).Create(&models.GroupConfig{GroupID: group.ID}).Error
 }
 
-func (db *DB) GetGroupMembers(ctx context.Context, id uint) ([]models.GroupMember, error) {
-	var members []models.GroupMember
-	err := db.client.WithContext(ctx).
-		Model(&models.Group{}).
-		Preload("GroupMembers").
-		Select("group_members").
-		Where("id = ?", id).
-		Find(&members).
-		Error
-	return members, err
-}
+//func (db *DB) GetGroupMembers(ctx context.Context, id uint) ([]models.GroupMember, error) {
+//	var members []models.GroupMember
+//	err := db.client.WithContext(ctx).
+//		Model(&models.Group{}).
+//		Preload("GroupMembers").
+//		Select("group_members").
+//		Where("id = ?", id).
+//		Find(&members).
+//		Error
+//	return members, err
+//}
 
 func (db *DB) GetGroupMemberIDs(ctx context.Context, id uint) ([]uint, error) {
 	var ids []uint

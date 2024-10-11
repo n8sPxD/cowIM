@@ -61,7 +61,7 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 
 	case constant.GROUP_CHAT:
 		// 先从MySQL查找群聊成员
-		members, err := l.svcCtx.MySQL.GetGroupMembers(l.ctx, uint(msg.To))
+		members, err := l.svcCtx.MySQL.GetGroupMemberIDs(l.ctx, uint(msg.To))
 		if err != nil {
 			logx.Error("[sendTimelineToDB] GetGroupMembers failed, error: ", err)
 			return
@@ -73,7 +73,7 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 		for _, member := range members {
 			current := models.UserTimeline{
 				ID:         idgen.NextId(),
-				ReceiverID: uint32(member.UserID),
+				ReceiverID: uint32(member),
 				SenderID:   msg.From,
 				GroupID:    msg.To,
 				Message:    syncMsg,
