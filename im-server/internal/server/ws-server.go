@@ -141,13 +141,13 @@ func (s *Server) checkOnline(id uint32) {
 		err error
 	)
 	if msg, err = proto.Marshal(&front.Message{
-		From:    constant.SYSTEM,
-		To:      id,
-		Content: "您已在另一台客户端登陆！即将强制下线",
-		Type:    constant.SYSTEM_INFO,
-		MsgType: constant.MSG_SYSTEM_MSG,
-		Extend:  nil,
-		Time:    time.Now().Unix(),
+		From:      constant.SYSTEM,
+		To:        id,
+		Content:   "您已在另一台客户端登陆！即将强制下线",
+		Type:      constant.SYSTEM_INFO,
+		MsgType:   constant.MSG_SYSTEM_MSG,
+		Extend:    nil,
+		Timestamp: time.Now().Unix(),
 	}); err != nil {
 		logx.Error("[checkOnline] Marshal message to protobuf failed, error: ", err)
 		// 发不了通知消息不影响后续把人家踢下线的流程，大不了之前的客户端干啥都干不了(连接都断了)，所以无需return
