@@ -24,21 +24,21 @@ export function initDB() {
 
             // 创建 messages 表
             if (!db.objectStoreNames.contains('messages')) {
-                const messagesStore = db.createObjectStore('messages', { keyPath: 'id' });
-                messagesStore.createIndex('from', 'from', { unique: false });
-                messagesStore.createIndex('to', 'to', { unique: false });
-                messagesStore.createIndex('group', 'group', { unique: false });
-                messagesStore.createIndex('timestamp', 'timestamp', { unique: false });
+                const messagesStore = db.createObjectStore('messages', {keyPath: 'id'});
+                messagesStore.createIndex('from', 'from', {unique: false});
+                messagesStore.createIndex('to', 'to', {unique: false});
+                messagesStore.createIndex('group', 'group', {unique: false});
+                messagesStore.createIndex('timestamp', 'timestamp', {unique: false});
             }
 
             // 创建 friends 表
             if (!db.objectStoreNames.contains('friends')) {
-                db.createObjectStore('friends', { keyPath: 'friendID' });
+                db.createObjectStore('friends', {keyPath: 'friendID'});
             }
 
             // 创建 groups 表
             if (!db.objectStoreNames.contains('groups')) {
-                db.createObjectStore('groups', { keyPath: 'groupID' });
+                db.createObjectStore('groups', {keyPath: 'groupID'});
             }
         };
     });
@@ -244,17 +244,18 @@ export function getLatestTimestamp() {
         // 打开游标，按时间戳倒序获取最新的记录
         const request = store.index('timestamp').openCursor(null, 'prev');
 
-        request.onsuccess = function(event) {
+        request.onsuccess = function (event) {
             const cursor = event.target.result;
             if (cursor) {
-                const latestTimestamp = cursor.value.timestamp; // 获取最新的 timestamp
+                const latestTimestamp = new Date(cursor.value.timestamp).getTime(); // 获取最新的 timestamp
+                console.log("timestamp: ", latestTimestamp)
                 resolve(latestTimestamp);
             } else {
                 resolve(0); // 如果没有记录，返回 null
             }
         };
 
-        request.onerror = function(event) {
+        request.onerror = function (event) {
             console.error('获取最新 timestamp 失败:', event.target.error);
             reject(event.target.error);
         };

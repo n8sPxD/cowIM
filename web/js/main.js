@@ -1,6 +1,6 @@
 // js/main.js
 
-import {addMessage, getLatestTimestamp, initDB} from './db.js';
+import {addGroup, addMessage, getLatestTimestamp, initDB} from './db.js';
 import {connectWebSocket, onMessageReceived} from './websocket.js';
 import {loadProto} from './message.js';
 
@@ -110,7 +110,7 @@ async function fetchInitialData() {
     if (!groupsResponse.ok) throw new Error('获取群组信息失败');
 
     const groupsData = await groupsResponse.json();
-    for (const group of groupsData) {
+    for (const group of groupsData.content.groupId) {
         await addGroup(group);
     }
 
