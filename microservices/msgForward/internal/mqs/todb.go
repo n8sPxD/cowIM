@@ -61,7 +61,7 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 
 	case constant.GROUP_CHAT:
 		// 先从MySQL查找群聊成员
-		members, err := l.svcCtx.MySQL.GetGroupMemberIDs(l.ctx, uint(msg.To))
+		members, err := l.svcCtx.MySQL.GetGroupMemberIDs(l.ctx, uint(*msg.Group))
 		if err != nil {
 			logx.Error("[sendTimelineToDB] GetGroupMembers failed, error: ", err)
 			return
