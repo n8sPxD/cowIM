@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-// MessageSync 消息同步表，用于用户即时能查询的信息，不直接入库，由Timeline简介入库（做数据冗余）
+// MessageSync 消息同步表，用于用户即时能查询的信息，不直接入库，由Timeline间接入库（做数据冗余）
 type MessageSync struct {
 	ID        int64     `bson:"_id"              json:"id"`
 	MsgType   uint8     `bson:"msg_type"         json:"msgType"`
