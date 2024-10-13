@@ -106,7 +106,7 @@ async function fetchInitialData() {
                 msg_type: msgForward.msgType,          // 聊天类型
                 timestamp: new Date(msgForward.timestamp).getTime() // 时间戳转换为时间戳（毫秒）
             };
-            await addMessage(timeline.msgForward); // 假设 addMessage 函数会处理消息存储
+            await addMessage(formattedMessage); // 假设 addMessage 函数会处理消息存储
         }
     } else {
         console.log("没有最新的同步消息")
