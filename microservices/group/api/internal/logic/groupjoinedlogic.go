@@ -31,7 +31,7 @@ func (l *GroupJoinedLogic) GroupJoined(req *types.GroupJoinedRequest) (*types.Gr
 		logx.Error("[GroupJoined] Get groups from MySQL failed, error: ", err)
 		return nil, errors.New("获取群组信息失败")
 	}
-	infos := make([]types.GroupJoinedInfo, 0, len(groups))
+	infos := make([]types.GroupJoinedInfo, len(groups))
 	for i, group := range groups {
 		infos[i].GroupID = uint32(group.ID)
 		infos[i].GroupName = group.GroupName
