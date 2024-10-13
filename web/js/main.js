@@ -273,7 +273,7 @@ async function displayGroupsList() {
     for (const group of groups) {
         const groupItem = document.createElement('div');
         groupItem.textContent = group.groupName;
-        groupItem.dataset.groupId = group.groupID;
+        groupItem.dataset.groupID = group.groupID;
         groupItem.classList.add('group-item');
         groupItem.addEventListener('click', () => selectConversation(`group_${group.groupID}`));
 
@@ -298,7 +298,7 @@ async function selectConversation(chatID) {
     // 设置聊天头部
     if (String(chatID).startsWith('group_')) {  // 确保 chatID 是字符串
         const groupID = Number(chatID.split('_')[1]);
-        const group = await getGroupByID(groupID);
+        const group = await getGroupByID(Number(groupID));
         chatHeader.textContent = group ? group.groupName : `群组 ${groupID}`;
     } else {
         const friend = await getFriendByID(Number(chatID));
