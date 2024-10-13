@@ -400,8 +400,6 @@ async function handleIncomingMessage(data) {
     // 假设接收到的消息是 Protobuf 二进制数据
     const message = deserializeMessage(data);
 
-    console.log("在handleIncomingMessage中，反序列化后的消息为: ", message)
-
     // 存储消息到 IndexedDB
     await addMessage(message);
 
@@ -409,7 +407,7 @@ async function handleIncomingMessage(data) {
     const currentChatID = getSelectedChatID();
     const messageChatID = message.group ? `group_${message.group}` : (message.from === Number(sessionStorage.getItem('CowID')) ? message.to : message.from);
 
-    if (messageChatID === currentChatID) {
+    if (messageChatID == currentChatID) {
         appendMessageToChatHistory(message);
     }
 
