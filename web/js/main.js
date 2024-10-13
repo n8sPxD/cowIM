@@ -274,7 +274,6 @@ async function displayGroupsList() {
         const groupItem = document.createElement('div');
         groupItem.textContent = group.groupName;
         groupItem.dataset.groupId = group.groupID;
-        groupItem.dataset.chatId = `group_${group.groupID}`
         groupItem.classList.add('group-item');
         groupItem.addEventListener('click', () => selectConversation(`group_${group.groupID}`));
 
@@ -288,7 +287,13 @@ async function selectConversation(chatID) {
     document.querySelectorAll('.chat-item, .friend-item, .group-item').forEach(item => {
         item.classList.remove('selected');
     });
-    const selectedItem = document.querySelector(`[data-chat-id="${chatID}"], [data-friend-id="${chatID}"], [data-group-id="${chatID}"]`);
+
+    const isGroup = String(chatID).startsWith('group_');
+    const tmpGroupID = isGroup ? Number(chatID.split('_')[1]) : null;
+
+    const selectedItem = document.querySelector(`[data-chat-id="${chatID}"], [data-friend-id="${chatID}"], [data-group-id="${tmpGroupID}"]`);
+    console.log("selectedItem: ", selectedItem);
+
     if (selectedItem) {
         selectedItem.classList.add('selected');
     }
@@ -297,15 +302,14 @@ async function selectConversation(chatID) {
     const chatHistory = document.getElementById('chatHistory');
 
     // 设置聊天头部
-    if (String(chatID).startsWith('group_')) {  // 确保 chatID 是字符串
-        const groupID = Number(chatID.split('_')[1]);
-        const group = await getGroupByID(Number(groupID));
+    if (isGroup) {
+        const groupID = tmpGroupID;
+        const group = await getGroupByID(groupID);
         chatHeader.textContent = group ? group.groupName : `群组 ${groupID}`;
     } else {
         const friend = await getFriendByID(Number(chatID));
         chatHeader.textContent = friend ? friend.friendName : `用户 ${chatID}`;
     }
-
 
     // 加载聊天记录
     const messages = await getChatMessages(chatID);
@@ -322,6 +326,7 @@ async function selectConversation(chatID) {
     // 滚动到底部
     chatHistory.scrollTop = chatHistory.scrollHeight;
 }
+
 
 // 处理发送消息
 async function handleSendMessage() {
