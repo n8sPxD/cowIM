@@ -1,8 +1,17 @@
 // js/main.js
 
-import {addGroup, addMessage, getLatestTimestamp, initDB} from './db.js';
-import {connectWebSocket, onMessageReceived} from './websocket.js';
-import {loadProto} from './message.js';
+import {
+    addFriend,
+    addGroup,
+    addMessage, getAllFriends, getAllGroups, getAllMessages,
+    getChatMessages,
+    getFriendByID,
+    getGroupByID,
+    getLatestTimestamp,
+    initDB
+} from './db.js';
+import {connectWebSocket, onMessageReceived, sendMessageWithAck} from './websocket.js';
+import {deserializeMessage, loadProto, serializeMessage} from './message.js';
 
 // 页面加载完成后初始化
 export async function initializeMain() {
@@ -82,21 +91,24 @@ async function fetchInitialData() {
     if (!timelineResponse.ok) throw new Error('获取离线消息失败');
 
     const timelineData = await timelineResponse.json();
-    console.log("timelineData: ", timelineData)
-    for (const timeline of timelineData.infos) {
-        const {msgForward} = timeline;
-        // 将后端返回的消息转换为 IndexedDB 所需的消息格式
-        const formattedMessage = {
-            id: msgForward.id.toString(),         // 消息 ID，转换为字符串
-            from: timeline.senderID,               // 发送者 ID
-            to: timeline.receiverID,               // 接受者 ID
-            group: msgForward.msgType === 1 ? msgForward.group : undefined, // 如果是群聊则有群组 ID
-            content: msgForward.content,           // 消息内容
-            type: msgForward.type,              // 消息类型，0 表示单聊，1 表示群聊
-            msg_type: msgForward.msgType,          // 聊天类型
-            timestamp: new Date(msgForward.timestamp).getTime() // 时间戳转换为时间戳（毫秒）
-        };
-        await addMessage(timeline.msgForward); // 假设 addMessage 函数会处理消息存储
+    if (timelineData.infos && Array.isArray(timelineData.infos)) {
+        for (const timeline of timelineData.infos) {
+            const {msgForward} = timeline;
+            // 将后端返回的消息转换为 IndexedDB 所需的消息格式
+            const formattedMessage = {
+                id: msgForward.id.toString(),         // 消息 ID，转换为字符串
+                from: timeline.senderID,               // 发送者 ID
+                to: timeline.receiverID,               // 接受者 ID
+                group: msgForward.msgType === 1 ? msgForward.group : undefined, // 如果是群聊则有群组 ID
+                content: msgForward.content,           // 消息内容
+                type: msgForward.type,              // 消息类型，0 表示单聊，1 表示群聊
+                msg_type: msgForward.msgType,          // 聊天类型
+                timestamp: new Date(msgForward.timestamp).getTime() // 时间戳转换为时间戳（毫秒）
+            };
+            await addMessage(timeline.msgForward); // 假设 addMessage 函数会处理消息存储
+        }
+    } else {
+        console.log("没有最新的同步消息")
     }
 
     // 获取群组信息 /groups
@@ -110,8 +122,15 @@ async function fetchInitialData() {
     if (!groupsResponse.ok) throw new Error('获取群组信息失败');
 
     const groupsData = await groupsResponse.json();
-    for (const group of groupsData.content.groupId) {
-        await addGroup(group);
+    if (groupsData.content.groupId && Array.isArray(groupsData.content.groupId)) {
+        for (const group of groupsData.content.groupId) {
+            const tmpGroup = {
+                groupID: group
+            }
+            await addGroup(tmpGroup);
+        }
+    } else {
+        console.log("群组为空")
     }
 
     // 获取好友列表 /friends
@@ -125,10 +144,18 @@ async function fetchInitialData() {
     if (!friendsResponse.ok) throw new Error('获取好友列表失败');
 
     const friendsData = await friendsResponse.json();
-    for (const friend of friendsData) {
-        await addFriend(friend);
+    if (friendsData.content.friends && Array.isArray(friendsData.content.friends)) {
+        for (const friend of friendsData.content.friends) {
+            const formattedFriend = {
+                friendID: friend.friendId,
+                friend_name: friend.username,
+                friend_avatar: friend.avatar,
+            };
+            await addFriend(formattedFriend);
+        }
     }
 }
+
 
 // 初始化 UI 组件和事件监听
 function initializeUI() {
@@ -149,6 +176,246 @@ function initializeUI() {
             event.preventDefault();
             handleSendMessage();
         }
+    });
+}
+
+// 显示最近会话列表
+async function displayRecentConversations() {
+    const conversationList = document.getElementById('conversationList');
+    conversationList.innerHTML = ''; // 清空现有列表
+
+    const messages = await getAllMessages();
+    const recentChats = new Map(); // key: chatID, value: latest message
+
+    messages.forEach(msg => {
+        if (msg.type === 0) { // SINGLE_CHAT
+            const chatID = msg.from === Number(sessionStorage.getItem('CowID')) ? msg.to : msg.from;
+            if (!recentChats.has(chatID) || recentChats.get(chatID).timestamp < msg.timestamp) {
+                recentChats.set(chatID, msg);
+            }
+        } else if (msg.type === 1) { // GROUP_CHAT
+            const groupID = msg.group;
+            if (!recentChats.has(`group_${groupID}`) || recentChats.get(`group_${groupID}`).timestamp < msg.timestamp) {
+                recentChats.set(`group_${groupID}`, msg);
+            }
+        }
+    });
+
+    // 转换为数组并按时间戳降序排序
+    const sortedChats = Array.from(recentChats.entries()).sort((a, b) => b[1].timestamp - a[1].timestamp);
+
+    for (const [chatID, msg] of sortedChats) {
+        let displayName;
+        if (chatID.startsWith('group_')) {
+            const groupID = chatID.split('_')[1];
+            const group = await getGroupByID(Number(groupID));
+            displayName = group ? group.groupName : `群组 ${groupID}`;
+        } else {
+            const friend = await getFriendByID(Number(chatID));
+            displayName = friend ? friend.friendName : `用户 ${chatID}`;
+        }
+
+        const chatItem = document.createElement('div');
+        chatItem.textContent = displayName;
+        chatItem.dataset.chatId = chatID;
+        chatItem.classList.add('chat-item');
+        chatItem.addEventListener('click', () => selectConversation(chatID));
+
+        conversationList.appendChild(chatItem);
+    }
+}
+
+// 显示好友列表
+async function displayFriendsList() {
+    const conversationList = document.getElementById('conversationList');
+    conversationList.innerHTML = ''; // 清空现有列表
+
+    const friends = await getAllFriends();
+
+    // 按用户名排序
+    friends.sort((a, b) => a.friendName.localeCompare(b.friendName));
+
+    for (const friend of friends) {
+        const friendItem = document.createElement('div');
+        friendItem.textContent = friend.friendName;
+        friendItem.dataset.friendId = friend.friendID;
+        friendItem.classList.add('friend-item');
+        friendItem.addEventListener('click', () => selectConversation(friend.friendID));
+
+        conversationList.appendChild(friendItem);
+    }
+}
+
+// 显示群组列表
+async function displayGroupsList() {
+    const conversationList = document.getElementById('conversationList');
+    conversationList.innerHTML = ''; // 清空现有列表
+
+    const groups = await getAllGroups();
+
+    // 按群名排序
+    groups.sort((a, b) => a.groupName.localeCompare(b.groupName));
+
+    for (const group of groups) {
+        const groupItem = document.createElement('div');
+        groupItem.textContent = group.groupName;
+        groupItem.dataset.groupId = group.groupID;
+        groupItem.classList.add('group-item');
+        groupItem.addEventListener('click', () => selectConversation(`group_${group.groupID}`));
+
+        conversationList.appendChild(groupItem);
+    }
+}
+
+// 选择一个会话（好友或群组）
+async function selectConversation(chatID) {
+    // 标记选中的会话
+    document.querySelectorAll('.chat-item, .friend-item, .group-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    const selectedItem = document.querySelector(`[data-chat-id="${chatID}"], [data-friend-id="${chatID}"], [data-group-id="${chatID}"]`);
+    if (selectedItem) {
+        selectedItem.classList.add('selected');
+    }
+
+    const chatHeader = document.getElementById('chatHeader');
+    const chatHistory = document.getElementById('chatHistory');
+
+    // 设置聊天头部
+    if (chatID.startsWith('group_')) {
+        const groupID = Number(chatID.split('_')[1]);
+        const group = await getGroupByID(groupID);
+        chatHeader.textContent = group ? group.groupName : `群组 ${groupID}`;
+    } else {
+        const friend = await getFriendByID(Number(chatID));
+        chatHeader.textContent = friend ? friend.friendName : `用户 ${chatID}`;
+    }
+
+    // 加载聊天记录
+    const messages = await getChatMessages(chatID);
+    chatHistory.innerHTML = ''; // 清空现有记录
+
+    messages.forEach(msg => {
+        const messageElement = document.createElement('div');
+        messageElement.textContent = `${msg.from === Number(sessionStorage.getItem('CowID')) ? '我' : '对方'}: ${msg.content}`;
+        chatHistory.appendChild(messageElement);
+    });
+
+    // 滚动到底部
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+// 处理发送消息
+async function handleSendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const content = messageInput.value.trim();
+    if (!content) return;
+
+    const chatID = getSelectedChatID();
+    if (!chatID) {
+        alert('请选择一个会话');
+        return;
+    }
+
+    const from = Number(sessionStorage.getItem('CowID'));
+    let to = null;
+    let group = null;
+
+    if (chatID.startsWith('group_')) {
+        group = Number(chatID.split('_')[1]);
+    } else {
+        to = Number(chatID);
+    }
+
+    // 创建消息对象
+    const message = {
+        id: generateUUID(),
+        from: from,
+        to: to,
+        group: group,
+        content: content,
+        type: group ? 1 : 0,           // 1 - GROUP_CHAT, 0 - SINGLE_CHAT
+        msg_type: 0,                   // 0 - MSG_COMMON_MSG
+        extend: null,
+        timestamp: Date.now()
+    };
+
+    try {
+        // 序列化消息
+        const serializedMessage = serializeMessage(message);
+
+        // 发送消息并处理 ACK
+        sendMessageWithAck(message, serializedMessage);
+
+        // 存储消息到 IndexedDB
+        await addMessage(message);
+
+        // 更新 UI
+        appendMessageToChatHistory(message);
+
+        // 清空输入框
+        messageInput.value = '';
+    } catch (error) {
+        console.error('发送消息失败:', error);
+        alert('发送消息失败，请重试');
+    }
+}
+
+// 获取选中的会话ID
+function getSelectedChatID() {
+    const selectedItem = document.querySelector('.chat-item.selected, .friend-item.selected, .group-item.selected');
+    if (selectedItem) {
+        return selectedItem.dataset.chatId || selectedItem.dataset.friendId || selectedItem.dataset.groupId;
+    }
+    return null;
+}
+
+// 将消息追加到聊天记录
+function appendMessageToChatHistory(message) {
+    const chatHistory = document.getElementById('chatHistory');
+
+    const messageElement = document.createElement('div');
+    messageElement.textContent = `${message.from === Number(sessionStorage.getItem('CowID')) ? '我' : '对方'}: ${message.content}`;
+    chatHistory.appendChild(messageElement);
+
+    // 滚动到底部
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+// 处理接收到的消息
+async function handleIncomingMessage(data) {
+    // 假设接收到的消息是 Protobuf 二进制数据
+    const message = deserializeMessage(data);
+
+    // 存储消息到 IndexedDB
+    await addMessage(message);
+
+    // 如果消息属于当前会话，追加到聊天记录
+    const currentChatID = getSelectedChatID();
+    const messageChatID = message.group ? `group_${message.group}` : (message.from === Number(sessionStorage.getItem('CowID')) ? message.to : message.from);
+
+    if (messageChatID === currentChatID) {
+        appendMessageToChatHistory(message);
+    }
+
+    // 更新最近会话列表
+    displayRecentConversations();
+}
+
+// 生成 UUID（简单版本）
+function generateUUID() { // 公有领域/MIT 许可
+    let d = new Date().getTime();// 时间戳
+    let d2 = (performance && performance.now && (performance.now()*1000)) || 0;// 微秒级时间
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        let r = Math.random() * 16;// 随机数
+        if(d > 0){
+            r = (d + r)%16 | 0;
+            d = Math.floor(d/16);
+        } else {
+            r = (d2 + r)%16 | 0;
+            d2 = Math.floor(d2/16);
+        }
+        return (c==='x' ? r : (r&0x3|0x8)).toString(16);
     });
 }
 
