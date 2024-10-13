@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/n8sPxD/cowIM/common/constant"
@@ -72,13 +73,29 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	var msg front.Message
 	err := proto.Unmarshal(protobuf, &msg)
 	if err != nil {
-		logx.Error("[MsgForwarder.Consume] Unmarshal msgForward failed, error: ", err)
+		logx.Error("[Consume] Unmarshal msgForward failed, error: ", err)
 		return
 	}
 
+	// 检查消息重复性
+	if ok, err := l.svcCtx.Redis.CheckDuplicateMessage(l.ctx, msg.Id); err != nil {
+		logx.Error("[Consume] Check duplicate message from redis failed, error: ", err)
+		return
+	} else if ok { // 消息是重复的
+		logx.Infof("[Consume] Message from %d with ID \"%s\" sent repeated", msg.From, msg.Id)
+		return
+	}
+
+	// 分配消息ID
+	id := idgen.NextId()
+	msg.Id = strconv.FormatInt(id, 10)
+
 	// 异步存库
 	go l.sendRecordMsgToDB(&msg, now) // 漫游库
-	go l.sendTimelineToDB(&msg, now)  // timeline+同步库
+	go l.sendTimelineToDB(&msg, now)  // timeline
+
+	// Ack消息
+	go l.replyAckMessage(&msg)
 
 	// 进行基于消息类型的消息处理
 	switch msg.Type {
@@ -89,7 +106,8 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	case constant.BIG_GROUP_CHAT:
 		go l.bigGroupChat(&msg)
 	default:
-		logx.Error("[MsgForwarder.Consume] Wrong msgForward type, Type is: ", msg.Type)
+		logx.Error("[Consume] Wrong msgForward type, Type is: ", msg.Type)
+		return
 	}
 }
 
@@ -103,7 +121,7 @@ func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
 		return
 	}
 	if err != nil {
-		logx.Error("[MsgForwarder.singleChat] Get router status from redis failed, error: ", err)
+		logx.Error("[singleChat] Get router status from redis failed, error: ", err)
 		return
 	}
 
@@ -129,7 +147,7 @@ func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
 	err = l.svcCtx.MsgSender.WriteMessages(l.ctx, mqMsg)
 	if err != nil {
 		logx.Error(
-			"[MsgForwarder.singleChat] Push msgForward to Websocket-server MQ failed, error: ",
+			"[singleChat] Push msgForward to Websocket-server MQ failed, error: ",
 			err,
 		)
 		return
@@ -141,7 +159,7 @@ func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 	// 先获取群里所有成员
 	members, err := l.svcCtx.MySQL.GetGroupMemberIDs(l.ctx, uint(msg.To))
 	if err != nil {
-		logx.Error(utils.FmtFuncName(), " Get group members from mysql failed, error: ", err)
+		logx.Error("[groupChat] Get group members from mysql failed, error: ", err)
 		return
 	}
 	// TODO: 可以优化，先处理所有消息，然后把对应服务器的消息以切片形式发送，避免重复调用WriteMessages
@@ -154,7 +172,7 @@ func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 			continue
 		} else if err != nil {
 			// redis出问题了
-			logx.Error(utils.FmtFuncName(), " Get router status from redis failed, error: ", err)
+			logx.Error("[groupChat] Get router status from redis failed, error: ", err)
 			continue
 		}
 
@@ -170,7 +188,7 @@ func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 		}
 		wsmsgByte, err := proto.Marshal(&wsmsg)
 		if err != nil {
-			logx.Errorf(utils.FmtFuncName(), " Marshal message failed, error: ", err)
+			logx.Error("[groupChat] Marshal message failed, error: ", err)
 			return
 		}
 
@@ -180,7 +198,7 @@ func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 		}
 		// 发消息
 		if err := l.svcCtx.MsgSender.WriteMessages(l.ctx, mqmsg); err != nil {
-			logx.Error(utils.FmtFuncName(), " Push msgForward to Websocket-server MQ failed, error: ", err)
+			logx.Error("[groupChat] Push msgForward to Websocket-server MQ failed, error: ", err)
 			continue
 		}
 	}
@@ -188,4 +206,57 @@ func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 
 func (l *MsgForwarder) bigGroupChat(msg *front.Message) {
 	// TODO: 完善逻辑
+}
+
+func (l *MsgForwarder) replyAckMessage(sender *front.Message) {
+	// 封装消息体
+	reply := front.Message{
+		From:    constant.USER_SYSTEM,
+		To:      sender.From,
+		Content: sender.Id, // 后端分配好的消息ID
+		Type:    constant.SYSTEM_INFO,
+		MsgType: constant.MSG_SYSTEM_MSG,
+	}
+	protobuf, err := proto.Marshal(&reply)
+	if err != nil {
+		logx.Error("[replyAckMessage] Marshal message failed, error: ", err)
+		return
+	}
+
+	// 查询Redis中路由信息
+	status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, sender.From)
+	if errors.Is(err, redis.Nil) {
+		// 没找到当前用户的路由信息，说明没上线
+		// 由于是系统提示没发成功消息，如果用户不在线就不用再提示他发过消息了
+		return
+	}
+	if err != nil {
+		logx.Error("[replyAckMessage] Get router status from redis failed, error: ", err)
+		return
+	}
+
+	// 转发消息到指定的websocket-server
+	// 先确定Topic
+	workID := status.WorkID
+	l.svcCtx.MsgSender.Topic = fmt.Sprintf("websocket-server-%d", workID)
+
+	// 封装inside.Message
+	wsmsg := inside.Message{
+		To:       sender.From,
+		Protobuf: protobuf,
+	}
+	wsmsgByte, err := proto.Marshal(&wsmsg)
+	if err != nil {
+		logx.Error("[replyAckMessage] Marshal message failed, error: ", err)
+		return
+	}
+
+	// 封装mq消息
+	mq := kafka.Message{
+		Value: wsmsgByte,
+	}
+	if err := l.svcCtx.MsgSender.WriteMessages(l.ctx, mq); err != nil {
+		logx.Error("[replyAckMessage] Push message to Websocket-server MQ failed, error: ", err)
+		return
+	}
 }

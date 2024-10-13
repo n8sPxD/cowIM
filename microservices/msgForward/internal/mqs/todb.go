@@ -2,6 +2,7 @@ package mqs
 
 import (
 	"encoding/json"
+	"strconv"
 	"time"
 
 	"github.com/n8sPxD/cowIM/common/constant"
@@ -14,8 +15,9 @@ import (
 )
 
 func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
+	id, _ := strconv.ParseInt(msg.Id, 10, 64)
 	syncMsg := models.MessageSync{
-		ID:        idgen.NextId(),
+		ID:        id,
 		MsgType:   uint8(msg.MsgType),
 		Content:   msg.Content,
 		Timestamp: now,
@@ -117,8 +119,9 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 // 对于群组消息， SenderID对应 front.Message 中的from
 // ReceiverID 对应 front.Message 中的 to，group也可以
 func (l *MsgForwarder) sendRecordMsgToDB(msg *front.Message, now time.Time) {
+	id, _ := strconv.ParseInt(msg.Id, 10, 64)
 	recordMsg := models.MessageRecord{
-		ID:         idgen.NextId(),
+		ID:         id,
 		SenderID:   msg.From,
 		Type:       uint8(msg.Type),
 		ReceiverID: msg.To,

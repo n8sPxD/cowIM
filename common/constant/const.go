@@ -1,12 +1,5 @@
 package constant
 
-// User 权利
-const (
-	USER_ADMIN  = 0
-	USER_COMMON = 1
-	USER_SYSTEM = 99
-)
-
 // Message 类型
 const (
 	MSG_COMMON_MSG = iota
@@ -34,7 +27,8 @@ const (
 
 // 特殊用户
 const (
-	SYSTEM = iota // 系统消息
+	USER_SYSTEM = iota // 系统消息
+	USER_COMMON
 )
 
 // 群聊权限
