@@ -68,10 +68,11 @@ func (db *DB) GetGroupsJoinedBaseInfo(ctx context.Context, userID uint32) ([]mod
 	var groups []models.Group
 	err := db.client.
 		WithContext(ctx).
-		Model(&models.GroupMember{}).
-		Select("group_id", "group_name", "group_avatar").
-		Where("user_id = ?", userID).
-		Take(&groups).
+		Model(&models.Group{}).
+		Select("groups.id", "groups.group_name", "groups.group_avatar").
+		Joins("JOIN group_members on groups.id = group_members.group_id").
+		Where("group_members.user_id = ?", userID).
+		Scan(&groups).
 		Error
 	return groups, err
 }
