@@ -3,7 +3,10 @@
 import {
     addFriend,
     addGroup,
-    addMessage, getAllFriends, getAllGroups, getAllMessages,
+    addMessage,
+    getAllFriends,
+    getAllGroups,
+    getAllMessages,
     getChatMessages,
     getFriendByID,
     getGroupByID,
@@ -13,6 +16,7 @@ import {
 import {connectWebSocket, onMessageReceived, sendMessageWithAck} from './websocket.js';
 import {deserializeMessage, loadProto, serializeMessage} from './message.js';
 import {generateUUID} from "./utils.js";
+import {GROUP_CHAT, MSG_COMMON_MSG, SINGLE_CHAT} from "./constant.js";
 
 // 页面加载完成后初始化
 export async function initializeMain() {
@@ -100,9 +104,9 @@ async function fetchInitialData() {
                 id: msgForward.id.toString(),         // 消息 ID，转换为字符串
                 from: timeline.senderID,               // 发送者 ID
                 to: timeline.receiverID,               // 接受者 ID
-                group: msgForward.msgType === 1 ? msgForward.group : undefined, // 如果是群聊则有群组 ID
+                group: timeline.type === GROUP_CHAT ? timeline.group : undefined, // 如果是群聊则有群组 ID
                 content: msgForward.content,           // 消息内容
-                type: timeline.type,              // 消息类型，0 表示单聊，1 表示群聊
+                type: timeline.type,              // 消息类型
                 msg_type: msgForward.msgType,          // 聊天类型
                 timestamp: new Date(msgForward.timestamp).getTime() // 时间戳转换为时间戳（毫秒）
             };
@@ -189,12 +193,12 @@ async function displayRecentConversations() {
     const recentChats = new Map(); // key: chatID, value: latest message
 
     messages.forEach(msg => {
-        if (msg.type === 0) { // SINGLE_CHAT
+        if (msg.type === SINGLE_CHAT) { // SINGLE_CHAT
             const chatID = msg.from === Number(sessionStorage.getItem('CowID')) ? msg.to : msg.from;
             if (!recentChats.has(chatID) || recentChats.get(chatID).timestamp < msg.timestamp) {
                 recentChats.set(chatID, msg);
             }
-        } else if (msg.type === 1) { // GROUP_CHAT
+        } else if (msg.type === GROUP_CHAT) { // GROUP_CHAT
             const groupID = msg.group;
             if (!recentChats.has(`group_${groupID}`) || recentChats.get(`group_${groupID}`).timestamp < msg.timestamp) {
                 recentChats.set(`group_${groupID}`, msg);
@@ -336,8 +340,8 @@ async function handleSendMessage() {
         to: to,
         group: group,
         content: content,
-        type: group ? 1 : 0,           // 1 - GROUP_CHAT, 0 - SINGLE_CHAT
-        msg_type: 0,                   // 0 - MSG_COMMON_MSG
+        type: group ? GROUP_CHAT : SINGLE_CHAT,           // 1 - GROUP_CHAT, 0 - SINGLE_CHAT
+        msg_type: MSG_COMMON_MSG,                   // 0 - MSG_COMMON_MSG
         extend: null,
         timestamp: Date.now()
     };
@@ -377,7 +381,7 @@ function appendMessageToChatHistory(message) {
     const chatHistory = document.getElementById('chatHistory');
 
     const messageElement = document.createElement('div');
-    console.log("在appendMessageToChatHistory中，消息为: ",message)
+    console.log("在appendMessageToChatHistory中，消息为: ", message)
     messageElement.textContent = `${message.from === Number(sessionStorage.getItem('CowID')) ? '我' : '对方'}: ${message.content}`;
     chatHistory.appendChild(messageElement);
 
