@@ -300,11 +300,13 @@ async function selectConversation(chatID) {
 
     // 加载聊天记录
     const messages = await getChatMessages(chatID);
+    const cowID = Number(sessionStorage.getItem('CowID'));
     chatHistory.innerHTML = ''; // 清空现有记录
 
     messages.forEach(msg => {
         const messageElement = document.createElement('div');
-        messageElement.textContent = `${msg.from === Number(sessionStorage.getItem('CowID')) ? '我' : '对方'}: ${msg.content}`;
+        messageElement.style.textAlign = msg.from === cowID ? "right" : "left";
+        messageElement.textContent = msg.content;
         chatHistory.appendChild(messageElement);
     });
 
@@ -382,10 +384,11 @@ function getSelectedChatID() {
 // 将消息追加到聊天记录
 function appendMessageToChatHistory(message) {
     const chatHistory = document.getElementById('chatHistory');
+    const cowID = Number(sessionStorage.getItem('CowID'))
 
     const messageElement = document.createElement('div');
-    console.log("在appendMessageToChatHistory中，消息为: ", message)
-    messageElement.textContent = `${message.from === Number(sessionStorage.getItem('CowID')) ? '我' : '对方'}: ${message.content}`;
+    messageElement.style.textAlign = message.from === cowID ? "right" : "left";
+    messageElement.textContent = message.content
     chatHistory.appendChild(messageElement);
 
     // 滚动到底部
