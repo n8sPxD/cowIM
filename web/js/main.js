@@ -30,7 +30,7 @@ export async function initializeMain() {
         await initDB();
 
         // 加载 Protobuf
-        await loadProto('/proto/message.proto');
+        await loadProto('../proto/message.proto');
 
         // 获取 WebSocket 服务器地址
         const wsServerIP = await getWebSocketServerIP();
@@ -377,6 +377,7 @@ function appendMessageToChatHistory(message) {
     const chatHistory = document.getElementById('chatHistory');
 
     const messageElement = document.createElement('div');
+    console.log("在appendMessageToChatHistory中，消息为: ",message)
     messageElement.textContent = `${message.from === Number(sessionStorage.getItem('CowID')) ? '我' : '对方'}: ${message.content}`;
     chatHistory.appendChild(messageElement);
 
@@ -388,6 +389,8 @@ function appendMessageToChatHistory(message) {
 async function handleIncomingMessage(data) {
     // 假设接收到的消息是 Protobuf 二进制数据
     const message = deserializeMessage(data);
+
+    console.log("在handleIncomingMessage中，反序列化后的消息为: ", message)
 
     // 存储消息到 IndexedDB
     await addMessage(message);
