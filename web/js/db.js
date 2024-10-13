@@ -1,5 +1,7 @@
 // js/db.js
 
+import {GROUP_CHAT, SINGLE_CHAT} from "./constant.js";
+
 const DB_NAME = 'CowIMDB';
 const DB_VERSION = 1;
 let db;
@@ -149,7 +151,7 @@ export function getChatMessages(chatID) {
                 })
             ]).then(([fromMsgs, toMsgs]) => {
                 const combined = fromMsgs.concat(toMsgs).filter(msg => {
-                    if (msg.type === 0) { // SINGLE_CHAT
+                    if (msg.type === SINGLE_CHAT) { // SINGLE_CHAT
                         return (msg.from === cowID && msg.to === chatID) || (msg.from === chatID && msg.to === cowID);
                     }
                     return false;
@@ -165,7 +167,7 @@ export function getChatMessages(chatID) {
             const groupRequest = index.getAll(groupID);
 
             groupRequest.onsuccess = (event) => {
-                const groupMsgs = event.target.result.filter(msg => msg.type === 1); // GROUP_CHAT
+                const groupMsgs = event.target.result.filter(msg => msg.type === GROUP_CHAT); // GROUP_CHAT
                 groupMsgs.sort((a, b) => a.timestamp - b.timestamp);
                 resolve(groupMsgs);
             };
