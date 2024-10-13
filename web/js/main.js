@@ -128,10 +128,12 @@ async function fetchInitialData() {
     if (!groupsResponse.ok) throw new Error('获取群组信息失败');
 
     const groupsData = await groupsResponse.json();
-    if (groupsData.content.groupId && Array.isArray(groupsData.content.groupId)) {
-        for (const group of groupsData.content.groupId) {
+    if (groupsData.content.infos && Array.isArray(groupsData.content.infos)) {
+        for (const group of groupsData.content.infos) {
             const tmpGroup = {
-                groupID: group
+                groupID: group.groupId,
+                groupName: group.groupName,
+                groupAvatar: group.groupAvatar,
             }
             await addGroup(tmpGroup);
         }
