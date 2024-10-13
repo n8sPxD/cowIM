@@ -1,11 +1,15 @@
 // js/websocket.js
 
+import {getMessageByID, updateMessage} from "./db.js";
+import {deserializeMessage} from "./message.js";
+import {MSG_ACK_MSG, SYSTEM_INFO, USER_SYSTEM} from "./constant.js";
+
 let websocket;
 let messageHandler = null;
 let ackHandler = new Map(); // Map<messageID, { messageObj, serializedMessage, retries, timeout }>
 
 const MAX_RETRIES = 3;
-const ACK_TIMEOUT = 2000; // 2秒
+const ACK_TIMEOUT = 3000; // 2秒
 
 // 连接 WebSocket 服务器
 export function connectWebSocket(wsIP, jwtToken) {
@@ -13,6 +17,8 @@ export function connectWebSocket(wsIP, jwtToken) {
         const wsURL = `ws://${wsIP}/ws?token=${jwtToken}`; // 根据实际情况调整 URL
 
         websocket = new WebSocket(wsURL);
+
+        websocket.binaryType = "arraybuffer";
 
         websocket.onopen = () => {
             console.log('WebSocket 连接成功');
@@ -37,25 +43,40 @@ export function connectWebSocket(wsIP, jwtToken) {
 
 // 处理接收到的 WebSocket 数据
 function handleIncomingData(data) {
-    // 假设 ACK 消息的结构为 { ack: true, id: "<messageID>" }
-    // 普通消息为 Protobuf 二进制数据
-
     try {
-        const parsedData = JSON.parse(data);
+        console.log("data: ", data)
+        const parsedData = deserializeMessage(data);
 
-        if (parsedData.ack) {
+        console.log("接受消息: ", parsedData)
+
+        if (parsedData.from === USER_SYSTEM && parsedData.type === SYSTEM_INFO && parsedData.msg_type === MSG_ACK_MSG) {
+            console.log("系统消息")
             const messageID = parsedData.id;
             if (ackHandler.has(messageID)) {
                 clearTimeout(ackHandler.get(messageID).timeout);
                 ackHandler.delete(messageID);
                 console.log(`消息 ${messageID} 已被确认`);
+
+                // 从IndexedDB中获取消息，更新ID
+                const messages = getMessageByID(messageID);
+                const messageToUpdate = messages.find(msg => msg.id === messageID);
+
+                if (messageToUpdate) {
+                    messageToUpdate.id = parsedData.content;
+                    updateMessage(messageToUpdate);
+                    console.log(`消息 ID 更新为 ${parsedData.content}`);
+                } else {
+                    console.warn(`未找到 ID 为 ${messageID} 的消息`);
+                }
             }
         } else {
+            console.log("正常消息")
             if (messageHandler) {
                 messageHandler(data);
             }
         }
     } catch (error) {
+        console.error('处理 WebSocket 数据时出错:', error);
         // 如果不是 JSON 格式，假设是 Protobuf 消息
         if (messageHandler) {
             messageHandler(data);

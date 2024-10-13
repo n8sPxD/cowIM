@@ -89,6 +89,23 @@ export function getAllMessages() {
     });
 }
 
+// 通过 ID 获取特定消息
+export function getMessageByID(messageID) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['messages'], 'readonly');
+        const store = transaction.objectStore('messages');
+        const request = store.get(messageID);
+
+        request.onsuccess = (event) => {
+            resolve(event.target.result);
+        };
+        request.onerror = (event) => {
+            console.error('获取消息失败:', event.target.error);
+            reject(event.target.error);
+        };
+    });
+}
+
 // 获取特定会话的消息
 export function getChatMessages(chatID) {
     return new Promise(async (resolve, reject) => {
