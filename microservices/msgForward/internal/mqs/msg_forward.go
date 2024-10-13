@@ -92,6 +92,8 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	id := idgen.NextId()
 	msg.Id = strconv.FormatInt(id, 10)
 
+	protobuf, err = proto.Marshal(&msg)
+
 	// 异步存库
 	go l.sendRecordMsgToDB(&msg, now) // 漫游库
 	go l.sendTimelineToDB(&msg, now)  // timeline
