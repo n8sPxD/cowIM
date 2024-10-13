@@ -102,7 +102,7 @@ async function fetchInitialData() {
                 to: timeline.receiverID,               // 接受者 ID
                 group: msgForward.msgType === 1 ? msgForward.group : undefined, // 如果是群聊则有群组 ID
                 content: msgForward.content,           // 消息内容
-                type: msgForward.type,              // 消息类型，0 表示单聊，1 表示群聊
+                type: timeline.type,              // 消息类型，0 表示单聊，1 表示群聊
                 msg_type: msgForward.msgType,          // 聊天类型
                 timestamp: new Date(msgForward.timestamp).getTime() // 时间戳转换为时间戳（毫秒）
             };
