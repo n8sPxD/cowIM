@@ -29,8 +29,13 @@ type (
 	GroupJoinedRequest {
 		UserID uint32 `header:"UserID""`
 	}
+	GroupJoinedInfo {
+		GroupID     uint32 `json:"groupId"`
+		GroupName   string `json:"groupName"`
+		GroupAvatar string `json:"groupAvatar"`
+	}
 	GroupJoinedResponse {
-		GroupID []uint32 `json:"groupId"`
+		Infos []GroupJoinedInfo `json:"infos"`
 	}
 )
 
