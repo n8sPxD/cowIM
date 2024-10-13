@@ -86,6 +86,8 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 		return
 	}
 
+	// 保存以前的uuid
+	oldId := msg.Id
 	// 分配消息ID
 	id := idgen.NextId()
 	msg.Id = strconv.FormatInt(id, 10)
@@ -95,7 +97,7 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	go l.sendTimelineToDB(&msg, now)  // timeline
 
 	// Ack消息
-	go l.replyAckMessage(&msg)
+	go l.replyAckMessage(&msg, oldId)
 
 	// 进行基于消息类型的消息处理
 	switch msg.Type {
@@ -208,15 +210,15 @@ func (l *MsgForwarder) bigGroupChat(msg *front.Message) {
 	// TODO: 完善逻辑
 }
 
-func (l *MsgForwarder) replyAckMessage(sender *front.Message) {
+func (l *MsgForwarder) replyAckMessage(sender *front.Message, oldId string) {
 	// 封装消息体
 	reply := front.Message{
-		Id:      sender.Id, // 后端分配好的消息ID
+		Id:      oldId,
 		From:    constant.USER_SYSTEM,
 		To:      sender.From,
-		Content: "ack",
+		Content: sender.Id, // 后端分配好的消息ID
 		Type:    constant.SYSTEM_INFO,
-		MsgType: constant.MSG_SYSTEM_MSG,
+		MsgType: constant.MSG_ACK_MSG,
 	}
 	protobuf, err := proto.Marshal(&reply)
 	if err != nil {
@@ -256,6 +258,7 @@ func (l *MsgForwarder) replyAckMessage(sender *front.Message) {
 	mq := kafka.Message{
 		Value: wsmsgByte,
 	}
+	logx.Infof("Sending Ack message to User %d ...", sender.From)
 	if err := l.svcCtx.MsgSender.WriteMessages(l.ctx, mq); err != nil {
 		logx.Error("[replyAckMessage] Push message to Websocket-server MQ failed, error: ", err)
 		return
