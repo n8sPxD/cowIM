@@ -49,7 +49,7 @@ export function addMessage(message) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(['messages'], 'readwrite');
         const store = transaction.objectStore('messages');
-        const request = store.put(message);
+        const request = store.add(message);
 
         request.onsuccess = () => resolve();
         request.onerror = (event) => {
@@ -69,6 +69,24 @@ export function updateMessage(message) {
         request.onsuccess = () => resolve();
         request.onerror = (event) => {
             console.error('更新消息失败:', event.target.error);
+            reject(event.target.error);
+        };
+    });
+}
+
+// 删除旧的消息记录
+export function deleteMessageByID(messageID) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['messages'], 'readwrite');
+        const store = transaction.objectStore('messages');
+        const request = store.delete(messageID); // 删除记录
+
+        request.onsuccess = () => {
+            resolve();
+        };
+
+        request.onerror = (event) => {
+            console.error('删除消息失败:', event.target.error);
             reject(event.target.error);
         };
     });

@@ -1,6 +1,6 @@
 // js/websocket.js
 
-import {getMessageByID, updateMessage} from "./db.js";
+import {addMessage, deleteMessageByID, getMessageByID, updateMessage} from "./db.js";
 import {deserializeMessage} from "./message.js";
 import {MSG_ACK_MSG, SYSTEM_INFO, USER_SYSTEM} from "./constant.js";
 
@@ -42,7 +42,7 @@ export function connectWebSocket(wsIP, jwtToken) {
 }
 
 // 处理接收到的 WebSocket 数据
-function handleIncomingData(data) {
+async function handleIncomingData(data) {
     try {
         console.log("data: ", data)
         const parsedData = deserializeMessage(data);
@@ -58,15 +58,19 @@ function handleIncomingData(data) {
                 console.log(`消息 ${messageID} 已被确认`);
 
                 // 从IndexedDB中获取消息，更新ID
-                const messages = getMessageByID(messageID);
-                const messageToUpdate = messages.find(msg => msg.id === messageID);
+                try {
+                    const messageToUpdate = await getMessageByID(messageID); // 等待消息获取完成
 
-                if (messageToUpdate) {
-                    messageToUpdate.id = parsedData.content;
-                    updateMessage(messageToUpdate);
-                    console.log(`消息 ID 更新为 ${parsedData.content}`);
-                } else {
-                    console.warn(`未找到 ID 为 ${messageID} 的消息`);
+                    if (messageToUpdate) {
+                        await deleteMessageByID(messageID)
+                        messageToUpdate.id = parsedData.content;
+                        await addMessage(messageToUpdate); // 更新消息
+                        console.log(`消息 ID 更新为 ${parsedData.content}`);
+                    } else {
+                        console.warn(`未找到 ID 为 ${messageID} 的消息`);
+                    }
+                } catch (error) {
+                    console.error(`获取或更新消息 ${messageID} 时出错:`, error);
                 }
             }
         } else {
