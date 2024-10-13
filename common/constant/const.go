@@ -2,7 +2,8 @@ package constant
 
 // Message 类型
 const (
-	MSG_COMMON_MSG = iota
+	_ = iota
+	MSG_COMMON_MSG
 	MSG_REPLY_MSG
 	MSG_IMAGE_MSG
 	MSG_VIDEO_MSG
@@ -17,7 +18,8 @@ const (
 
 // 群聊或者单聊
 const (
-	SINGLE_CHAT = iota
+	_ = iota
+	SINGLE_CHAT
 	GROUP_CHAT
 	BIG_GROUP_CHAT
 	SYSTEM_INFO = 99
@@ -25,20 +27,23 @@ const (
 
 // 存表中区分表的类型
 const (
-	MESSAGE_RECORD = iota
+	_ = iota
+	MESSAGE_RECORD
 	MESSAGE_SYNC
 	USER_TIMELINE
 )
 
 // 特殊用户
 const (
-	USER_SYSTEM = iota // 系统消息
+	_           = iota
+	USER_SYSTEM // 系统消息
 	USER_COMMON
 )
 
 // 群聊权限
 const (
-	GROUP_MASTER = iota
+	_ = iota
+	GROUP_MASTER
 	GROUP_ADMIN
 	GROUP_COMMON
 )
