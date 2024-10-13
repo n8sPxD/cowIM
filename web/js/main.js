@@ -12,6 +12,7 @@ import {
 } from './db.js';
 import {connectWebSocket, onMessageReceived, sendMessageWithAck} from './websocket.js';
 import {deserializeMessage, loadProto, serializeMessage} from './message.js';
+import {generateUUID} from "./utils.js";
 
 // 页面加载完成后初始化
 export async function initializeMain() {
@@ -148,8 +149,8 @@ async function fetchInitialData() {
         for (const friend of friendsData.content.friends) {
             const formattedFriend = {
                 friendID: friend.friendId,
-                friend_name: friend.username,
-                friend_avatar: friend.avatar,
+                friendName: friend.username,
+                friendAvatar: friend.avatar,
             };
             await addFriend(formattedFriend);
         }
@@ -206,7 +207,7 @@ async function displayRecentConversations() {
 
     for (const [chatID, msg] of sortedChats) {
         let displayName;
-        if (chatID.startsWith('group_')) {
+        if (String(chatID).startsWith('group_')) {
             const groupID = chatID.split('_')[1];
             const group = await getGroupByID(Number(groupID));
             displayName = group ? group.groupName : `群组 ${groupID}`;
@@ -282,7 +283,7 @@ async function selectConversation(chatID) {
     const chatHistory = document.getElementById('chatHistory');
 
     // 设置聊天头部
-    if (chatID.startsWith('group_')) {
+    if (String(chatID).startsWith('group_')) {  // 确保 chatID 是字符串
         const groupID = Number(chatID.split('_')[1]);
         const group = await getGroupByID(groupID);
         chatHeader.textContent = group ? group.groupName : `群组 ${groupID}`;
@@ -290,6 +291,7 @@ async function selectConversation(chatID) {
         const friend = await getFriendByID(Number(chatID));
         chatHeader.textContent = friend ? friend.friendName : `用户 ${chatID}`;
     }
+
 
     // 加载聊天记录
     const messages = await getChatMessages(chatID);
@@ -400,23 +402,6 @@ async function handleIncomingMessage(data) {
 
     // 更新最近会话列表
     displayRecentConversations();
-}
-
-// 生成 UUID（简单版本）
-function generateUUID() { // 公有领域/MIT 许可
-    let d = new Date().getTime();// 时间戳
-    let d2 = (performance && performance.now && (performance.now()*1000)) || 0;// 微秒级时间
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        let r = Math.random() * 16;// 随机数
-        if(d > 0){
-            r = (d + r)%16 | 0;
-            d = Math.floor(d/16);
-        } else {
-            r = (d2 + r)%16 | 0;
-            d2 = Math.floor(d2/16);
-        }
-        return (c==='x' ? r : (r&0x3|0x8)).toString(16);
-    });
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
