@@ -110,13 +110,13 @@ func connectWebSocket(jwtToken string) error {
 	// 示例：发送一条消息
 	messageToSend := "哈哈，这是一条测试消息😄"
 	sendMessage := front.Message{
-		From:    1,
-		To:      2,
-		Content: messageToSend,
-		Type:    constant.SINGLE_CHAT,
-		MsgType: constant.MSG_COMMON_MSG,
-		Extend:  nil,
-		Time:    time.Now().Unix(),
+		From:      1,
+		To:        2,
+		Content:   messageToSend,
+		Type:      constant.SINGLE_CHAT,
+		MsgType:   constant.MSG_COMMON_MSG,
+		Extend:    nil,
+		Timestamp: time.Now().Unix(),
 	}
 	realMsg, err := proto.Marshal(&sendMessage)
 	err = conn.WriteMessage(websocket.BinaryMessage, realMsg)
