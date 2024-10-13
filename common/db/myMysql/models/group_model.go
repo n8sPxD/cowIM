@@ -5,6 +5,7 @@ import "gorm.io/gorm"
 type Group struct {
 	gorm.Model
 	GroupName    string         `json:"groupName"`
+	GroupAvatar  string         `json:"groupAvatar"`
 	GroupMembers []*GroupMember `json:"groupMembers"`
 	GroupConfig  *GroupConfig   `json:"groupConfig"`
 }
