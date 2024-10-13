@@ -31,6 +31,7 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 			ID:         idgen.NextId(),
 			ReceiverID: msg.To,
 			SenderID:   msg.From,
+			Type:       constant.SINGLE_CHAT,
 			Message:    syncMsg,
 			Timestamp:  now,
 		}
@@ -75,6 +76,7 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 				ID:         idgen.NextId(),
 				ReceiverID: uint32(member),
 				SenderID:   msg.From,
+				Type:       constant.GROUP_CHAT,
 				GroupID:    msg.To,
 				Message:    syncMsg,
 				Timestamp:  now,
