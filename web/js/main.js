@@ -273,7 +273,8 @@ async function displayGroupsList() {
     for (const group of groups) {
         const groupItem = document.createElement('div');
         groupItem.textContent = group.groupName;
-        groupItem.dataset.groupID = group.groupID;
+        groupItem.dataset.groupId = group.groupID;
+        groupItem.dataset.chatId = `group_${group.groupID}`
         groupItem.classList.add('group-item');
         groupItem.addEventListener('click', () => selectConversation(`group_${group.groupID}`));
 
@@ -329,6 +330,7 @@ async function handleSendMessage() {
     if (!content) return;
 
     const chatID = getSelectedChatID();
+    console.log("chatID: ", chatID)
     if (!chatID) {
         alert('请选择一个会话');
         return;
