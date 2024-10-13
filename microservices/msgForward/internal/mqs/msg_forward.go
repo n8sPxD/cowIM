@@ -211,9 +211,10 @@ func (l *MsgForwarder) bigGroupChat(msg *front.Message) {
 func (l *MsgForwarder) replyAckMessage(sender *front.Message) {
 	// 封装消息体
 	reply := front.Message{
+		Id:      sender.Id, // 后端分配好的消息ID
 		From:    constant.USER_SYSTEM,
 		To:      sender.From,
-		Content: sender.Id, // 后端分配好的消息ID
+		Content: "ack",
 		Type:    constant.SYSTEM_INFO,
 		MsgType: constant.MSG_SYSTEM_MSG,
 	}
