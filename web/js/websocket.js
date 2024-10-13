@@ -49,7 +49,7 @@ function handleIncomingData(data) {
 
         console.log("接受消息: ", parsedData)
 
-        if (parsedData.from === USER_SYSTEM && parsedData.type === SYSTEM_INFO && parsedData.msg_type === MSG_ACK_MSG) {
+        if (parsedData.from === USER_SYSTEM && parsedData.type === SYSTEM_INFO && parsedData.msgType === MSG_ACK_MSG) {
             console.log("系统消息")
             const messageID = parsedData.id;
             if (ackHandler.has(messageID)) {
