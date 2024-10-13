@@ -26,10 +26,16 @@ func NewGroupJoinedLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Group
 
 func (l *GroupJoinedLogic) GroupJoined(req *types.GroupJoinedRequest) (*types.GroupJoinedResponse, error) {
 	// 直接查数据库
-	groups, err := l.svcCtx.MySQL.GetGroupIDJoined(l.ctx, req.UserID)
+	groups, err := l.svcCtx.MySQL.GetGroupsJoinedBaseInfo(l.ctx, req.UserID)
 	if err != nil {
 		logx.Error("[GroupJoined] Get groups from MySQL failed, error: ", err)
 		return nil, errors.New("获取群组信息失败")
 	}
-	return &types.GroupJoinedResponse{GroupID: groups}, nil
+	infos := make([]types.GroupJoinedInfo, 0, len(groups))
+	for i, group := range groups {
+		infos[i].GroupID = uint32(group.ID)
+		infos[i].GroupName = group.GroupName
+		infos[i].GroupAvatar = group.GroupAvatar
+	}
+	return &types.GroupJoinedResponse{Infos: infos}, nil
 }
