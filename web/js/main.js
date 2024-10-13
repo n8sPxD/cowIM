@@ -186,7 +186,7 @@ function initializeUI() {
 }
 
 // 显示最近会话列表
-async function displayRecentConversations() {
+async function displayRecentConversations(selectedChatID = null) {
     const conversationList = document.getElementById('conversationList');
     conversationList.innerHTML = ''; // 清空现有列表
 
@@ -227,9 +227,15 @@ async function displayRecentConversations() {
         chatItem.classList.add('chat-item');
         chatItem.addEventListener('click', () => selectConversation(chatID));
 
+        // 保持选中的会话
+        if (chatID == selectedChatID) {
+            chatItem.classList.add('selected');
+        }
+
         conversationList.appendChild(chatItem);
     }
 }
+
 
 // 显示好友列表
 async function displayFriendsList() {
@@ -403,17 +409,20 @@ async function handleIncomingMessage(data) {
     // 存储消息到 IndexedDB
     await addMessage(message);
 
-    // 如果消息属于当前会话，追加到聊天记录
+    // 获取当前选中的会话 ID
     const currentChatID = getSelectedChatID();
+
+    // 如果消息属于当前会话，追加到聊天记录
     const messageChatID = message.group ? `group_${message.group}` : (message.from === Number(sessionStorage.getItem('CowID')) ? message.to : message.from);
 
     if (messageChatID == currentChatID) {
         appendMessageToChatHistory(message);
     }
 
-    // 更新最近会话列表
-    displayRecentConversations();
+    // 更新最近会话列表，并保持当前选中的会话
+    await displayRecentConversations(currentChatID);
 }
+
 
 document.addEventListener('DOMContentLoaded', async () => {
     await initializeMain();
