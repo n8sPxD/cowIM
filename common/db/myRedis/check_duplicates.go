@@ -2,27 +2,18 @@ package myRedis
 
 import (
 	"context"
-	"errors"
-
-	"github.com/zeromicro/go-zero/core/bloom"
 )
 
 func (db *DB) CheckDuplicateMessage(ctx context.Context, uuid string) (bool, error) {
 	var (
-		filter *bloom.Filter
-		ok     bool
-		err    error
+		key = "dup_id"
+		ok  bool
+		err error
 	)
-	// 没有初始化该filter
-	if filter, ok = db.blooms["dup_id"]; !ok {
-		return false, errors.New("failed to get bloom filter \"dup_id\"")
-	}
-	if ok, err = filter.Exists([]byte(uuid)); err != nil {
-		// 查找过程出现错误
+	if ok, err = db.SismemberCtx(ctx, key, uuid); err != nil { // redis 出问题了
 		return false, err
-	} else if !ok {
-		// 没找到，不存在
-		filter.Add([]byte(uuid))
+	} else if !ok { // 没找到该元素，说明该消息是第一次到服务器
+		_, _ = db.SaddCtx(ctx, key, uuid)
 	}
 	return ok, nil
 }
