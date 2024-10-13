@@ -7,7 +7,12 @@ const (
 	MSG_IMAGE_MSG
 	MSG_VIDEO_MSG
 	MSG_FILE_MSG
-	MSG_SYSTEM_MSG = 99
+)
+
+// 系统相关 Message 类型
+const (
+	MSG_SYSTEM_MSG = 100 + iota
+	MSG_ACK_MSG    // 消息重传中使用
 )
 
 // 群聊或者单聊
