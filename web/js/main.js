@@ -104,10 +104,11 @@ async function fetchInitialData() {
                 id: msgForward.id.toString(),         // 消息 ID，转换为字符串
                 from: timeline.senderID,               // 发送者 ID
                 to: timeline.receiverID,               // 接受者 ID
-                group: timeline.type === GROUP_CHAT ? timeline.group : undefined, // 如果是群聊则有群组 ID
+                group: timeline.groupID, // 如果是群聊则有群组 ID
                 content: msgForward.content,           // 消息内容
                 type: timeline.type,              // 消息类型
-                msg_type: msgForward.msgType,          // 聊天类型
+                msgType: msgForward.msgType,          // 聊天类型
+                extend: msgForward.extend,
                 timestamp: new Date(msgForward.timestamp).getTime() // 时间戳转换为时间戳（毫秒）
             };
             await addMessage(formattedMessage); // 假设 addMessage 函数会处理消息存储
@@ -214,10 +215,10 @@ async function displayRecentConversations() {
         if (String(chatID).startsWith('group_')) {
             const groupID = chatID.split('_')[1];
             const group = await getGroupByID(Number(groupID));
-            displayName = group ? group.groupName : `群组 ${groupID}`;
+            displayName = group ? group.groupName + `(${groupID})` : `群组 ${groupID}`;
         } else {
             const friend = await getFriendByID(Number(chatID));
-            displayName = friend ? friend.friendName : `用户 ${chatID}`;
+            displayName = friend ? friend.friendName + `(${chatID})` : `用户 ${chatID}`;
         }
 
         const chatItem = document.createElement('div');
@@ -324,24 +325,26 @@ async function handleSendMessage() {
     }
 
     const from = Number(sessionStorage.getItem('CowID'));
-    let to = null;
+    let to;
     let group = null;
 
     if (chatID.startsWith('group_')) {
         group = Number(chatID.split('_')[1]);
+        to = group
     } else {
         to = Number(chatID);
     }
 
     // 创建消息对象
+    // TODO: 细化消息对象
     const message = {
         id: generateUUID(),
         from: from,
         to: to,
         group: group,
         content: content,
-        type: group ? GROUP_CHAT : SINGLE_CHAT,           // 1 - GROUP_CHAT, 0 - SINGLE_CHAT
-        msg_type: MSG_COMMON_MSG,                   // 0 - MSG_COMMON_MSG
+        type: group ? GROUP_CHAT : SINGLE_CHAT,
+        msgType: MSG_COMMON_MSG,
         extend: null,
         timestamp: Date.now()
     };
