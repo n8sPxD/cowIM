@@ -141,7 +141,7 @@ func (s *Server) checkOnline(id uint32) {
 		err error
 	)
 	if msg, err = proto.Marshal(&front.Message{
-		From:      constant.SYSTEM,
+		From:      constant.USER_SYSTEM,
 		To:        id,
 		Content:   "您已在另一台客户端登陆！即将强制下线",
 		Type:      constant.SYSTEM_INFO,
