@@ -64,12 +64,12 @@ func (db *DB) InsertGroupMembers(ctx context.Context, groupID uint32, members []
 	return db.client.WithContext(ctx).Create(&membercols).Error
 }
 
-func (db *DB) GetGroupIDJoined(ctx context.Context, userID uint32) ([]uint32, error) {
-	var groups []uint32
+func (db *DB) GetGroupsJoinedBaseInfo(ctx context.Context, userID uint32) ([]models.Group, error) {
+	var groups []models.Group
 	err := db.client.
 		WithContext(ctx).
 		Model(&models.GroupMember{}).
-		Select("group_id").
+		Select("group_id", "group_name", "group_avatar").
 		Where("user_id = ?", userID).
 		Take(&groups).
 		Error
