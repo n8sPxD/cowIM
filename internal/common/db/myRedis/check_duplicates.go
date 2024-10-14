@@ -2,6 +2,7 @@ package myRedis
 
 import (
 	"context"
+	"time"
 )
 
 func (db *DB) CheckDuplicateMessage(ctx context.Context, uuid string) (bool, error) {
@@ -14,6 +15,10 @@ func (db *DB) CheckDuplicateMessage(ctx context.Context, uuid string) (bool, err
 		return false, err
 	} else if !ok { // 没找到该元素，说明该消息是第一次到服务器
 		db.SaddCtx(ctx, key, uuid)
+		go func() {
+			time.Sleep(5 * time.Second)
+			db.Srem(key, uuid)
+		}()
 	}
 	return ok, nil
 }
