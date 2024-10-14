@@ -15,7 +15,7 @@ func (s *Server) authenticate(w http.ResponseWriter, r *http.Request) (*jwt.Cust
 	}
 
 	// 验证 JWT
-	claims, err := jwt.ParseToken(tokenString, s.config.Auth.AccessSecret)
+	claims, err := jwt.ParseToken(tokenString, s.svcCtx.Config.Auth.AccessSecret)
 	if err != nil {
 		http.Error(w, "Invalid token", http.StatusUnauthorized)
 		return nil, false
