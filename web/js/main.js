@@ -312,7 +312,6 @@ async function selectConversation(chatID) {
     const tmpGroupID = isGroup ? Number(chatID.split('_')[1]) : null;
 
     const selectedItem = document.querySelector(`[data-chat-id="${chatID}"], [data-friend-id="${chatID}"], [data-group-id="${tmpGroupID}"]`);
-    console.log("selectedItem: ", selectedItem);
 
     if (selectedItem) {
         selectedItem.classList.add('selected');
@@ -355,7 +354,6 @@ async function handleSendMessage() {
     if (!content) return;
 
     const chatID = getSelectedChatID();
-    console.log("chatID: ", chatID)
     if (!chatID) {
         alert('请选择一个会话');
         return;
@@ -411,7 +409,12 @@ async function handleSendMessage() {
 function getSelectedChatID() {
     const selectedItem = document.querySelector('.chat-item.selected, .friend-item.selected, .group-item.selected');
     if (selectedItem) {
-        return selectedItem.dataset.chatId || selectedItem.dataset.friendId || selectedItem.dataset.groupId;
+        // 判断是否是 group 项目
+        if (selectedItem.dataset.groupId) {
+            return "group_" + selectedItem.dataset.groupId;
+        }
+        // 如果不是 group，返回其他类型的 id
+        return selectedItem.dataset.chatId || selectedItem.dataset.friendId;
     }
     return null;
 }
