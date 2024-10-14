@@ -49,12 +49,6 @@ func (l *MsgSender) Start() {
 			logx.Error("[MsgSender.Start] Reading message error: ", err)
 			continue
 		}
-		logx.Debugf(
-			"[MsgForwarder.Start] Message at partition %d offset %d: %s\n",
-			msg.Partition,
-			msg.Offset,
-			string(msg.Value),
-		)
 		go l.Consume(msg.Value)
 	}
 }

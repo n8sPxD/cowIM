@@ -57,12 +57,6 @@ func (l *MsgForwarder) Start() {
 			logx.Error("[MsgForwarder.Start] Reading message error: ", err)
 			break
 		}
-		logx.Debugf(
-			"[MsgForwarder.Start] Message at partition %d offset %d: %s\n",
-			msg.Partition,
-			msg.Offset,
-			string(msg.Value),
-		)
 		go l.Consume(msg.Value, time.Now())
 	}
 }
@@ -161,14 +155,21 @@ func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
 // 群聊处理
 func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 	// 先获取群里所有成员
-	members, err := l.svcCtx.MySQL.GetGroupMemberIDs(l.ctx, uint(msg.To))
+	members, err := l.svcCtx.MySQL.GetGroupMemberIDs(l.ctx, uint(*msg.Group))
 	if err != nil {
 		logx.Error("[groupChat] Get group members from mysql failed, error: ", err)
 		return
 	}
+	logx.Debug("members: ", members)
 	// TODO: 可以优化，先处理所有消息，然后把对应服务器的消息以切片形式发送，避免重复调用WriteMessages
 	for _, member := range members {
 		receiver := member
+
+		// 不用给发消息的人发
+		if receiver == uint(msg.From) {
+			continue
+		}
+
 		// 先查用户在不在线
 		status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, uint32(receiver))
 		if errors.Is(err, redis.Nil) {
@@ -187,7 +188,7 @@ func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 
 		// 封装inside.Message
 		wsmsg := inside.Message{
-			To:       msg.To,
+			To:       uint32(receiver),
 			Protobuf: protobuf,
 		}
 		wsmsgByte, err := proto.Marshal(&wsmsg)
