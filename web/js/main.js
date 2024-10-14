@@ -318,7 +318,22 @@ async function selectConversation(chatID) {
     const isGroup = String(chatID).startsWith('group_');
     const tmpGroupID = isGroup ? Number(chatID.split('_')[1]) : null;
 
-    const selectedItem = document.querySelector(`[data-chat-id="${chatID}"], [data-friend-id="${chatID}"], [data-group-id="${tmpGroupID}"]`);
+    let selectedItem;
+    // 判断当前显示的列表，限制选择范围
+    const recentListVisible = document.getElementById('recentList').style.display === 'block';
+    const friendsListVisible = document.getElementById('friendsList').style.display === 'block';
+    const groupsListVisible = document.getElementById('groupsList').style.display === 'block';
+
+    if (recentListVisible) {
+        // 在最近会话列表中查找
+        selectedItem = document.querySelector(`#recentList [data-chat-id="${chatID}"]`);
+    } else if (friendsListVisible) {
+        // 在好友列表中查找
+        selectedItem = document.querySelector(`#friendsList [data-friend-id="${chatID}"]`);
+    } else if (groupsListVisible) {
+        // 在群组列表中查找
+        selectedItem = document.querySelector(`#groupsList [data-group-id="${tmpGroupID}"]`);
+    }
 
     if (selectedItem) {
         selectedItem.classList.add('selected');
