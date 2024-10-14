@@ -105,6 +105,30 @@
             border-radius: 4px;
             font-size: 16px;
         }
+
+        /* 新增样式：独立展示会话、好友和群组的方块 */
+        .chat-item, .friend-item, .group-item {
+            background-color: #e0e0e0;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-item:hover, .friend-item:hover, .group-item:hover {
+            background-color: #cfcfcf;
+            transform: scale(1.02);
+        }
+
+        .chat-item.selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+
     </style>
 </head>
 <body>
