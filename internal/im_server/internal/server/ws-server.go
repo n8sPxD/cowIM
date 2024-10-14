@@ -14,8 +14,6 @@ import (
 	"github.com/n8sPxD/cowIM/internal/apis/auth/rpc/types/authRpc"
 	"github.com/n8sPxD/cowIM/internal/common/constant"
 	"github.com/n8sPxD/cowIM/internal/common/message/front"
-	"github.com/n8sPxD/cowIM/internal/im_server/internal/config"
-	"github.com/n8sPxD/cowIM/internal/im_server/internal/server/manager"
 	"github.com/n8sPxD/cowIM/internal/im_server/svc"
 	"github.com/n8sPxD/cowIM/pkg/servicehub"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -23,22 +21,20 @@ import (
 )
 
 type Server struct {
-	ctx         context.Context            // 上下文
-	svcCtx      *svc.ServiceContext        // 依赖服务
-	config      config.Config              // Server的设置
-	Manager     *manager.ConnectionManager // 连接管理器
-	upgrader    *websocket.Upgrader        // Websocket协议升级器
-	messages    chan string                // 本地消息队列，作用是消息聚合
-	close       chan struct{}              // 关闭信号
-	registerHub *servicehub.RegisterHub    // 注册中心
+	ctx         context.Context         // 上下文
+	svcCtx      *svc.ServiceContext     // 依赖服务
+	Manager     IConnectionManager      // 连接管理器
+	upgrader    *websocket.Upgrader     // Websocket协议升级器
+	messages    chan string             // 本地消息队列，作用是消息聚合
+	close       chan struct{}           // 关闭信号
+	registerHub *servicehub.RegisterHub // 注册中心
 }
 
-func MustNewServer(c config.Config, ctx context.Context, svcCtx *svc.ServiceContext) *Server {
+func MustNewServer(ctx context.Context, svcCtx *svc.ServiceContext) *Server {
 	return &Server{
 		ctx:     ctx,
 		svcCtx:  svcCtx,
-		config:  c,
-		Manager: manager.NewConnectionManager(),
+		Manager: NewConnectionManager(),
 		upgrader: &websocket.Upgrader{
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
@@ -59,7 +55,7 @@ func (s *Server) Start() {
 	s.register()
 
 	// 启动HTTP服务器
-	addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
+	addr := fmt.Sprintf("%s:%d", s.svcCtx.Config.Host, s.svcCtx.Config.Port)
 	fmt.Println("WebSocket server starting on ", addr)
 	err := http.ListenAndServe(addr, r)
 	if err != nil {
@@ -95,8 +91,8 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 添加连接到管理器
-	s.Manager.Add(&manager.Session{
-		ID:       manager.UserID(id),
+	s.Manager.Add(&Session{
+		ID:       UserID(id),
 		Username: name,
 		Conn:     conn,
 	})
@@ -178,7 +174,7 @@ func (s *Server) checkOnline(id uint32) {
 
 func (s *Server) updateRouterStatus(id uint32) {
 	_, err := s.svcCtx.AuthRpc.UserConnStatus(s.ctx, &authRpc.ConnRequest{
-		WorkId: uint32(s.config.WorkID),
+		WorkId: uint32(s.svcCtx.Config.WorkID),
 		UserId: id,
 	})
 	if err != nil {

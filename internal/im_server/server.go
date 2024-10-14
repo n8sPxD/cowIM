@@ -45,7 +45,6 @@ func main() {
 		os.Exit(0)
 	}() // 处理退出信号，平滑关闭
 
-	s := server.MustNewServer(c, ctx, svcCtx)
-	svcCtx.ConnectionManager = s.Manager
+	s := server.MustNewServer(ctx, svcCtx)
 	s.Start()
 }

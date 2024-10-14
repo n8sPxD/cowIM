@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/n8sPxD/cowIM/internal/common/message/inside"
-	"github.com/n8sPxD/cowIM/internal/im_server/internal/server/manager"
+	"github.com/n8sPxD/cowIM/internal/im_server/internal/server"
 	"github.com/n8sPxD/cowIM/internal/im_server/svc"
 	"github.com/segmentio/kafka-go"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -16,6 +16,7 @@ import (
 type MsgSender struct {
 	ctx       context.Context
 	svcCtx    *svc.ServiceContext
+	manager   *server.ConnectionManager
 	MsgSender *kafka.Reader
 }
 
@@ -66,9 +67,9 @@ func (l *MsgSender) Consume(protobuf []byte) {
 	}
 	// 能传到这里来，代表Message服务中已经从Redis中获取到当前Recv用户在线
 	// 在线，以服务器主动推模式发送消息
-	if err := l.svcCtx.ConnectionManager.SendMessage(msg.To, msg.Protobuf); err != nil {
+	if err := l.manager.SendMessage(msg.To, msg.Protobuf); err != nil {
 		// Message服务中检测到用户在线，但是可能在消息中转的过程中又离线
-		if errors.Is(err, manager.ClientGoingAway) {
+		if errors.Is(err, server.ClientGoingAway) {
 			// TODO: 更改Redis信息
 			return
 		}

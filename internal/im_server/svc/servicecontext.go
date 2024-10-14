@@ -7,7 +7,6 @@ import (
 	"github.com/n8sPxD/cowIM/internal/apis/auth/rpc/types/authRpc"
 	"github.com/n8sPxD/cowIM/internal/common/db/myRedis"
 	"github.com/n8sPxD/cowIM/internal/im_server/internal/config"
-	"github.com/n8sPxD/cowIM/internal/im_server/internal/server/manager"
 	"github.com/n8sPxD/cowIM/pkg/servicehub"
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/compress"
@@ -15,12 +14,11 @@ import (
 )
 
 type ServiceContext struct {
-	Config            config.Config
-	AuthRpc           authRpc.AuthClient
-	ConnectionManager *manager.ConnectionManager
-	MsgForwarder      *kafka.Writer
-	Redis             *myRedis.DB
-	RegisterHub       *servicehub.RegisterHub
+	Config       config.Config
+	AuthRpc      authRpc.AuthClient
+	MsgForwarder *kafka.Writer
+	Redis        *myRedis.DB
+	RegisterHub  *servicehub.RegisterHub
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {

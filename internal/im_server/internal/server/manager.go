@@ -1,4 +1,4 @@
-package manager
+package server
 
 import (
 	"errors"
@@ -16,6 +16,14 @@ type Session struct {
 
 type UserID uint32
 
+type IConnectionManager interface {
+	Add(*Session)
+	Remove(uint32)
+	Get(uint32) (*Session, bool)
+	SendMessage(uint32, []byte) error
+	ReadMessage(uint32) ([]byte, error)
+}
+
 // ConnectionManager WebSocket连接管理器
 type ConnectionManager struct {
 	// TODO: map换ConcurrentMap
@@ -23,9 +31,10 @@ type ConnectionManager struct {
 	mutex       sync.RWMutex
 }
 
-func NewConnectionManager() *ConnectionManager {
+func NewConnectionManager() IConnectionManager {
 	return &ConnectionManager{
-		connections: make(map[UserID]*Session),
+		connections: make(map[UserID]*Session, 100000),
+		mutex:       sync.RWMutex{},
 	}
 }
 
