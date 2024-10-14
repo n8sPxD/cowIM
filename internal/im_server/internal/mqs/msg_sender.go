@@ -16,7 +16,7 @@ import (
 type MsgSender struct {
 	ctx       context.Context
 	svcCtx    *svc.ServiceContext
-	manager   *server.ConnectionManager
+	manager   server.IConnectionManager
 	MsgSender *kafka.Reader
 }
 
@@ -35,6 +35,11 @@ func NewMsgSender(ctx context.Context, svcCtx *svc.ServiceContext) *MsgSender {
 			CommitInterval: 500 * time.Millisecond, // 提交间隔
 		}),
 	}
+}
+
+func (l *MsgSender) WithManager(manager server.IConnectionManager) *MsgSender {
+	l.manager = manager
+	return l
 }
 
 func (l *MsgSender) Start() {

@@ -17,10 +17,15 @@ import (
 	"github.com/zeromicro/go-zero/core/threading"
 )
 
-var configFile = flag.String("f", "etc/server.yaml", "the config file")
+var (
+	configFile = flag.String("f", "etc/server.yaml", "the config file")
+
+	c  config.Config
+	s  *server.Server
+	mq *mqs.MsgSender
+)
 
 func main() {
-	var c config.Config
 	conf.MustLoad(*configFile, &c)
 	logx.MustSetup(c.Log)
 
@@ -30,10 +35,9 @@ func main() {
 	ctx := context.Background()
 	svcCtx := svc.NewServiceContext(c)
 
-	var mq *mqs.MsgSender
+	s = server.MustNewServer(ctx, svcCtx)
 	threading.GoSafe(func() {
-		mq = mqs.NewMsgSender(ctx, svcCtx)
-		mq.Start()
+		s.Start()
 	})
 
 	// 处理退出信号，平滑关闭
@@ -45,6 +49,6 @@ func main() {
 		os.Exit(0)
 	}() // 处理退出信号，平滑关闭
 
-	s := server.MustNewServer(ctx, svcCtx)
-	s.Start()
+	mq = mqs.NewMsgSender(ctx, svcCtx).WithManager(s.Manager)
+	mq.Start()
 }

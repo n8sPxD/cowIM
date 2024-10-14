@@ -1,4 +1,4 @@
-// server/ws-server.go
+// server/ws_server.go
 // 负责处理长连接的建立、保持以及消息的转发
 
 package server

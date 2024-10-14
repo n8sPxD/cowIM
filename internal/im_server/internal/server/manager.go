@@ -33,7 +33,7 @@ type ConnectionManager struct {
 
 func NewConnectionManager() IConnectionManager {
 	return &ConnectionManager{
-		connections: make(map[UserID]*Session, 100000),
+		connections: make(map[UserID]*Session),
 		mutex:       sync.RWMutex{},
 	}
 }
