@@ -1,6 +1,6 @@
 // js/websocket.js
 
-import {addMessage, deleteMessageByID, getMessageByID, updateMessage} from "./db.js";
+import {addMessage, deleteMessageByID, getMessageByID} from "./db.js";
 import {deserializeMessage} from "./message.js";
 import {MSG_ACK_MSG, SYSTEM_INFO, USER_SYSTEM} from "./constant.js";
 
@@ -10,6 +10,9 @@ let ackHandler = new Map(); // Map<messageID, { messageObj, serializedMessage, r
 
 const MAX_RETRIES = 3;
 const ACK_TIMEOUT = 3000; // 2秒
+const HEARTBEAT_INTERVAL = 25000;
+
+let heartbeatIntervalID = null; // 用于存储心跳定时器ID
 
 // 连接 WebSocket 服务器
 export function connectWebSocket(wsIP, jwtToken) {
@@ -22,6 +25,7 @@ export function connectWebSocket(wsIP, jwtToken) {
 
         websocket.onopen = () => {
             console.log('WebSocket 连接成功');
+            startHeartbeat(); // 启动心跳
             resolve();
         };
 
@@ -36,9 +40,36 @@ export function connectWebSocket(wsIP, jwtToken) {
 
         websocket.onclose = (event) => {
             console.log('WebSocket 连接关闭:', event);
+            stopHeartbeat(); // 停止心跳
             // 可选：实现重连逻辑
         };
     });
+}
+
+// 启动心跳定时器
+function startHeartbeat() {
+    // 先发送一次心跳
+    sendHeartbeat();
+
+    // 设置定时器每25秒发送一次心跳
+    heartbeatIntervalID = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
+}
+
+// 停止心跳定时器
+function stopHeartbeat() {
+    if (heartbeatIntervalID !== null) {
+        clearInterval(heartbeatIntervalID);
+        heartbeatIntervalID = null;
+    }
+}
+
+// 发送心跳包
+function sendHeartbeat() {
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+        const heartbeatMessage = new TextEncoder().encode("ping");
+        websocket.send(heartbeatMessage);
+        console.log("发送心跳包: ping");
+    }
 }
 
 // 处理接收到的 WebSocket 数据
@@ -100,7 +131,7 @@ export function sendMessageWithAck(messageObj, serializedMessage) {
             handleAckTimeout(messageID);
         }, ACK_TIMEOUT);
 
-        ackHandler.set(messageID, { messageObj, serializedMessage, retries, timeout });
+        ackHandler.set(messageID, {messageObj, serializedMessage, retries, timeout});
     } else {
         console.error('WebSocket 未连接');
     }
