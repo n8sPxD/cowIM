@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/n8sPxD/cowIM/common/constant"
-	"github.com/n8sPxD/cowIM/common/message/front"
+	"github.com/n8sPxD/cowIM/internal/common/constant"
+	"github.com/n8sPxD/cowIM/internal/common/message/front"
 	"google.golang.org/protobuf/proto"
 )
 
