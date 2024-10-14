@@ -38,9 +38,32 @@
         }
 
         .sidebar button {
+            width: 100%;
+            padding: 10px;
             margin-bottom: 10px;
-            padding: 5px;
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
             cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .sidebar button:hover {
+            background-color: #d9d9d9;
+            transform: scale(1.05);
+        }
+
+        .sidebar button.selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .sidebar button {
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .conversation-list {
@@ -124,10 +147,12 @@
             transform: scale(1.02);
         }
 
-        .chat-item.selected {
+        .chat-item.selected, .friend-item.selected, .group-item.selected {
             background-color: #4CAF50;
             color: white;
         }
+
+
 
     </style>
 </head>

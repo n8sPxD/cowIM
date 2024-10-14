@@ -171,9 +171,23 @@ function initializeUI() {
     displayRecentConversations();
 
     // 设置侧边栏按钮事件
-    document.getElementById('recentButton').addEventListener('click', displayRecentConversations);
-    document.getElementById('friendsButton').addEventListener('click', displayFriendsList);
-    document.getElementById('groupsButton').addEventListener('click', displayGroupsList);
+    document.getElementById('recentButton').addEventListener('click', () => {
+        clearSelectedButton(); // 清除所有按钮的选中状态
+        document.getElementById('recentButton').classList.add('selected'); // 给当前按钮添加选中状态
+        displayRecentConversations(); // 调用对应的回调函数
+    });
+
+    document.getElementById('friendsButton').addEventListener('click', () => {
+        clearSelectedButton();
+        document.getElementById('friendsButton').classList.add('selected');
+        displayFriendsList();
+    });
+
+    document.getElementById('groupsButton').addEventListener('click', () => {
+        clearSelectedButton();
+        document.getElementById('groupsButton').classList.add('selected');
+        displayGroupsList();
+    });
 
     // 设置发送按钮事件
     document.getElementById('sendButton').addEventListener('click', handleSendMessage);
@@ -185,6 +199,12 @@ function initializeUI() {
             handleSendMessage();
         }
     });
+}
+
+// 辅助函数：清除所有按钮的选中状态
+function clearSelectedButton() {
+    const buttons = document.querySelectorAll('.sidebar button'); // 获取所有侧边栏按钮
+    buttons.forEach(button => button.classList.remove('selected')); // 移除每个按钮的 `selected` 类
 }
 
 // 显示最近会话列表
