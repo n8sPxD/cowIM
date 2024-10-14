@@ -32,3 +32,7 @@ func (db *DB) RemoveUserRouterStatus(ctx context.Context, userID uint32) error {
 	}
 	return nil
 }
+
+func (db *DB) RemoveAllUserRouterStatus() {
+	db.Hdel("router")
+}

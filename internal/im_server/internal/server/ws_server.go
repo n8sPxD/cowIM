@@ -97,7 +97,7 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		Conn:     conn,
 	})
 	defer s.Manager.Remove(id)
-	logx.Infof("[handleWebsocket] User %s connected", name)
+	logx.Infof("[handleWebsocket] User %s on %s connected", name, conn.RemoteAddr())
 
 	// 维护用户登陆路由
 	go s.updateRouterStatus(id)
