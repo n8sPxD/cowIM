@@ -19,7 +19,7 @@ export function initializeRegister() {
         // 可选：添加更多的输入合法性验证
 
         try {
-            const response = await fetch('/register', {
+            const response = await fetch('http://localhost:8080/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -29,9 +29,8 @@ export function initializeRegister() {
 
             if (response.ok) {
                 const data = await response.json();
-                const { cowID } = data;
 
-                alert(`注册成功！您的 CowID 是: ${cowID}`);
+                alert(`注册成功！您的 CowID 是: ${data.content.id}`);
                 // 跳转回登录页
                 window.location.href = 'login.html';
             } else {

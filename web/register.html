@@ -3,7 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <title>注册 - Cow IM</title>
-    <link rel="stylesheet" href="./styles/styles.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;  /* 容器内子项水平居中 */
+            align-items: center; /* 容器内子项垂直居中 */
+            width: 700px;
+            border: 1px solid #000;
+            background-color: #fff;
+            padding: 40px;
+            height: 300px; /* 固定容器高度 */
+        }
+
+        .register-container {
+            margin-right: 50px; /* 让注册框和cowsay保持适当间距 */
+            width: 300px;
+            text-align: center;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #000;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: 1px solid #000;
+            background-color: #fff;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        #cowsay-container {
+            margin-left: auto;  /* 自动调整左边距 */
+            margin-right: auto; /* 自动调整右边距 */
+            font-family: monospace;
+            white-space: pre;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%; /* 确保高度填充 */
+            font-size: larger;
+        }
+    </style>
 </head>
 <body>
 <div class="container">
@@ -19,17 +74,24 @@
                 <label for="password">密码</label><br>
                 <input type="password" id="password" name="password" required>
             </div>
-            <!-- 根据需求添加其他字段 -->
             <div>
+                <label for="confirm-password">确认密码</label><br>
+                <input type="password" id="confirm-password" name="confirm-password" required>
+            </div>
+            <div>
+                <button type="button" id="loginBtn">返回登录</button>
                 <button type="submit">注册</button>
             </div>
         </form>
     </div>
+    <!-- cowsay 输出框 -->
+    <div id="cowsay-container"></div>
 </div>
 
 <!-- 引入 Protobuf.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/protobufjs/7.2.3/protobuf.min.js"></script>
 <!-- 引入模块化的 JS -->
 <script type="module" src="./js/register.js"></script>
+<script src="./js/bundle.js"></script>
 </body>
 </html>
