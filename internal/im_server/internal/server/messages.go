@@ -53,8 +53,9 @@ func (s *Server) readMessageFromFrontend(id uint32) error {
 		}
 		if string(msg) == "ping" {
 			go s.checkHeartBeat(id)
+		} else {
+			s.messages <- string(msg)
 		}
-		s.messages <- string(msg)
 	}
 }
 
