@@ -11,7 +11,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"github.com/n8sPxD/cowIM/internal/apis/auth/rpc/types/authRpc"
 	"github.com/n8sPxD/cowIM/internal/common/constant"
 	"github.com/n8sPxD/cowIM/internal/common/message/front"
 	"github.com/n8sPxD/cowIM/internal/im_server/svc"
