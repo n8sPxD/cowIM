@@ -173,11 +173,8 @@ func (s *Server) checkOnline(id uint32) {
 }
 
 func (s *Server) updateRouterStatus(id uint32) {
-	_, err := s.svcCtx.AuthRpc.UserConnStatus(s.ctx, &authRpc.ConnRequest{
-		WorkId: uint32(s.svcCtx.Config.WorkID),
-		UserId: id,
-	})
+	err := s.svcCtx.Redis.UpdateUserRouterStatus(s.ctx, id, s.svcCtx.Config.WorkID, time.Now())
 	if err != nil {
-		logx.Error("[updateRouterStatus] RPC UserConnStatus failed, error: ", err)
+		logx.Error("[updateRouterStatus] Update router status to redis failed, error: ", err)
 	}
 }

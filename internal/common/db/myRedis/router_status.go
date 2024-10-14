@@ -8,7 +8,7 @@ import (
 )
 
 type RouterStatus struct {
-	WorkID     uint32    `json:"work_id"`
+	WorkID     uint16    `json:"work_id"`
 	LastUpdate time.Time `json:"last_update"`
 }
 
@@ -28,7 +28,7 @@ func (db *DB) GetUserRouterStatus(ctx context.Context, userID uint32) (*RouterSt
 // UpdateUserRouterStatus 路由信息登记
 // Key: user_id			Value: { server_work_id: xxx, last_update: xxx }
 // 用户路由信息，保存用户建立长连接的服务器IP和最后和服务器进行心跳检测的时间
-func (db *DB) UpdateUserRouterStatus(ctx context.Context, userID, workID uint32, timestamp time.Time) error {
+func (db *DB) UpdateUserRouterStatus(ctx context.Context, userID uint32, workID uint16, timestamp time.Time) error {
 	if val, err := json.Marshal(RouterStatus{
 		WorkID:     workID,
 		LastUpdate: timestamp,
