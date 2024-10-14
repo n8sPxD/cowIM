@@ -2,13 +2,10 @@ package logic
 
 import (
 	"context"
-	"encoding/json"
-	"strconv"
 	"time"
 
 	"github.com/n8sPxD/cowIM/internal/apis/auth/rpc/internal/svc"
 	"github.com/n8sPxD/cowIM/internal/apis/auth/rpc/types/authRpc"
-	"github.com/n8sPxD/cowIM/internal/common/db/myRedis"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -27,23 +24,9 @@ func NewUserConnStatusLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Us
 }
 
 func (l *UserConnStatusLogic) UserConnStatus(in *authRpc.ConnRequest) (*authRpc.Empty, error) {
-	// 路由信息登记
-	// Key: user_id			Value: { server_work_id: xxx, last_update: xxx }
-	// 用户路由信息，保存用户建立长连接的服务器IP和最后和服务器进行心跳检测的时间
-	status := myRedis.Status{
-		WorkID:     in.WorkId,
-		LastUpdate: time.Now(),
-	}
-	val, err := json.Marshal(status)
+	err := l.svcCtx.Redis.UpdateUserRouterStatus(l.ctx, in.UserId, in.WorkId, time.Now())
 	if err != nil {
-		logx.Error("[UserRouteStatus] Json marshal failed, error: ", err)
-		return nil, err
+		logx.Error("[UserConnStatus] Update user router status from redis failed, error: ", err)
 	}
-
-	if err := l.svcCtx.Redis.HsetCtx(l.ctx, "router", strconv.FormatInt(int64(in.UserId), 10), string(val)); err != nil {
-		logx.Error("[UserRouteStatus] Redis Hset failed, error: ", err)
-		return nil, err
-	}
-
-	return &authRpc.Empty{}, nil
+	return &authRpc.Empty{}, err
 }
