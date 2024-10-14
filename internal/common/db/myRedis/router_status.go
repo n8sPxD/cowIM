@@ -7,22 +7,36 @@ import (
 	"time"
 )
 
-type Status struct {
+type RouterStatus struct {
 	WorkID     uint32    `json:"work_id"`
 	LastUpdate time.Time `json:"last_update"`
 }
 
-func (db *DB) GetUserRouterStatus(ctx context.Context, userID uint32) (*Status, error) {
+func (db *DB) GetUserRouterStatus(ctx context.Context, userID uint32) (*RouterStatus, error) {
 	res, err := db.HgetCtx(ctx, "router", strconv.FormatInt(int64(userID), 10))
 	if err != nil {
 		return nil, err
 	}
-	var status Status
+	var status RouterStatus
 	err = json.Unmarshal([]byte(res), &status)
 	if err != nil {
 		return nil, err
 	}
 	return &status, err
+}
+
+// UpdateUserRouterStatus 路由信息登记
+// Key: user_id			Value: { server_work_id: xxx, last_update: xxx }
+// 用户路由信息，保存用户建立长连接的服务器IP和最后和服务器进行心跳检测的时间
+func (db *DB) UpdateUserRouterStatus(ctx context.Context, userID, workID uint32, timestamp time.Time) error {
+	if val, err := json.Marshal(RouterStatus{
+		WorkID:     workID,
+		LastUpdate: timestamp,
+	}); err != nil {
+		return err
+	} else {
+		return db.HsetCtx(ctx, "router", strconv.FormatInt(int64(userID), 10), string(val))
+	}
 }
 
 func (db *DB) RemoveUserRouterStatus(ctx context.Context, userID uint32) error {
