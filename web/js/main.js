@@ -167,25 +167,31 @@ async function fetchInitialData() {
 
 // 初始化 UI 组件和事件监听
 function initializeUI() {
-    // 显示最近会话列表
+    // 默认显示最近会话
+    showList('recentList');
+    document.getElementById('recentButton').classList.add('selected');
     displayRecentConversations();
+
 
     // 设置侧边栏按钮事件
     document.getElementById('recentButton').addEventListener('click', () => {
-        clearSelectedButton(); // 清除所有按钮的选中状态
-        document.getElementById('recentButton').classList.add('selected'); // 给当前按钮添加选中状态
-        displayRecentConversations(); // 调用对应的回调函数
+        clearSelectedButton();
+        document.getElementById('recentButton').classList.add('selected');
+        showList('recentList');
+        displayRecentConversations();
     });
 
     document.getElementById('friendsButton').addEventListener('click', () => {
         clearSelectedButton();
         document.getElementById('friendsButton').classList.add('selected');
+        showList('friendsList');
         displayFriendsList();
     });
 
     document.getElementById('groupsButton').addEventListener('click', () => {
         clearSelectedButton();
         document.getElementById('groupsButton').classList.add('selected');
+        showList('groupsList');
         displayGroupsList();
     });
 
@@ -209,8 +215,8 @@ function clearSelectedButton() {
 
 // 显示最近会话列表
 async function displayRecentConversations(selectedChatID = null) {
-    const conversationList = document.getElementById('conversationList');
-    conversationList.innerHTML = ''; // 清空现有列表
+    const recentList = document.getElementById('recentList');
+    recentList.innerHTML = ''; // 清空现有列表
 
     const messages = await getAllMessages();
     const recentChats = new Map(); // key: chatID, value: latest message
@@ -254,15 +260,15 @@ async function displayRecentConversations(selectedChatID = null) {
             chatItem.classList.add('selected');
         }
 
-        conversationList.appendChild(chatItem);
+        recentList.appendChild(chatItem);
     }
 }
 
 
 // 显示好友列表
 async function displayFriendsList() {
-    const conversationList = document.getElementById('conversationList');
-    conversationList.innerHTML = ''; // 清空现有列表
+    const friendsList = document.getElementById('friendsList');
+    friendsList.innerHTML = ''; // 清空现有列表
 
     const friends = await getAllFriends();
 
@@ -276,14 +282,15 @@ async function displayFriendsList() {
         friendItem.classList.add('friend-item');
         friendItem.addEventListener('click', () => selectConversation(friend.friendID));
 
-        conversationList.appendChild(friendItem);
+        friendsList.appendChild(friendItem);
     }
 }
 
+
 // 显示群组列表
 async function displayGroupsList() {
-    const conversationList = document.getElementById('conversationList');
-    conversationList.innerHTML = ''; // 清空现有列表
+    const groupsList = document.getElementById('groupsList');
+    groupsList.innerHTML = ''; // 清空现有列表
 
     const groups = await getAllGroups();
 
@@ -297,7 +304,7 @@ async function displayGroupsList() {
         groupItem.classList.add('group-item');
         groupItem.addEventListener('click', () => selectConversation(`group_${group.groupID}`));
 
-        conversationList.appendChild(groupItem);
+        groupsList.appendChild(groupItem);
     }
 }
 
@@ -451,8 +458,16 @@ async function handleIncomingMessage(data) {
         appendMessageToChatHistory(message);
     }
 
-    // 更新最近会话列表，并保持当前选中的会话
+    // 仅更新最近会话列表
     await displayRecentConversations(currentChatID);
+}
+
+// 显示指定的列表，并隐藏其他列表
+function showList(listId) {
+    const lists = ['recentList', 'friendsList', 'groupsList'];
+    lists.forEach(id => {
+        document.getElementById(id).style.display = (id === listId) ? 'block' : 'none';
+    });
 }
 
 
@@ -460,6 +475,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     await initializeMain();
 });
 
-// 其他函数如 displayRecentConversations, displayFriendsList, displayGroupsList, selectConversation, handleSendMessage, appendMessageToChatHistory, handleIncomingMessage 等保持不变
 
 // 生成 UUID 已在 utils.js 中定义
