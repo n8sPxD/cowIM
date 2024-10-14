@@ -34,5 +34,10 @@ func (db *DB) RemoveUserRouterStatus(ctx context.Context, userID uint32) error {
 }
 
 func (db *DB) RemoveAllUserRouterStatus() {
-	db.Hdel("router")
+	table, _ := db.Hgetall("router")
+	slices := make([]string, 0, len(table))
+	for key := range table {
+		slices = append(slices, key)
+	}
+	db.Hdel("router", slices...)
 }
