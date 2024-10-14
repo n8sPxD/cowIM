@@ -30,13 +30,12 @@ func main() {
 	svcCtx := svc.NewServiceContext(c)
 	ctx := context.Background()
 
-	svcCtx.Redis.RemoveAllDupMessages() // 移除所有未处理的重复消息uuid
-
 	// 处理退出信号，平滑关闭
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-signalChan
+		svcCtx.Redis.RemoveAllDupMessages() // 移除所有未处理的重复消息uuid
 		mq.Close()
 		os.Exit(0)
 	}() // 处理退出信号，平滑关闭

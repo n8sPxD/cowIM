@@ -46,7 +46,6 @@ func main() {
 	go func() {
 		<-signalChan
 		mq.Close()
-		svcCtx.Redis.RemoveAllUserRouterStatus() // 移除所有用户路由信息
 		os.Exit(0)
 	}() // 处理退出信号，平滑关闭
 
