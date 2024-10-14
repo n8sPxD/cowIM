@@ -119,6 +119,12 @@ func (l *MsgForwarder) packageMessage(protobuf []byte, id uint32) (kafka.Message
 		return kafka.Message{}, err
 	}
 
+	// 心跳检测 如果更新时间大于30秒，就鉴定为离线
+	if time.Now().Sub(status.LastUpdate) > 30*time.Second {
+		go l.svcCtx.Redis.RemoveUserRouterStatus(l.ctx, id)
+		return kafka.Message{}, errors.New("user check heartbeat failed")
+	}
+
 	// 用户在线，发消息
 	// 确定Topic
 	workID := status.WorkID

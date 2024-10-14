@@ -1,6 +1,8 @@
 package server
 
 import (
+	"time"
+
 	"github.com/gorilla/websocket"
 	"github.com/segmentio/kafka-go"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -49,7 +51,16 @@ func (s *Server) readMessageFromFrontend(id uint32) error {
 
 			return err
 		}
-		logx.Debug("[readMessageFromFrontend] message: ", msg)
+		if string(msg) == "ping" {
+			go s.checkHeartBeat(id)
+		}
 		s.messages <- string(msg)
+	}
+}
+
+// 心跳检查
+func (s *Server) checkHeartBeat(id uint32) {
+	if err := s.svcCtx.Redis.UpdateUserRouterStatus(s.ctx, id, s.svcCtx.Config.WorkID, time.Now()); err != nil {
+		logx.Error("[checkHeartBeat] Update router status to redis failed, error: ", err)
 	}
 }
