@@ -63,4 +63,5 @@ func (s *Server) checkHeartBeat(id uint32) {
 	if err := s.svcCtx.Redis.UpdateUserRouterStatus(s.ctx, id, s.svcCtx.Config.WorkID, time.Now()); err != nil {
 		logx.Error("[checkHeartBeat] Update router status to redis failed, error: ", err)
 	}
+	logx.Info("HeartBeat from User ", id)
 }

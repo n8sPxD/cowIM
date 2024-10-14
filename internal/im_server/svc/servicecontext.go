@@ -3,19 +3,15 @@ package svc
 import (
 	"time"
 
-	"github.com/n8sPxD/cowIM/internal/apis/auth/rpc/auth"
-	"github.com/n8sPxD/cowIM/internal/apis/auth/rpc/types/authRpc"
 	"github.com/n8sPxD/cowIM/internal/common/db/myRedis"
 	"github.com/n8sPxD/cowIM/internal/im_server/internal/config"
 	"github.com/n8sPxD/cowIM/pkg/servicehub"
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/compress"
-	"github.com/zeromicro/go-zero/zrpc"
 )
 
 type ServiceContext struct {
 	Config       config.Config
-	AuthRpc      authRpc.AuthClient
 	MsgForwarder *kafka.Writer
 	Redis        *myRedis.DB
 	RegisterHub  *servicehub.RegisterHub
@@ -23,8 +19,7 @@ type ServiceContext struct {
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
-		Config:  c,
-		AuthRpc: auth.NewAuth(zrpc.MustNewClient(c.AuthRpc)),
+		Config: c,
 		MsgForwarder: &kafka.Writer{
 			Addr:         kafka.TCP(c.MsgForwarder.Brokers...),
 			Topic:        c.MsgForwarder.Topic,
