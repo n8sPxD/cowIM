@@ -14,19 +14,23 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-var configFile = flag.String("f", "etc/message.yaml", "the config file")
+var (
+	configFile = flag.String("f", "etc/message.yaml", "the config file")
+
+	c  config.Config
+	mq *mqs.MsgForwarder
+)
 
 func main() {
 	flag.Parse()
 
-	var c config.Config
 	conf.MustLoad(*configFile, &c)
 	logx.MustSetup(c.Log)
 
 	svcCtx := svc.NewServiceContext(c)
 	ctx := context.Background()
 
-	mq := mqs.NewMsgForwarder(ctx, svcCtx)
+	svcCtx.Redis.RemoveAllDupMessages() // 移除所有未处理的重复消息uuid
 
 	// 处理退出信号，平滑关闭
 	signalChan := make(chan os.Signal, 1)
@@ -37,5 +41,6 @@ func main() {
 		os.Exit(0)
 	}() // 处理退出信号，平滑关闭
 
+	mq = mqs.NewMsgForwarder(ctx, svcCtx)
 	mq.Start()
 }
