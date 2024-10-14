@@ -22,3 +22,8 @@ func (db *DB) CheckDuplicateMessage(ctx context.Context, uuid string) (bool, err
 	}
 	return ok, nil
 }
+
+func (db *DB) RemoveAllDupMessages() {
+	fields, _ := db.Smembers("dup_id")
+	db.Srem("dup_id", fields)
+}
