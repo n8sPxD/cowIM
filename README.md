@@ -12,7 +12,7 @@
 ```
 ##### 即时通讯系统
 ```sh
-% cd deployments/run
+% cd build/run
 
 # 确保运行之前给予执行权限
 # chmod +x *.sh
@@ -25,24 +25,25 @@
 ### 目前实现与进度
 #### 业务(后端)
  - [x] 单聊
- - [ ] 群聊
+ - [x] 群聊
  - [x] 好友添加
  - [x] 好友查询
  - [ ] 好友管理
  - [x] 群聊创建
- - [ ] 群聊查询
+ - [x] 群聊查询
 
 ### 目录说明
 ```
 .
-├── common          # 公共组件
-├── deployments     # 服务部署
-├── docs            # 文档以及图片
-├── gateway         # http网关
-├── im-server       # websocket server
-├── microservices   # 微服务们
-├── test            # 测试代码
-└── web             # 前端代码文件
+├── build           // 构建脚本
+├── cmd             // 初始化文件
+├── deployments     // 服务容器部署
+├── docs            // 文档
+├── internal        // 系统内部代码
+├── pkg             // 系统公共代码
+├── test            // 测试代码
+└── web             // 前端页面
+
 ```
 
 
