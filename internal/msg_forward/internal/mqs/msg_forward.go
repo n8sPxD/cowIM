@@ -11,7 +11,6 @@ import (
 	"github.com/n8sPxD/cowIM/internal/common/message/front"
 	"github.com/n8sPxD/cowIM/internal/common/message/inside"
 	"github.com/n8sPxD/cowIM/internal/msg_forward/internal/svc"
-	"github.com/n8sPxD/cowIM/pkg/utils"
 	"github.com/segmentio/kafka-go"
 	"github.com/yitter/idgenerator-go/idgen"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -109,40 +108,43 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	}
 }
 
-// 单聊处理
-func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
-	// 查询Redis中路由信息
-	status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, msg.To)
+func (l *MsgForwarder) packageMessage(protobuf []byte, id uint32) (kafka.Message, error) {
+	// 先查用户在不在线
+	status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, id)
 	if errors.Is(err, redis.Nil) {
-		// 没找到当前用户的路由信息，说明没上线
-		// 之前已经存过timeline了，所以不需要做任何处理
-		return
-	}
-	if err != nil {
-		logx.Error("[singleChat] Get router status from redis failed, error: ", err)
-		return
+		// 不在线，直接跳过
+		return kafka.Message{}, redis.Nil
+	} else if err != nil {
+		// redis出问题了
+		return kafka.Message{}, err
 	}
 
-	// 转发消息到指定的websocket-server
-	// 先确定Topic
+	// 用户在线，发消息
+	// 确定Topic
 	workID := status.WorkID
 	l.svcCtx.MsgSender.Topic = fmt.Sprintf("websocket-server-%d", workID)
 
 	// 封装inside.Message
-	wsmsg := inside.Message{
-		To:       msg.To,
+	msg := inside.Message{
+		To:       id,
 		Protobuf: protobuf,
 	}
-	wsmsgByte, err := proto.Marshal(&wsmsg)
+	msgByte, err := proto.Marshal(&msg)
 	if err != nil {
-		logx.Errorf(utils.FmtFuncName(), " Marshal message failed, error: ", err)
+		return kafka.Message{}, err
+	}
+
+	return kafka.Message{Value: msgByte}, nil
+}
+
+// 单聊处理
+func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
+	km, err := l.packageMessage(protobuf, msg.To)
+	if err != nil {
+		logx.Error("[singleChat] Package message failed, error: ", err)
 		return
 	}
-	// 封装mq消息
-	mqMsg := kafka.Message{
-		Value: wsmsgByte,
-	}
-	err = l.svcCtx.MsgSender.WriteMessages(l.ctx, mqMsg)
+	err = l.svcCtx.MsgSender.WriteMessages(l.ctx, km)
 	if err != nil {
 		logx.Error(
 			"[singleChat] Push message to Websocket-server MQ failed, error: ",
@@ -160,49 +162,19 @@ func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 		logx.Error("[groupChat] Get group members from mysql failed, error: ", err)
 		return
 	}
-	logx.Debug("members: ", members)
 	// TODO: 可以优化，先处理所有消息，然后把对应服务器的消息以切片形式发送，避免重复调用WriteMessages
 	for _, member := range members {
-		receiver := member
-
 		// 不用给发消息的人发
-		if receiver == uint(msg.From) {
+		if member == uint(msg.From) {
 			continue
 		}
-
-		// 先查用户在不在线
-		status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, uint32(receiver))
-		if errors.Is(err, redis.Nil) {
-			// 不在线，直接跳过
-			continue
-		} else if err != nil {
-			// redis出问题了
-			logx.Error("[groupChat] Get router status from redis failed, error: ", err)
-			continue
-		}
-
-		// 用户在线，发消息
-		// 确定Topic
-		workID := status.WorkID
-		l.svcCtx.MsgSender.Topic = fmt.Sprintf("websocket-server-%d", workID)
-
-		// 封装inside.Message
-		wsmsg := inside.Message{
-			To:       uint32(receiver),
-			Protobuf: protobuf,
-		}
-		wsmsgByte, err := proto.Marshal(&wsmsg)
+		kq, err := l.packageMessage(protobuf, uint32(member))
 		if err != nil {
-			logx.Error("[groupChat] Marshal message failed, error: ", err)
+			logx.Error("[groupChat] Package message failed, error: ", err)
 			return
 		}
-
-		// 封装mq消息
-		mqmsg := kafka.Message{
-			Value: wsmsgByte,
-		}
 		// 发消息
-		if err := l.svcCtx.MsgSender.WriteMessages(l.ctx, mqmsg); err != nil {
+		if err := l.svcCtx.MsgSender.WriteMessages(l.ctx, kq); err != nil {
 			logx.Error("[groupChat] Push message to Websocket-server MQ failed, error: ", err)
 			continue
 		}
@@ -228,41 +200,12 @@ func (l *MsgForwarder) replyAckMessage(sender *front.Message, oldId string) {
 		logx.Error("[replyAckMessage] Marshal message failed, error: ", err)
 		return
 	}
-
-	// 查询Redis中路由信息
-	status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, sender.From)
-	if errors.Is(err, redis.Nil) {
-		// 没找到当前用户的路由信息，说明没上线
-		// 由于是系统提示没发成功消息，如果用户不在线就不用再提示他发过消息了
-		return
-	}
+	kq, err := l.packageMessage(protobuf, sender.From)
 	if err != nil {
-		logx.Error("[replyAckMessage] Get router status from redis failed, error: ", err)
+		logx.Error("[replyAckMessage] Package message failed, error: ", err)
 		return
 	}
-
-	// 转发消息到指定的websocket-server
-	// 先确定Topic
-	workID := status.WorkID
-	l.svcCtx.MsgSender.Topic = fmt.Sprintf("websocket-server-%d", workID)
-
-	// 封装inside.Message
-	wsmsg := inside.Message{
-		To:       sender.From,
-		Protobuf: protobuf,
-	}
-	wsmsgByte, err := proto.Marshal(&wsmsg)
-	if err != nil {
-		logx.Error("[replyAckMessage] Marshal message failed, error: ", err)
-		return
-	}
-
-	// 封装mq消息
-	mq := kafka.Message{
-		Value: wsmsgByte,
-	}
-	logx.Infof("Sending Ack message to User %d ...", sender.From)
-	if err := l.svcCtx.MsgSender.WriteMessages(l.ctx, mq); err != nil {
+	if err := l.svcCtx.MsgSender.WriteMessages(l.ctx, kq); err != nil {
 		logx.Error("[replyAckMessage] Push message to Websocket-server MQ failed, error: ", err)
 		return
 	}
