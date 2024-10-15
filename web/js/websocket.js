@@ -121,7 +121,7 @@ async function handleIncomingData(data) {
 }
 
 async function sendAckMessage(parsedData) {
-    const ackMessage = new TextEncoder().encode(`_ack_${sessionStorage.CowID}_${parsedData.id}`);
+    const ackMessage = new TextEncoder().encode(`ack_${sessionStorage.CowID}_${parsedData.id}`);
     websocket.send(ackMessage);
     console.log('返回 ACK 消息给服务器，消息ID: ', parsedData.id);
 }
