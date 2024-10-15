@@ -77,6 +77,7 @@ func (l *MsgSender) Consume(protobuf []byte) {
 }
 
 func (l *MsgSender) replyMessageWithAck(message *inside.Message) {
+	logx.Debug("[replyMessageWithAck] Replying ack message to User ", message.To)
 	if err := l.manager.SendMessage(message.To, message.Protobuf); err != nil {
 		logx.Error("[replyMessageWithAck] Reply Ack message failed, error: ", err)
 	}
@@ -100,6 +101,7 @@ func (l *MsgSender) sendMessage(message *inside.Message, retryInterval time.Dura
 		}
 		// 等待Ack
 		if <-ackChan {
+			logx.Debugf("[sendMessage] Receive Ack from User %d with message \"%s\"", message.To, message.MsgId)
 			return
 		}
 	}

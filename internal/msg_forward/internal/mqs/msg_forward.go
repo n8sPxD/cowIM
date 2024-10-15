@@ -108,28 +108,33 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	}
 }
 
-func (l *MsgForwarder) packageMessage(protobuf []byte, id uint32, msgID string, msgType uint32) (kafka.Message, error) {
+func (l *MsgForwarder) packageMessageAndSend(protobuf []byte, id uint32, msgID string, msgType uint32) {
 	// 先查用户在不在线
 	status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, id)
 	if errors.Is(err, redis.Nil) {
 		// 不在线，直接跳过
-		return kafka.Message{}, redis.Nil
+		return
 	} else if err != nil {
 		// redis出问题了
-		return kafka.Message{}, err
+		logx.Error("[packageMessageAndSend] Get router status from redis failed, error: ", err)
+		// TODO: 增加重试
+		return
 	}
 
 	// 心跳检测 如果更新时间大于30秒，就鉴定为离线
 	if time.Now().Sub(status.LastUpdate) > 30*time.Second {
 		go l.svcCtx.Redis.RemoveUserRouterStatus(l.ctx, id)
-		logx.Infof("[packageMessage] User %d heartbeat timeout", id)
-		return kafka.Message{}, errors.New("user check heartbeat failed")
+		logx.Infof("[packageMessageAndSend] User %d heartbeat timeout", id)
+		return
 	}
 
 	// 用户在线，发消息
 	// 确定Topic
-	workID := status.WorkID
-	l.svcCtx.MsgSender.Topic = fmt.Sprintf("websocket-server-%d", workID)
+	var (
+		workID = status.WorkID
+		topic  = fmt.Sprintf("websocket-server-%d", workID)
+	)
+	l.svcCtx.MsgSender.Topic = topic
 
 	// 封装inside.Message
 	msg := inside.Message{
@@ -140,31 +145,26 @@ func (l *MsgForwarder) packageMessage(protobuf []byte, id uint32, msgID string, 
 	}
 	msgByte, err := proto.Marshal(&msg)
 	if err != nil {
-		return kafka.Message{}, err
+		logx.Error("[packageMessageAndSend] Marshal message failed, error: ", err)
+		return
 	}
 
-	return kafka.Message{Value: msgByte}, nil
+	km := kafka.Message{Value: msgByte}
+	err = l.svcCtx.MsgSender.WriteMessages(l.ctx, km)
+	if err != nil {
+		logx.Error(
+			"[packageMessage] Push message to Websocket-server MQ failed, error: ",
+			err,
+		)
+	}
 }
 
 // 单聊处理
 func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
-	km, err := l.packageMessage(protobuf, msg.To, msg.Id, msg.MsgType)
-	if err != nil {
-		logx.Error("[singleChat] Package message failed, error: ", err)
-		return
-	}
-	err = l.svcCtx.MsgSender.WriteMessages(l.ctx, km)
-	if err != nil {
-		logx.Error(
-			"[singleChat] Push message to Websocket-server MQ failed, error: ",
-			err,
-		)
-		return
-	}
+	l.packageMessageAndSend(protobuf, msg.To, msg.Id, msg.MsgType)
 }
 
 // 群聊处理
-// TODO: 修改逻辑，为每个人封装不一样的消息
 func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 	// 先获取群里所有成员
 	members, err := l.svcCtx.MySQL.GetGroupMemberIDs(l.ctx, uint(*msg.Group))
@@ -178,16 +178,8 @@ func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 		if member == uint(msg.From) {
 			continue
 		}
-		kq, err := l.packageMessage(protobuf, uint32(member), msg.Id, msg.MsgType)
-		if err != nil {
-			logx.Error("[groupChat] Package message failed, error: ", err)
-			return
-		}
-		// 发消息
-		if err := l.svcCtx.MsgSender.WriteMessages(l.ctx, kq); err != nil {
-			logx.Error("[groupChat] Push message to Websocket-server MQ failed, error: ", err)
-			continue
-		}
+		// TODO: 为每个人封装不一样的消息
+		l.packageMessageAndSend(protobuf, msg.To, msg.Id, msg.MsgType)
 	}
 }
 
@@ -210,13 +202,5 @@ func (l *MsgForwarder) replyAckMessage(sender *front.Message, oldId string) {
 		logx.Error("[replyAckMessage] Marshal message failed, error: ", err)
 		return
 	}
-	kq, err := l.packageMessage(protobuf, sender.From, oldId, reply.MsgType)
-	if err != nil {
-		logx.Error("[replyAckMessage] Package message failed, error: ", err)
-		return
-	}
-	if err := l.svcCtx.MsgSender.WriteMessages(l.ctx, kq); err != nil {
-		logx.Error("[replyAckMessage] Push message to Websocket-server MQ failed, error: ", err)
-		return
-	}
+	l.packageMessageAndSend(protobuf, sender.From, oldId, constant.MSG_ACK_MSG)
 }
