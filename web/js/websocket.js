@@ -1,7 +1,7 @@
 // js/websocket.js
 
 import {addMessage, deleteMessageByID, getMessageByID} from "./db.js";
-import {deserializeMessage} from "./message.js";
+import {deserializeMessage, serializeMessage} from "./message.js";
 import {MSG_ACK_MSG, SYSTEM_INFO, USER_SYSTEM} from "./constant.js";
 
 let websocket;
@@ -75,13 +75,12 @@ function sendHeartbeat() {
 // 处理接收到的 WebSocket 数据
 async function handleIncomingData(data) {
     try {
-        console.log("data: ", data)
         const parsedData = deserializeMessage(data);
 
         console.log("接受消息: ", parsedData)
 
+        // 如果是来自服务器的Ack消息
         if (parsedData.from === USER_SYSTEM && parsedData.type === SYSTEM_INFO && parsedData.msgType === MSG_ACK_MSG) {
-            console.log("系统消息")
             const messageID = parsedData.id;
             if (ackHandler.has(messageID)) {
                 clearTimeout(ackHandler.get(messageID).timeout);
@@ -105,7 +104,9 @@ async function handleIncomingData(data) {
                 }
             }
         } else {
-            console.log("正常消息")
+            // 如果是来自服务器的一般聊天数据,返回Ack
+            await sendAckMessage(parsedData)
+
             if (messageHandler) {
                 messageHandler(data);
             }
@@ -116,6 +117,27 @@ async function handleIncomingData(data) {
         if (messageHandler) {
             messageHandler(data);
         }
+    }
+}
+
+async function sendAckMessage(parsedData) {
+    // 封装消息
+    const ackMessage = {
+        id: parsedData.id,
+        from: parsedData.to,
+        to: USER_SYSTEM,
+        content: "",
+        type: SYSTEM_INFO,
+        msgType: MSG_ACK_MSG,
+        timestamp: Date.now(),
+    };
+
+    try {
+        const serializedAck = serializeMessage(ackMessage);
+        websocket.send(serializedAck);
+        console.log('已发送 ACK 消息, 原消息ID: ', parsedData.id)
+    } catch (sendError) {
+        console.error('发送 ACK 消息出错: ', sendError);
     }
 }
 
