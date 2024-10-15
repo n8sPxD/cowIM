@@ -4,7 +4,8 @@ package message2;
 option go_package = "./inside";
 
 message Message {
-  uint32 to = 1;
-  string msg_id = 2;
-  bytes protobuf = 3;
+  uint32 to = 1;  // 要发送给哪个用户
+  string msg_id = 2;  // 消息的ID
+  bytes protobuf = 3; // 消息内容
+  uint32 type = 4;    // 消息的类型（用来区分一般消息和Ack消息）
 }
