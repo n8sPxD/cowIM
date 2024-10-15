@@ -108,7 +108,7 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	}
 }
 
-func (l *MsgForwarder) packageMessage(protobuf []byte, id uint32, msgID string) (kafka.Message, error) {
+func (l *MsgForwarder) packageMessage(protobuf []byte, id uint32, msgID string, msgType uint32) (kafka.Message, error) {
 	// 先查用户在不在线
 	status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, id)
 	if errors.Is(err, redis.Nil) {
@@ -136,6 +136,7 @@ func (l *MsgForwarder) packageMessage(protobuf []byte, id uint32, msgID string) 
 		To:       id,
 		MsgId:    msgID,
 		Protobuf: protobuf,
+		Type:     msgType,
 	}
 	msgByte, err := proto.Marshal(&msg)
 	if err != nil {
@@ -147,7 +148,7 @@ func (l *MsgForwarder) packageMessage(protobuf []byte, id uint32, msgID string) 
 
 // 单聊处理
 func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
-	km, err := l.packageMessage(protobuf, msg.To, msg.Id)
+	km, err := l.packageMessage(protobuf, msg.To, msg.Id, msg.MsgType)
 	if err != nil {
 		logx.Error("[singleChat] Package message failed, error: ", err)
 		return
@@ -163,6 +164,7 @@ func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
 }
 
 // 群聊处理
+// TODO: 修改逻辑，为每个人封装不一样的消息
 func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 	// 先获取群里所有成员
 	members, err := l.svcCtx.MySQL.GetGroupMemberIDs(l.ctx, uint(*msg.Group))
@@ -176,7 +178,7 @@ func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 		if member == uint(msg.From) {
 			continue
 		}
-		kq, err := l.packageMessage(protobuf, uint32(member), msg.Id)
+		kq, err := l.packageMessage(protobuf, uint32(member), msg.Id, msg.MsgType)
 		if err != nil {
 			logx.Error("[groupChat] Package message failed, error: ", err)
 			return
@@ -208,7 +210,7 @@ func (l *MsgForwarder) replyAckMessage(sender *front.Message, oldId string) {
 		logx.Error("[replyAckMessage] Marshal message failed, error: ", err)
 		return
 	}
-	kq, err := l.packageMessage(protobuf, sender.From, oldId)
+	kq, err := l.packageMessage(protobuf, sender.From, oldId, reply.MsgType)
 	if err != nil {
 		logx.Error("[replyAckMessage] Package message failed, error: ", err)
 		return

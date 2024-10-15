@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/n8sPxD/cowIM/internal/common/constant"
 	"github.com/n8sPxD/cowIM/internal/common/message/inside"
 	"github.com/n8sPxD/cowIM/internal/im_server/internal/server"
 	"github.com/n8sPxD/cowIM/internal/im_server/svc"
@@ -65,7 +66,20 @@ func (l *MsgSender) Consume(protobuf []byte) {
 	}
 	// 能传到这里来，代表Message服务中已经从Redis中获取到当前Recv用户在线
 	// 在线，以服务器主动推模式发送消息
-	go l.sendMessage(&msg, 2*time.Second, 3)
+	switch msg.Type {
+	case constant.MSG_ACK_MSG:
+		// 有用户发送消息到服务器，需要获得来自服务器的Ack
+		go l.replyMessageWithAck(&msg)
+	default:
+		// 一般正常消息
+		go l.sendMessage(&msg, 2*time.Second, 3)
+	}
+}
+
+func (l *MsgSender) replyMessageWithAck(message *inside.Message) {
+	if err := l.manager.SendMessage(message.To, message.Protobuf); err != nil {
+		logx.Error("[replyMessageWithAck] Reply Ack message failed, error: ", err)
+	}
 }
 
 func (l *MsgSender) sendMessage(message *inside.Message, retryInterval time.Duration, maxRetires int) {
