@@ -108,7 +108,7 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	}
 }
 
-func (l *MsgForwarder) packageMessage(protobuf []byte, id uint32) (kafka.Message, error) {
+func (l *MsgForwarder) packageMessage(protobuf []byte, id uint32, msgID string) (kafka.Message, error) {
 	// 先查用户在不在线
 	status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, id)
 	if errors.Is(err, redis.Nil) {
@@ -122,6 +122,7 @@ func (l *MsgForwarder) packageMessage(protobuf []byte, id uint32) (kafka.Message
 	// 心跳检测 如果更新时间大于30秒，就鉴定为离线
 	if time.Now().Sub(status.LastUpdate) > 30*time.Second {
 		go l.svcCtx.Redis.RemoveUserRouterStatus(l.ctx, id)
+		logx.Infof("[packageMessage] User %d heartbeat timeout", id)
 		return kafka.Message{}, errors.New("user check heartbeat failed")
 	}
 
@@ -133,6 +134,7 @@ func (l *MsgForwarder) packageMessage(protobuf []byte, id uint32) (kafka.Message
 	// 封装inside.Message
 	msg := inside.Message{
 		To:       id,
+		MsgId:    msgID,
 		Protobuf: protobuf,
 	}
 	msgByte, err := proto.Marshal(&msg)
@@ -145,7 +147,7 @@ func (l *MsgForwarder) packageMessage(protobuf []byte, id uint32) (kafka.Message
 
 // 单聊处理
 func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
-	km, err := l.packageMessage(protobuf, msg.To)
+	km, err := l.packageMessage(protobuf, msg.To, msg.Id)
 	if err != nil {
 		logx.Error("[singleChat] Package message failed, error: ", err)
 		return
@@ -174,7 +176,7 @@ func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 		if member == uint(msg.From) {
 			continue
 		}
-		kq, err := l.packageMessage(protobuf, uint32(member))
+		kq, err := l.packageMessage(protobuf, uint32(member), msg.Id)
 		if err != nil {
 			logx.Error("[groupChat] Package message failed, error: ", err)
 			return
@@ -206,7 +208,7 @@ func (l *MsgForwarder) replyAckMessage(sender *front.Message, oldId string) {
 		logx.Error("[replyAckMessage] Marshal message failed, error: ", err)
 		return
 	}
-	kq, err := l.packageMessage(protobuf, sender.From)
+	kq, err := l.packageMessage(protobuf, sender.From, oldId)
 	if err != nil {
 		logx.Error("[replyAckMessage] Package message failed, error: ", err)
 		return

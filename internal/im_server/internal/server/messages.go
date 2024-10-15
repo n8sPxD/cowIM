@@ -1,6 +1,8 @@
 package server
 
 import (
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -37,18 +39,47 @@ func (s *Server) readMessageFromFrontend(id uint32) error {
 			}
 			return err
 		}
-		if string(msg) == "ping" {
+		// 判定消息类型
+		if isHeartbeat(msg) {
 			go s.checkHeartBeat(id)
+		} else if isAck(msg) {
+			go s.acceptAckMessage(msg)
 		} else {
 			s.messages <- string(msg)
 		}
 	}
 }
 
+func isHeartbeat(message []byte) bool {
+	return string(message) == "ping"
+}
+
+func isAck(message []byte) bool {
+	return strings.HasPrefix(string(message), "ack")
+}
+
 // 心跳检查
 func (s *Server) checkHeartBeat(id uint32) {
 	if err := s.svcCtx.Redis.UpdateUserRouterStatus(s.ctx, id, s.svcCtx.Config.WorkID, time.Now()); err != nil {
 		logx.Error("[checkHeartBeat] Update router status to redis failed, error: ", err)
+	} else {
+		logx.Info("HeartBeat from User ", id)
 	}
-	logx.Info("HeartBeat from User ", id)
+}
+
+// 接受ACK消息
+func (s *Server) acceptAckMessage(message []byte) {
+	// 先从string把数据分出来
+	// 0: ack 1: userID 2: messageID
+	parts := strings.Split(string(message), "_")
+	tmpID, _ := strconv.Atoi(parts[1])
+	userID := uint32(tmpID)
+	messageID := parts[2]
+
+	s.Manager.GetAckHandler().ConfirmAck(Ack{
+		To:        userID,
+		MessageID: messageID,
+	})
+
+	logx.Debugf("[acceptAckMessage] Confirm ack message to user %d with messageID \"%s\"", userID, messageID)
 }

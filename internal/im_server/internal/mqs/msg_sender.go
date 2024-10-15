@@ -2,7 +2,6 @@ package mqs
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/n8sPxD/cowIM/internal/common/message/inside"
@@ -54,7 +53,7 @@ func (l *MsgSender) Start() {
 }
 
 func (l *MsgSender) Close() {
-	_ = l.MsgSender.Close()
+	l.MsgSender.Close()
 }
 
 // Consume 接受从 后端消息处理服务 发来的消息，并转发给对应的用户
@@ -66,13 +65,29 @@ func (l *MsgSender) Consume(protobuf []byte) {
 	}
 	// 能传到这里来，代表Message服务中已经从Redis中获取到当前Recv用户在线
 	// 在线，以服务器主动推模式发送消息
-	if err := l.manager.SendMessage(msg.To, msg.Protobuf); err != nil {
-		// Message服务中检测到用户在线，但是可能在消息中转的过程中又离线
-		if errors.Is(err, server.ClientGoingAway) {
-			// TODO: 更改Redis信息
+	go l.sendMessage(&msg, 2*time.Second, 3)
+}
+
+func (l *MsgSender) sendMessage(message *inside.Message, retryInterval time.Duration, maxRetires int) {
+	for range maxRetires {
+		var (
+			ackChan    = make(chan bool)
+			manager    = l.manager
+			ackHandler = manager.GetAckHandler()
+			ack        = server.Ack{To: message.To, MessageID: message.MsgId}
+		)
+		// 创建等待用Ack Channel
+		ackHandler.AssignAckChan(ack, ackChan)
+		// 等待Ack或超时
+		go ackHandler.WaitForAck(ack, retryInterval)
+		// 发送消息
+		if err := manager.SendMessage(message.To, message.Protobuf); err != nil {
+			logx.Errorf("[sendMessage] Send message to User %d failed, error: ", err)
+		}
+		// 等待Ack
+		if <-ackChan {
 			return
 		}
-		logx.Error("[MsgSender.SingleChat] Send message failed, error: ", err)
-		return
 	}
+	logx.Errorf("[sendMessage] Receive Ack from User %d with message \"%s\" failed", message.To, message.MsgId)
 }
