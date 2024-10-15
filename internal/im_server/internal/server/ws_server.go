@@ -81,7 +81,9 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	// 处理重复在线
 	// TODO: 责任链模式重构handleWebsocket
-	s.checkOnline(id)
+	if online := s.checkOnline(id); online {
+		return
+	}
 
 	// 升级 Websocket
 	conn, err := s.upgrader.Upgrade(w, r, nil)
@@ -129,13 +131,14 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) checkOnline(id uint32) {
+func (s *Server) checkOnline(id uint32) bool {
 	// 处理重复登陆, 把已经登陆的客户端踢下线
 
 	// 先从本地找，再从redis找
 	if _, online := s.Manager.Get(id); online {
 		// 在当前服务器在线, 直接踢
 		s.Manager.RemoveWithCode(id, constant.DUP_CLIENT_CODE, constant.DUP_CLIENT_ERR)
+		return true
 	}
 
 	status, _ := s.svcCtx.Redis.GetUserRouterStatus(s.ctx, id)
@@ -150,10 +153,13 @@ func (s *Server) checkOnline(id uint32) {
 		}); err != nil {
 			logx.Error("[checkOnline] Marshal message to protobuf failed, error: ", err)
 			// 发不了通知消息不影响后续把人家踢下线的流程，大不了之前的客户端干啥都干不了(连接都断了)，所以无需return
+			return false
 		} else {
 			s.messages <- string(msg)
+			return true
 		}
 	}
+	return false
 }
 
 func (s *Server) updateRouterStatus(id uint32) {
