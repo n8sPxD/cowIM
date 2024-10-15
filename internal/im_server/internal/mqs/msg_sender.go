@@ -70,6 +70,9 @@ func (l *MsgSender) Consume(protobuf []byte) {
 	case constant.MSG_ACK_MSG:
 		// 有用户发送消息到服务器，需要获得来自服务器的Ack
 		go l.replyMessageWithAck(&msg)
+	case constant.MSG_ALERT_MSG:
+		// 一般是系统给前端的提示信息，不需要Ack
+		go l.sendAlertMessage(&msg)
 	default:
 		// 一般正常消息
 		go l.sendMessage(&msg, 2*time.Second, 3)
@@ -106,4 +109,11 @@ func (l *MsgSender) sendMessage(message *inside.Message, retryInterval time.Dura
 		}
 	}
 	logx.Errorf("[sendMessage] Receive Ack from User %d with message \"%s\" failed", message.To, message.MsgId)
+}
+
+func (l *MsgSender) sendAlertMessage(message *inside.Message) {
+	// 能走到这里来，代表该用户在该MessageSender负责的Websocket Server中，直接通过manager发通知即可
+	if err := l.manager.SendMessage(message.To, message.Protobuf); err != nil {
+		logx.Errorf("[sendMessage] Send message to User %d failed, error: ", err)
+	}
 }

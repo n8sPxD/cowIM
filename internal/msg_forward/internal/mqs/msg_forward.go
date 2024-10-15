@@ -63,36 +63,36 @@ func (l *MsgForwarder) Start() {
 // Consume 接收从 Websocket Server的消息，处理后再进行转发
 func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	// 传过来的消息是序列化过的，先反序列化
-	var msg front.Message
+	var (
+		msg   front.Message
+		oldId string
+	)
 	err := proto.Unmarshal(protobuf, &msg)
 	if err != nil {
 		logx.Error("[Consume] Unmarshal message failed, error: ", err)
 		return
 	}
 
-	// 检查消息重复性
-	if ok, err := l.svcCtx.Redis.CheckDuplicateMessage(l.ctx, msg.Id); err != nil {
-		logx.Error("[Consume] Check duplicate message from redis failed, error: ", err)
-		return
-	} else if ok { // 消息是重复的
-		logx.Infof("[Consume] Message from %d with ID \"%s\" sent repeated", msg.From, msg.Id)
-		return
+	// 隔离系统信息
+	if msg.From != constant.USER_SYSTEM && msg.To != constant.USER_SYSTEM {
+		// 检查消息重复性
+		if ok, err := l.svcCtx.Redis.CheckDuplicateMessage(l.ctx, msg.Id); err != nil {
+			logx.Error("[Consume] Check duplicate message from redis failed, error: ", err)
+			return
+		} else if ok { // 消息是重复的
+			logx.Infof("[Consume] Message from %d with ID \"%s\" sent repeated", msg.From, msg.Id)
+			return
+		}
+		// 保存以前的uuid,分配消息ID
+		oldId, msg.Id = msg.Id, strconv.FormatInt(idgen.NextId(), 10)
+		// 重新序列化
+		protobuf, err = proto.Marshal(&msg)
+		// 异步存库
+		go l.sendRecordMsgToDB(&msg, now) // 漫游库
+		go l.sendTimelineToDB(&msg, now)  // timeline
+		// Ack消息
+		go l.replyAckMessage(&msg, oldId)
 	}
-
-	// 保存以前的uuid
-	oldId := msg.Id
-	// 分配消息ID
-	id := idgen.NextId()
-	msg.Id = strconv.FormatInt(id, 10)
-
-	protobuf, err = proto.Marshal(&msg)
-
-	// 异步存库
-	go l.sendRecordMsgToDB(&msg, now) // 漫游库
-	go l.sendTimelineToDB(&msg, now)  // timeline
-
-	// Ack消息
-	go l.replyAckMessage(&msg, oldId)
 
 	// 进行基于消息类型的消息处理
 	switch msg.Type {
@@ -102,6 +102,8 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 		go l.groupChat(&msg, protobuf)
 	case constant.BIG_GROUP_CHAT:
 		go l.bigGroupChat(&msg)
+	case constant.SYSTEM_INFO:
+		go l.systemNotice(&msg, protobuf)
 	default:
 		logx.Error("[Consume] Wrong message type, Type is: ", msg.Type)
 		return
@@ -178,7 +180,6 @@ func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 		if member == uint(msg.From) {
 			continue
 		}
-		// TODO: 为每个人封装不一样的消息
 		l.packageMessageAndSend(protobuf, msg.To, msg.Id, msg.MsgType)
 	}
 }
@@ -203,4 +204,8 @@ func (l *MsgForwarder) replyAckMessage(sender *front.Message, oldId string) {
 		return
 	}
 	l.packageMessageAndSend(protobuf, sender.From, oldId, constant.MSG_ACK_MSG)
+}
+
+func (l *MsgForwarder) systemNotice(message *front.Message, protobuf []byte) {
+	l.packageMessageAndSend(protobuf, message.To, message.Id, message.MsgType)
 }
