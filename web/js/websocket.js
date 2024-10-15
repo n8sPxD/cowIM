@@ -1,7 +1,7 @@
 // js/websocket.js
 
 import {addMessage, deleteMessageByID, getMessageByID} from "./db.js";
-import {deserializeMessage, serializeMessage} from "./message.js";
+import {deserializeMessage} from "./message.js";
 import {MSG_ACK_MSG, SYSTEM_INFO, USER_SYSTEM} from "./constant.js";
 
 let websocket;
@@ -106,7 +106,7 @@ async function handleIncomingData(data) {
         } else {
             // 如果是来自服务器的一般聊天数据,返回Ack
             await sendAckMessage(parsedData)
-
+            // 正常处理消息
             if (messageHandler) {
                 messageHandler(data);
             }
@@ -121,24 +121,9 @@ async function handleIncomingData(data) {
 }
 
 async function sendAckMessage(parsedData) {
-    // 封装消息
-    const ackMessage = {
-        id: parsedData.id,
-        from: parsedData.to,
-        to: USER_SYSTEM,
-        content: "",
-        type: SYSTEM_INFO,
-        msgType: MSG_ACK_MSG,
-        timestamp: Date.now(),
-    };
-
-    try {
-        const serializedAck = serializeMessage(ackMessage);
-        websocket.send(serializedAck);
-        console.log('已发送 ACK 消息, 原消息ID: ', parsedData.id)
-    } catch (sendError) {
-        console.error('发送 ACK 消息出错: ', sendError);
-    }
+    const ackMessage = new TextEncoder().encode(`_ack_${sessionStorage.CowID}_${parsedData.id}`);
+    websocket.send(ackMessage);
+    console.log('返回 ACK 消息给服务器，消息ID: ', parsedData.id);
 }
 
 // 发送消息并处理 ACK
