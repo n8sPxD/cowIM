@@ -5,5 +5,6 @@ option go_package = "./inside";
 
 message Message {
   uint32 to = 1;
-  bytes protobuf = 2;
+  string msg_id = 2;
+  bytes protobuf = 3;
 }
