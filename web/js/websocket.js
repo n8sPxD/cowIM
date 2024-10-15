@@ -41,6 +41,10 @@ export function connectWebSocket(wsIP, jwtToken) {
         websocket.onclose = (event) => {
             console.log('WebSocket 连接关闭:', event);
             stopHeartbeat(); // 停止心跳
+            if (event.code === 4001) {
+                alert(`${event.reason}`)
+                window.history.back()
+            }
             // 可选：实现重连逻辑
         };
     });

@@ -25,3 +25,6 @@ export const USER_COMMON = 2;
 export const GROUP_MASTER = 1;
 export const GROUP_ADMIN = 2;
 export const GROUP_COMMON = 3;
+
+// Websocket 关闭代码
+export const DUP_CLIENT_CODE = 4001;
