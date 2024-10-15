@@ -73,6 +73,9 @@ func (l *MsgSender) Consume(protobuf []byte) {
 	case constant.MSG_ALERT_MSG:
 		// 一般是系统给前端的提示信息，不需要Ack
 		go l.sendAlertMessage(&msg)
+	case constant.MSG_DUP_CLIENT:
+		// 重复客户端提醒，不用发消息，直接处理
+		go l.handleDupClient(&msg)
 	default:
 		// 一般正常消息
 		go l.sendMessage(&msg, 2*time.Second, 3)
@@ -116,4 +119,8 @@ func (l *MsgSender) sendAlertMessage(message *inside.Message) {
 	if err := l.manager.SendMessage(message.To, message.Protobuf); err != nil {
 		logx.Errorf("[sendMessage] Send message to User %d failed, error: ", err)
 	}
+}
+
+func (l *MsgSender) handleDupClient(message *inside.Message) {
+	l.manager.RemoveWithCode(message.To, constant.DUP_CLIENT_CODE, constant.DUP_CLIENT_ERR)
 }

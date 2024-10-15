@@ -47,3 +47,17 @@ const (
 	GROUP_ADMIN  // 管理
 	GROUP_COMMON // 狗群员
 )
+
+// 系统对系统的操作 属于MsgType
+const (
+	MSG_DUP_CLIENT = 200 + iota // 多客户端登录，强制下线
+)
+
+// Websocket 相关代码
+const (
+	DUP_CLIENT_CODE = 4001 + iota
+)
+
+const (
+	DUP_CLIENT_ERR = "您已在另一台客户端登陆，即将强制下线"
+)

@@ -80,6 +80,7 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 处理重复在线
+	// TODO: 责任链模式重构handleWebsocket
 	s.checkOnline(id)
 
 	// 升级 Websocket
@@ -130,44 +131,28 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) checkOnline(id uint32) {
 	// 处理重复登陆, 把已经登陆的客户端踢下线
-	// 给之前登陆的客户端的消息体
-	var (
-		msg []byte
-		err error
-	)
-	if msg, err = proto.Marshal(&front.Message{
-		From:      constant.USER_SYSTEM,
-		To:        id,
-		Content:   "您已在另一台客户端登陆！即将强制下线",
-		Type:      constant.SYSTEM_INFO,
-		MsgType:   constant.MSG_SYSTEM_MSG,
-		Extend:    nil,
-		Timestamp: time.Now().Unix(),
-	}); err != nil {
-		logx.Error("[checkOnline] Marshal message to protobuf failed, error: ", err)
-		// 发不了通知消息不影响后续把人家踢下线的流程，大不了之前的客户端干啥都干不了(连接都断了)，所以无需return
-	}
-
-	sendMsg := func() {
-		// 判断msg的长度，防止上面marshal后没结果
-		if len(msg) > 0 {
-			s.messages <- string(msg)
-		}
-	}
 
 	// 先从本地找，再从redis找
-	_, online := s.Manager.Get(id)
-	if online {
-		// 在当前服务器在线, 直接发消息
-		sendMsg()
-		s.Manager.Remove(id)
+	if _, online := s.Manager.Get(id); online {
+		// 在当前服务器在线, 直接踢
+		s.Manager.RemoveWithCode(id, constant.DUP_CLIENT_CODE, constant.DUP_CLIENT_ERR)
 	}
 
-	_, err = s.svcCtx.Redis.GetUserRouterStatus(s.ctx, id)
-	if err == nil {
-		// 没出错，说明找到了用户在线
-		sendMsg()
-		s.Manager.Remove(id)
+	status, _ := s.svcCtx.Redis.GetUserRouterStatus(s.ctx, id)
+	if status != nil {
+		// 没出错，说明找到了用户在线，但是不在当前服务器中
+		// 消息塞队列，给隔壁处理
+		if msg, err := proto.Marshal(&front.Message{
+			From:    uint32(status.WorkID),
+			To:      id,
+			Type:    constant.SYSTEM_INFO,
+			MsgType: constant.MSG_DUP_CLIENT,
+		}); err != nil {
+			logx.Error("[checkOnline] Marshal message to protobuf failed, error: ", err)
+			// 发不了通知消息不影响后续把人家踢下线的流程，大不了之前的客户端干啥都干不了(连接都断了)，所以无需return
+		} else {
+			s.messages <- string(msg)
+		}
 	}
 }
 

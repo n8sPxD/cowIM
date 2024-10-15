@@ -103,7 +103,7 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	case constant.BIG_GROUP_CHAT:
 		go l.bigGroupChat(&msg)
 	case constant.SYSTEM_INFO:
-		go l.systemNotice(&msg, protobuf)
+		go l.systemOperation(&msg, protobuf)
 	default:
 		logx.Error("[Consume] Wrong message type, Type is: ", msg.Type)
 		return
@@ -112,6 +112,7 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 
 func (l *MsgForwarder) packageMessageAndSend(protobuf []byte, id uint32, msgID string, msgType uint32) {
 	// 先查用户在不在线
+	// TODO: 如果是DupClient消息，可以省去这一步查询
 	status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, id)
 	if errors.Is(err, redis.Nil) {
 		// 不在线，直接跳过
@@ -206,6 +207,6 @@ func (l *MsgForwarder) replyAckMessage(sender *front.Message, oldId string) {
 	l.packageMessageAndSend(protobuf, sender.From, oldId, constant.MSG_ACK_MSG)
 }
 
-func (l *MsgForwarder) systemNotice(message *front.Message, protobuf []byte) {
-	l.packageMessageAndSend(protobuf, message.To, message.Id, message.MsgType)
+func (l *MsgForwarder) systemOperation(message *front.Message, protobuf []byte) {
+	l.packageMessageAndSend(protobuf, message.To, "", message.MsgType)
 }
