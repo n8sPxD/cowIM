@@ -3,6 +3,7 @@ package server
 import (
 	"strconv"
 	"sync"
+	"time"
 )
 
 type Ack struct {
@@ -17,37 +18,43 @@ func (data Ack) Value() AckData {
 }
 
 type IAckHandler interface {
-	CheckAck(userID uint32, messageID string) bool
-	ConfirmAck(userID uint32, messageID string)
-	AddAck(userID uint32, messageID string)
+	AssignAckChan(Ack, chan bool)
+	WaitForAck(ack Ack, timeout time.Duration)
+	ConfirmAck(Ack)
 }
 
 type AckHandler struct {
-	data  map[AckData]bool
-	mutex sync.RWMutex
+	data  map[AckData]chan bool
+	mutex sync.Mutex
 }
 
 func NewAckHandler() IAckHandler {
 	return &AckHandler{
-		data:  make(map[AckData]bool),
-		mutex: sync.RWMutex{},
+		data:  make(map[AckData]chan bool),
+		mutex: sync.Mutex{},
 	}
 }
 
-func (handler *AckHandler) CheckAck(to uint32, messageID string) bool {
-	handler.mutex.RLock()
-	defer handler.mutex.RUnlock()
-	return handler.data[Ack{to, messageID}.Value()]
-}
-
-func (handler *AckHandler) ConfirmAck(to uint32, messageID string) {
+func (handler *AckHandler) AssignAckChan(ack Ack, ch chan bool) {
 	handler.mutex.Lock()
 	defer handler.mutex.Unlock()
-	delete(handler.data, Ack{to, messageID}.Value())
+	handler.data[ack.Value()] = ch
 }
 
-func (handler *AckHandler) AddAck(to uint32, messageID string) {
+func (handler *AckHandler) WaitForAck(ack Ack, timeout time.Duration) {
+	select {
+	case <-time.After(timeout):
+		handler.data[ack.Value()] <- false
+		return
+	}
+}
+
+func (handler *AckHandler) ConfirmAck(ack Ack) {
+	value := ack.Value()
 	handler.mutex.Lock()
 	defer handler.mutex.Unlock()
-	handler.data[Ack{to, messageID}.Value()] = true
+	if ackChan, ok := handler.data[value]; ok {
+		ackChan <- true
+		delete(handler.data, value)
+	}
 }

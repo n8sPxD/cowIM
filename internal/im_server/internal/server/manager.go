@@ -22,6 +22,7 @@ type IConnectionManager interface {
 	Get(uint32) (*Session, bool)
 	SendMessage(uint32, []byte) error
 	ReadMessage(uint32) ([]byte, error)
+	GetAckHandler() IAckHandler
 }
 
 // ConnectionManager WebSocket连接管理器
@@ -87,4 +88,8 @@ func (cm *ConnectionManager) ReadMessage(userID uint32) ([]byte, error) {
 		return nil, err
 	}
 	return msg, nil
+}
+
+func (cm *ConnectionManager) GetAckHandler() IAckHandler {
+	return cm.AckHandler
 }
