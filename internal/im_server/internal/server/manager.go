@@ -28,12 +28,14 @@ type IConnectionManager interface {
 type ConnectionManager struct {
 	// TODO: map换ConcurrentMap
 	connections map[UserID]*Session
+	AckHandler  IAckHandler
 	mutex       sync.RWMutex
 }
 
 func NewConnectionManager() IConnectionManager {
 	return &ConnectionManager{
 		connections: make(map[UserID]*Session),
+		AckHandler:  NewAckHandler(),
 		mutex:       sync.RWMutex{},
 	}
 }
