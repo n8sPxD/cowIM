@@ -84,7 +84,7 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 			return
 		}
 		// 保存以前的uuid,分配消息ID
-		oldId, msg.Id = msg.Id, strconv.FormatInt(idgen.NextId(), 10)
+		oldId, msg.Id, msg.Timestamp = msg.Id, strconv.FormatInt(idgen.NextId(), 10), now
 		// 重新序列化
 		protobuf, err = proto.Marshal(&msg)
 		// 异步存库
@@ -192,12 +192,13 @@ func (l *MsgForwarder) bigGroupChat(msg *front.Message) {
 func (l *MsgForwarder) replyAckMessage(sender *front.Message, oldId string) {
 	// 封装消息体
 	reply := front.Message{
-		Id:      oldId,
-		From:    constant.USER_SYSTEM,
-		To:      sender.From,
-		Content: sender.Id, // 后端分配好的消息ID
-		Type:    constant.SYSTEM_INFO,
-		MsgType: constant.MSG_ACK_MSG,
+		Id:        oldId,
+		From:      constant.USER_SYSTEM,
+		To:        sender.From,
+		Content:   sender.Id, // 后端分配好的消息ID
+		Type:      constant.SYSTEM_INFO,
+		MsgType:   constant.MSG_ACK_MSG,
+		Timestamp: time.Now().Unix(),
 	}
 	protobuf, err := proto.Marshal(&reply)
 	if err != nil {
