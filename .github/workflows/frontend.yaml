@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    environment: frontend
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -17,28 +17,30 @@ jobs:
         run: |
           tar -czf web.tar.gz -C web .
 
-      - name: 部署到服务器
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-          SERVER_USER: ${{ secrets.SERVER_USER }}
-          SERVER_PORT: ${{ secrets.WEBSERVER_PORT }}
-          DEPLOY_PATH: /var/www/cowim
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          
-          scp -P $SERVER_PORT -o StrictHostKeyChecking=no web.tar.gz $SERVER_USER@$SERVER_HOST:$DEPLOY_PATH
-          
-          ssh -p $SERVER_PORT -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << EOF
-            mkdir -p $DEPLOY_PATH
-            cd $DEPLOY_PATH
+      - name: 上传web到服务器
+        uses: moonpathbg/scp_uploader@latest
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_PORT }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "./web.tar.gz"
+          target: "/home/www/cowim"
+
+      - name: 部署webserver
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            mkdir -p /home/www/cowim
+            cd /home/www/cowim
             tar -xzf web.tar.gz -C .
             rm web.tar.gz
-            sudo systemctl reload openresty
-          EOF
-          
+            echo "${{ secrets.SUDO_PASSWD }}" | sudo -S openresty -s reload
+
       - name: 清理本地文件
         run: |
           rm -f web.tar.gz
