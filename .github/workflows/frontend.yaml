@@ -1,0 +1,44 @@
+name: 搭建前端
+
+on:
+  push:
+    paths:
+      - 'web/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: 目录打包
+        run: |
+          tar -czf web.tar.gz -C web .
+
+      - name: 部署到服务器
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PORT: ${{ secrets.WEBSERVER_PORT }}
+          DEPLOY_PATH: /var/www/cowim
+        run: |
+          mkdir -p /.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          
+          scp -P $SERVER_PORT -o StrictHostKeyChecking=no web.tar.gz $SERVER_USER@$SERVER_HOST:$DEPLOY_PATH
+          
+          ssh -p $SERVER_PORT -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << EOF
+            mkdir -p $DEPLOY_PATH
+            cd $DEPLOY_PATH
+            tar -xzf web.tar.gz -C .
+            rm web.tar.gz
+            sudo systemctl reload openresty
+          EOF
+          
+      - name: 清理本地文件
+        run: |
+          rm -f web.tar.gz
