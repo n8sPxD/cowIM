@@ -1,10 +1,10 @@
-FROM cowim_base AS builder
+FROM n8spxd/cow-im:base AS builder
 
 WORKDIR /build/internal/apis/auth/api
 
 RUN go build -o auth auth.go
 
-FROM alpine:latest
+FROM golang:alpine
 
 ARG SERVICE_DIR=/build/internal/apis/auth/api/
 

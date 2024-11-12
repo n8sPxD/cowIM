@@ -1,13 +1,12 @@
-name: base-docker-build.yml
+name: base-docker-build
 
 on:
   push:
     paths:
-      - .github/workflows/base-docker-build.yml
       - cmd/**
       - internal/**
       - pkg/**
-      - ./Dockerfile
+      - Dockerfile
 
 jobs:
   build-and-push:
