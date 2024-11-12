@@ -4,8 +4,6 @@ WORKDIR /build/internal/apis/auth/api
 
 RUN go build -o auth auth.go
 
-RUN ls
-
 FROM golang:alpine
 
 ARG SERVICE_DIR=/build/internal/apis/auth/api/
