@@ -1,6 +1,0 @@
-name: 构建Docker images
-
-on: push
-
-jobs:
-
