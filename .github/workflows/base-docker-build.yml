@@ -3,9 +3,6 @@ name: base-docker-build
 on:
   push:
     paths:
-      - cmd/**
-      - internal/**
-      - pkg/**
       - Dockerfile
 
 jobs:
