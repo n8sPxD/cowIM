@@ -1,0 +1,26 @@
+name: auth-restful-docker-build.yml
+on:
+  push:
+    paths:
+      - .github/workflows/auth-restful-docker-build.yml
+      - internal/apis/auth/api/**
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: 登陆DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: 构建Docker镜像并push到DockerHub
+        uses: docker/build-push-action@v6.9.0
+        with:
+          context: internal/apis/auth/api
+          push: true
+          tags: n8spxd/cow-im:auth-api
