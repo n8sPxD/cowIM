@@ -1,13 +1,17 @@
 name: auth-restful-docker-build
 
 on:
+  workflow_run:
+    workflows: [ "base-docker-build" ]
+    types:
+      - completed
   push:
     paths:
       - .github/workflows/auth-restful-docker-build.yml
       - internal/apis/auth/api/**
 
 jobs:
-  setup:
+  base-rebuild-and-push:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -19,10 +23,6 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-  base-rebuild-and-push:
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
       - name: 重新构建base镜像，并push到DockerHub
         uses: docker/build-push-action@v6.9.0
         with:
@@ -33,7 +33,7 @@ jobs:
 
   build-and-push:
     runs-on: ubuntu-latest
-    needs: [setup, base-rebuild-and-push]
+    needs: base-rebuild-and-push
     steps:
       - name: checkout
         uses: actions/checkout@v4
