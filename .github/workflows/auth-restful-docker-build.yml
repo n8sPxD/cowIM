@@ -1,10 +1,6 @@
 name: auth-restful-docker-build
 
 on:
-  workflow_run:
-    workflows: [ "base-docker-build" ]
-    types:
-      - completed
   push:
     paths:
       - .github/workflows/auth-restful-docker-build.yml
