@@ -2,16 +2,15 @@ name: base-docker-build.yml
 
 on:
   push:
-    paths-ignore:
-      - 'web/**'
-      - 'docs/**'
-      - 'test/**'
-      - 'build/**'
-      - '.template/**'
-      - '.github/**'
+    paths:
+      - .github/workflows/base-docker-build.yml
+      - cmd/**
+      - internal/**
+      - pkg/**
+      - ./Dockerfile
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
