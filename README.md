@@ -11,26 +11,11 @@
 % docker-compose -f deployments/base/docker-compose.yaml up -d
 ```
 ##### 即时通讯系统
+当前部署方案并不完善，处于测试阶段，没有实现端口的动态映射等基本公网部署条件，但是起码能把容器都凑出来
 ```sh
-% cd build/run
-
-# 确保运行之前给予执行权限
-# chmod +x *.sh
-
-% ./auth_api.sh
-% ./auth_rpc.sh
-...
+# 单机部署
+% docker-compose -f deployments/main/docker-compose.yaml up -d
 ```
-
-### 目前实现与进度
-#### 业务(后端)
- - [x] 单聊
- - [x] 群聊
- - [x] 好友添加
- - [x] 好友查询
- - [ ] 好友管理
- - [x] 群聊创建
- - [x] 群聊查询
 
 ### 目录说明
 ```
