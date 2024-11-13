@@ -13,6 +13,6 @@ COPY --from=builder $SERVICE_DIR/gateway          /app/gateway
 
 WORKDIR /app
 
-EXPOSE 20001
+EXPOSE 8081
 
 ENTRYPOINT ["/app/gateway"]

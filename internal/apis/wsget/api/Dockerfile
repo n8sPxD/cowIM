@@ -13,6 +13,6 @@ COPY --from=builder $SERVICE_DIR/wsget          /app/wsget
 
 WORKDIR /app
 
-EXPOSE 20001
+EXPOSE 20004
 
 ENTRYPOINT ["/app/wsget"]

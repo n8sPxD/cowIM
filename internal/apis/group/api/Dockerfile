@@ -13,6 +13,6 @@ COPY --from=builder $SERVICE_DIR/group          /app/group
 
 WORKDIR /app
 
-EXPOSE 20001
+EXPOSE 20005
 
 ENTRYPOINT ["/app/group"]

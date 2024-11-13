@@ -59,7 +59,7 @@ func (g *Gateway) Start() error {
 
 	// 初始化 HTTP 服务器
 	g.server = &http.Server{
-		Addr:         ":8080",
+		Addr:         ":8081",
 		Handler:      mux,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,

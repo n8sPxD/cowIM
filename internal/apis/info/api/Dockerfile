@@ -13,6 +13,6 @@ COPY --from=builder $SERVICE_DIR/infos          /app/infos
 
 WORKDIR /app
 
-EXPOSE 20001
+EXPOSE 20002
 
 ENTRYPOINT ["/app/infos"]
