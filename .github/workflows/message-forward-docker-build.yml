@@ -1,0 +1,48 @@
+name: message-forward-docker-build
+
+on:
+  push:
+    paths:
+      - .github/workflows/message-forward-docker-build.yml
+      - internal/msg_forward/**
+
+jobs:
+  base-rebuild-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: 登陆DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: 重新构建base镜像，并push到DockerHub
+        uses: docker/build-push-action@v6.9.0
+        with:
+          context: .
+          push: true
+          tags: n8spxd/cow-im:base
+
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: base-rebuild-and-push
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: 登陆DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: 构建msg-forward Docker镜像并push到DockerHub
+        uses: docker/build-push-action@v6.9.0
+        with:
+          context: internal/msg_forward
+          push: true
+          tags: n8spxd/cow-im:message-forward
