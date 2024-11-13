@@ -2,7 +2,7 @@ FROM n8spxd/cow-im:base AS builder
 
 WORKDIR /build/internal/msg_forward/
 
-RUN go build -f message message.go
+RUN go build -o message message.go
 
 FROM golang:alpine
 
