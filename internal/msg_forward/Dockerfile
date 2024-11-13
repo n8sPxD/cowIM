@@ -13,4 +13,4 @@ COPY --from=builder $SERVICE_DIR/message          /app/message
 
 WORKDIR /app
 
-ENTRYPOINT ["/app/server"]
+ENTRYPOINT ["/app/message"]
