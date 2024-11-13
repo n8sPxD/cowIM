@@ -1,0 +1,59 @@
+services:
+  auth-api:
+    image: n8spxd/cow-im:auth-api
+    container_name: cowim-auth-api
+    restart: always
+    ports:
+      - "20001:20001"
+
+  group-api:
+    image: n8spxd/cow-im:group-api
+    container_name: cowim-group-api
+    restart: always
+    ports:
+      - "20005:20005"
+
+  info-api:
+    image: n8spxd/cow-im:info-api
+    container_name: cowim-info-api
+    restart: always
+    ports:
+      - "20002:20002"
+
+  user-api:
+    image: n8spxd/cow-im:user-api
+    container_name: cowim-user-api
+    restart: always
+    ports:
+      - "20003:20003"
+
+  wsget-api:
+    image: n8spxd/cow-im:wsget-api
+    container_name: cowim-wsget-api
+    restart: always
+    ports:
+      - "20004:20004"
+
+  http-gateway:
+    image: n8spxd/cow-im:http-gateway
+    container_name: cowim-http-gateway
+    restart: always
+    ports:
+      - "8081:8081"
+
+  im-server:
+    image: n8spxd/cow-im:im-server
+    container_name: cowim-im-server
+    restart: always
+    ports:
+      - "8082:8082"
+
+  message-forward:
+    image: n8spxd/cow-im:message-forward
+    container_name: cowim-msg-fwd
+    restart: always
+
+  message-to-db:
+    image: n8spxd/cow-im:message-to-db
+    container_name: cowim-msg-to-db
+    restart: always
