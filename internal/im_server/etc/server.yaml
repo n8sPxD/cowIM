@@ -16,25 +16,25 @@ Auth:
 AuthRpc:
   Etcd:
     Hosts:
-      - 127.0.0.1:2379
+      - 10.0.0.4:2379
     Key: authrpc.rpc
 
 MsgForwarder:
   Brokers:
-    - 127.0.0.1:9092
+    - 10.0.0.5:9092
   Topic: "messages"
 
 WorkID: 1
 
 MsgSender:
   Brokers:
-    - 127.0.0.1:9092
+    - 10.0.0.5:9092
   Topic: "websocket-server-1" # 最后一位为WorkID
 
 RedisConf:
-  Host: 127.0.0.1:6379
+  Host: 10.0.0.3:6379
   Type: "node"
 
 Etcd:
   Hosts:
-    - 127.0.0.1:2379
+    - 10.0.0.4:2379
