@@ -23,6 +23,7 @@ func NewMsgToDB(ctx context.Context, svcCtx *svc.ServiceContext) *MsgToDB {
 	return &MsgToDB{
 		ctx:    ctx,
 		svcCtx: svcCtx,
+		// TODO: 考虑使用RocketMQ替换Kafka
 		MsgToDB: kafka.NewReader(kafka.ReaderConfig{
 			Brokers:     svcCtx.Config.MsgToDB.Brokers,
 			Topic:       svcCtx.Config.MsgToDB.Topic,

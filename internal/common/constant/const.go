@@ -12,8 +12,10 @@ const (
 
 // 系统相关 Message 类型
 const (
-	MSG_ALERT_MSG = 100 + iota // 在前端直接弹窗出来的消息
-	MSG_ACK_MSG                // 消息重传中使用
+	MSG_ALERT_MSG         = 100 + iota // 在前端直接弹窗出来的消息
+	MSG_ACK_MSG                        // 消息重传中使用
+	MSG_BIG_GROUP_REQ                  // 详细见 后端设计
+	MSG_BIG_GROUP_ALL_REQ              // 详细见 后端设计
 )
 
 // 群聊或者单聊

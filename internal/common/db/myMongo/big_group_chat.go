@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// GetBigGroupMessage 从Timeline数据库获得 读扩散 的大群组消息
 func (db *DB) GetBigGroupMessage(ctx context.Context, groupID uint32, clientTimestamp time.Time) ([]models.UserTimeline, error) {
 	filter := mongo.Pipeline{}
 

@@ -152,7 +152,6 @@ func (s *Server) checkOnline(id uint32) bool {
 			MsgType: constant.MSG_DUP_CLIENT,
 		}); err != nil {
 			logx.Error("[checkOnline] Marshal message to protobuf failed, error: ", err)
-			// 发不了通知消息不影响后续把人家踢下线的流程，大不了之前的客户端干啥都干不了(连接都断了)，所以无需return
 			return false
 		} else {
 			s.messages <- string(msg)

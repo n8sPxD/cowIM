@@ -3,6 +3,7 @@ syntax = "proto3";
 package message2;
 option go_package = "./inside";
 
+// TODO: 这玩意其实没必要存在，后续考虑删了
 message Message {
   uint32 to = 1;  // 要发送给哪个用户
   string msg_id = 2;  // 消息的ID
