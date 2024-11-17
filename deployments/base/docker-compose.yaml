@@ -1,3 +1,11 @@
+networks:
+  cowim-network:
+    driver: bridge
+    external: true
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24
+
 services:
   mysql:
     image: mysql:latest
@@ -10,6 +18,9 @@ services:
       - ~/docker-compose-volumes/mysql/data/:/var/lib/mysql
     ports:
       - "3306:3306"
+    networks:
+      cowim-network:
+        ipv4_address: 10.0.0.1
 
   redis:
     image: redis:latest
@@ -17,6 +28,9 @@ services:
     restart: always
     ports:
       - "6379:6379"
+    networks:
+      cowim-network:
+        ipv4_address: 10.0.0.2
 
   etcd:
     image: bitnami/etcd:latest
@@ -29,6 +43,9 @@ services:
       - "2379:2379"
       - "2380:2380"
     command: [ "etcd" ]
+    networks:
+      cowim-network:
+        ipv4_address: 10.0.0.3
 
   kafka:
     image: bitnami/kafka:latest
@@ -53,12 +70,18 @@ services:
     ports:
       - "9092:9092"
       - "9094:9094"
+    networks:
+      cowim-network:
+        ipv4_address: 10.0.0.4
 
   mongodb:
-    image: bitnami/mongodb:latest
+    image: mongodb/mongodb-community-server:latest
     container_name: mongo-im
     restart: always
-    volumes:
-      - ~/docker-compose-volumes/mongodb/data:/bitnami/mongodb
+#    volumes:
+#      - ~/docker-compose-volumes/mongodb/data:/data/db
     ports:
       - "27017:27017"
+    networks:
+      cowim-network:
+        ipv4_address: 10.0.0.5
