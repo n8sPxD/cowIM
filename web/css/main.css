@@ -1,0 +1,148 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f9f9f9;
+}
+
+.container {
+    width: 80vw;
+    height: 70vh;
+    display: flex;
+    border: 1px solid #000;
+    background-color: #fff;
+    position: relative;
+}
+
+.sidebar {
+    width: 50px;
+    border-right: 1px solid #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px;
+}
+
+.sidebar button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #f0f0f0;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.sidebar button:hover {
+    background-color: #d9d9d9;
+    transform: scale(1.05);
+}
+
+.sidebar button.selected {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.sidebar button {
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.conversation-list {
+    width: 200px;
+    border-right: 1px solid #000;
+    padding: 10px;
+    position: relative;
+    overflow: auto;
+    transition: width 0.3s;
+}
+
+.chat-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+}
+
+.chat-header {
+    height: 40px;
+    border-bottom: 1px solid #000;
+    padding: 10px;
+}
+
+.chat-history {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    border-bottom: 1px solid #000;
+}
+
+.message-input {
+    height: 100px;
+    position: relative;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    background-color: transparent;
+}
+
+.message-input textarea {
+    flex: 1;
+    height: 80px;
+    padding: 10px;
+    border-color: black;
+    border-radius: 4px;
+    resize: none;
+    font-size: 16px;
+    line-height: 1.5;
+    background-color: transparent;
+}
+
+.send-button {
+    margin-left: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+/* 新增样式：独立展示会话、好友和群组的方块 */
+.chat-item, .friend-item, .group-item {
+    background-color: #e0e0e0;
+    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.chat-item:hover, .friend-item:hover, .group-item:hover {
+    background-color: #cfcfcf;
+    transform: scale(1.02);
+}
+
+.chat-item.selected, .friend-item.selected, .group-item.selected {
+    background-color: #4CAF50;
+    color: white;
+}
+

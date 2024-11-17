@@ -1,0 +1,54 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    display: flex;
+    justify-content: center;  /* 容器内子项水平居中 */
+    align-items: center; /* 容器内子项垂直居中 */
+    width: 700px;
+    border: 1px solid #000;
+    background-color: #fff;
+    padding: 40px;
+    height: 300px; /* 固定容器高度 */
+}
+
+.login-container {
+    margin-right: 50px; /* 让登录框和cowsay保持适当间距 */
+    width: 300px;
+    text-align: center;
+}
+
+input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #000;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 10px;
+    border: 1px solid #000;
+    background-color: #fff;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+#cowsay-container {
+    margin-left: auto;  /* 自动调整左边距 */
+    margin-right: auto; /* 自动调整右边距 */
+    font-family: monospace;
+    white-space: pre;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; /* 确保高度填充 */
+    font-size: larger;
+}

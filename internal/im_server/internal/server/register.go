@@ -10,6 +10,7 @@ import (
 // 续租
 func (s *Server) register() {
 	c := s.svcCtx.Config
+	// TODO: 从Etcd获取目前最大workid，避免手动指定
 	if len(c.Etcd.Hosts) > 0 {
 		ip, err := utils.GetLocalIP()
 		if err != nil {
