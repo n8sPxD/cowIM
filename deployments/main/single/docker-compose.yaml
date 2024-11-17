@@ -1,3 +1,11 @@
+networks:
+  cowim-network:
+    driver: bridge
+    external: true
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24
+
 services:
   auth-api:
     image: n8spxd/cow-im:auth-api
@@ -5,6 +13,9 @@ services:
     restart: always
     ports:
       - "20001:20001"
+    networks:
+      cowim-network:
+        ipv4_address: 10.0.0.101
 
   group-api:
     image: n8spxd/cow-im:group-api
@@ -12,6 +23,9 @@ services:
     restart: always
     ports:
       - "20005:20005"
+    networks:
+      cowim-network:
+        ipv4_address: 10.0.0.102
 
   info-api:
     image: n8spxd/cow-im:info-api
@@ -19,6 +33,9 @@ services:
     restart: always
     ports:
       - "20002:20002"
+    networks:
+      cowim-network:
+        ipv4_address: 10.0.0.103
 
   user-api:
     image: n8spxd/cow-im:user-api
@@ -26,6 +43,9 @@ services:
     restart: always
     ports:
       - "20003:20003"
+    networks:
+      cowim-network:
+        ipv4_address: 10.0.0.104
 
   wsget-api:
     image: n8spxd/cow-im:wsget-api
@@ -33,6 +53,9 @@ services:
     restart: always
     ports:
       - "20004:20004"
+    networks:
+      cowim-network:
+        ipv4_address: 10.0.0.105
 
   http-gateway:
     image: n8spxd/cow-im:http-gateway
@@ -40,6 +63,9 @@ services:
     restart: always
     ports:
       - "8081:8081"
+    networks:
+      cowim-network:
+        ipv4_address: 10.0.0.106
 
   im-server:
     image: n8spxd/cow-im:im-server
@@ -47,13 +73,22 @@ services:
     restart: always
     ports:
       - "8082:8082"
+    networks:
+      cowim-network:
+        ipv4_address: 10.0.0.107
 
   message-forward:
     image: n8spxd/cow-im:message-forward
     container_name: cowim-msg-fwd
     restart: always
+    networks:
+      cowim-network:
+        ipv4_address: 10.0.0.108
 
   message-to-db:
     image: n8spxd/cow-im:message-to-db
     container_name: cowim-msg-to-db
     restart: always
+    networks:
+      cowim-network:
+        ipv4_address: 10.0.0.109
