@@ -20,7 +20,7 @@ services:
       - "3306:3306"
     networks:
       cowim-network:
-        ipv4_address: 10.0.0.1
+        ipv4_address: 10.0.0.2
 
   redis:
     image: redis:latest
@@ -30,7 +30,7 @@ services:
       - "6379:6379"
     networks:
       cowim-network:
-        ipv4_address: 10.0.0.2
+        ipv4_address: 10.0.0.3
 
   etcd:
     image: bitnami/etcd:latest
@@ -45,7 +45,7 @@ services:
     command: [ "etcd" ]
     networks:
       cowim-network:
-        ipv4_address: 10.0.0.3
+        ipv4_address: 10.0.0.4
 
   kafka:
     image: bitnami/kafka:latest
@@ -72,7 +72,7 @@ services:
       - "9094:9094"
     networks:
       cowim-network:
-        ipv4_address: 10.0.0.4
+        ipv4_address: 10.0.0.5
 
   mongodb:
     image: mongodb/mongodb-community-server:latest
@@ -84,4 +84,4 @@ services:
       - "27017:27017"
     networks:
       cowim-network:
-        ipv4_address: 10.0.0.5
+        ipv4_address: 10.0.0.6
