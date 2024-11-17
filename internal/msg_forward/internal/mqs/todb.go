@@ -108,6 +108,33 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 		}
 
 	case constant.BIG_GROUP_CHAT:
+		// 大规模群聊，读扩散存库
+
+		// TODO:
+		//senderTLByte, err := json.Marshal(senderTL)
+		//if err != nil {
+		//	logx.Error("[sendTimelineToDB] Json marshal failed, error: ", err)
+		//	return
+		//}
+
+		var packMsg inside.MessageToDB
+		packMsg.Type = constant.USER_TIMELINE
+		packMsg.Payload = append(
+			packMsg.Payload,
+			// TODO: senderTLByte,
+		)
+		packMsgByte, err := json.Marshal(packMsg)
+		if err != nil {
+			logx.Error("[sendTimelineToDB] Json marshal failed, error: ", err)
+			return
+		}
+		mqMsg := kafka.Message{
+			Value: packMsgByte,
+		}
+		err = l.svcCtx.MsgDBSaver.WriteMessages(l.ctx, mqMsg)
+		if err != nil {
+			logx.Error("[sendTimelineToDB] Push message to DBSaver MQ failed, error: ", err)
+		}
 	case constant.SYSTEM_INFO:
 	default:
 		logx.Error("[sendTimelineToDB] Invalid message type, type is: ", msg.Type)
