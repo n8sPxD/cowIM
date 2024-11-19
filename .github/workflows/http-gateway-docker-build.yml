@@ -43,7 +43,7 @@ jobs:
       - name: 构建http-gateway Docker镜像并push到DockerHub
         uses: docker/build-push-action@v6.9.0
         with:
-          context: deployments/main/services
-          file: deployments/main/services/Dockerfile.http-gateway
+          context: deployments/services
+          file: deployments/services/Dockerfile.http-gateway
           push: true
           tags: n8spxd/cow-im:http-gateway

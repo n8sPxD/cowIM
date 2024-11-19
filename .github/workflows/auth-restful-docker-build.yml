@@ -44,7 +44,7 @@ jobs:
       - name: 构建auth-api Docker镜像并push到DockerHub
         uses: docker/build-push-action@v6.9.0
         with:
-          context: deployments/main/services
-          file:  deployments/main/services/Dockerfile.auth-api
+          context: deployments/services
+          file:  deployments/services/Dockerfile.auth-api
           push: true
           tags: n8spxd/cow-im:auth-api
