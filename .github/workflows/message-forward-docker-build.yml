@@ -5,6 +5,7 @@ on:
     paths:
       - .github/workflows/message-forward-docker-build.yml
       - internal/msg_forward/**
+      - deployments/services/configs/message.yaml
 
 jobs:
   base-rebuild-and-push:

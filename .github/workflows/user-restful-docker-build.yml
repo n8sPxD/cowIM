@@ -4,6 +4,7 @@ on:
     paths:
       - .github/workflows/user-restful-docker-build.yml
       - internal/business/user/api/**
+      - deployments/services/configs/user.yaml
 
 jobs:
   base-rebuild-and-push:

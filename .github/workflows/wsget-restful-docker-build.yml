@@ -4,6 +4,7 @@ on:
     paths:
       - .github/workflows/wsget-restful-docker-build.yml
       - internal/business/wsget/api/**
+      - deployments/services/configs/wsget.yaml
 
 jobs:
   base-rebuild-and-push:

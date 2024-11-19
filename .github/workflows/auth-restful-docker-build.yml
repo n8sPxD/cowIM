@@ -5,6 +5,7 @@ on:
     paths:
       - .github/workflows/auth-restful-docker-build.yml
       - internal/business/auth/api/**
+      - deployments/services/configs/auth.yaml
 
 jobs:
   base-rebuild-and-push:

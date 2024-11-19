@@ -4,6 +4,7 @@ on:
     paths:
       - .github/workflows/im-server-docker-build.yml
       - internal/im_server/**
+      - deployments/services/configs/server.yaml
 
 jobs:
   base-rebuild-and-push:

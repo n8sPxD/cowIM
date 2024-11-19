@@ -4,6 +4,7 @@ on:
     paths:
       - .github/workflows/http-gateway-docker-build.yml
       - internal/http_gateway/**
+      - deployments/services/configs/gateway.yaml
 
 jobs:
   base-rebuild-and-push:

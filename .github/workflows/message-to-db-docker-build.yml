@@ -5,6 +5,7 @@ on:
     paths:
       - .github/workflows/message-to-db-docker-build.yml
       - internal/msg_to_db/**
+      - deployments/services/configs/todb.yaml
 
 jobs:
   base-rebuild-and-push:
