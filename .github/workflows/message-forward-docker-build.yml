@@ -43,6 +43,7 @@ jobs:
       - name: 构建msg-forward Docker镜像并push到DockerHub
         uses: docker/build-push-action@v6.9.0
         with:
-          context: internal/msg_forward
+          context:  deployments/main/services
+          file:  deployments/main/services/Dockerfile.msg-fwd
           push: true
           tags: n8spxd/cow-im:message-forward

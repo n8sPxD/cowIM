@@ -42,6 +42,7 @@ jobs:
       - name: 构建info-api Docker镜像并push到DockerHub
         uses: docker/build-push-action@v6.9.0
         with:
-          context: internal/business/info/api
+          context: deployments/main/services
+          file:  deployments/main/services/Dockerfile.info-api
           push: true
           tags: n8spxd/cow-im:info-api

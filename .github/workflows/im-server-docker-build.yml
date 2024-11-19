@@ -42,6 +42,7 @@ jobs:
       - name: 构建im-server Docker镜像并push到DockerHub
         uses: docker/build-push-action@v6.9.0
         with:
-          context: internal/im_server
+          context:  deployments/main/services
+          file:  deployments/main/services/Dockerfile.im-server
           push: true
           tags: n8spxd/cow-im:im-server
