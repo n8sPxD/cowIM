@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/n8sPxD/cowIM/internal/common/confor"
 	"os"
 	"os/signal"
 	"syscall"
@@ -28,8 +27,6 @@ var (
 
 func main() {
 	conf.MustLoad(*configFile, &c)
-	confor.FromEnv(&c.RedisConf.Host, "REDIS_HOST")
-	confor.FromEnv(&c.WorkID, "WORK_ID")
 	logx.MustSetup(c.Log)
 
 	idOptions := idgen.NewIdGeneratorOptions(c.WorkID)
