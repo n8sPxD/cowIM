@@ -127,6 +127,7 @@ func (l *MsgForwarder) packageMessageAndSend(protobuf []byte, id uint32, msgID s
 	}
 
 	// 心跳检测 如果更新时间大于30秒，就鉴定为离线
+	// TODO: 直接用Redis内置Expire实现心跳超时
 	if time.Now().Sub(status.LastUpdate) > 30*time.Second {
 		go l.svcCtx.Redis.RemoveUserRouterStatus(l.ctx, id)
 		logx.Infof("[packageMessageAndSend] User %d heartbeat timeout", id)
@@ -183,6 +184,7 @@ func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 		if member == uint(msg.From) {
 			continue
 		}
+		// TODO: Redis中用Pipeline一次性查询所有member对应的服务器ID, 直接转发，避免重复的单次查询
 		l.packageMessageAndSend(protobuf, msg.To, msg.Id, msg.MsgType)
 	}
 }

@@ -3,7 +3,7 @@ on:
   push:
     paths:
       - .github/workflows/group-restful-docker-build.yml
-      - internal/apis/group/api/**
+      - internal/business/group/api/**
 
 jobs:
   base-rebuild-and-push:
@@ -42,6 +42,6 @@ jobs:
       - name: 构建group-api Docker镜像并push到DockerHub
         uses: docker/build-push-action@v6.9.0
         with:
-          context: internal/apis/group/api
+          context: internal/business/group/api
           push: true
           tags: n8spxd/cow-im:group-api

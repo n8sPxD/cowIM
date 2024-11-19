@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - .github/workflows/auth-restful-docker-build.yml
-      - internal/apis/auth/api/**
+      - internal/business/auth/api/**
 
 jobs:
   base-rebuild-and-push:
@@ -43,6 +43,6 @@ jobs:
       - name: 构建auth-api Docker镜像并push到DockerHub
         uses: docker/build-push-action@v6.9.0
         with:
-          context: internal/apis/auth/api
+          context: internal/business/auth/api
           push: true
           tags: n8spxd/cow-im:auth-api

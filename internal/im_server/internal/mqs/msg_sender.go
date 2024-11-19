@@ -72,6 +72,7 @@ func (l *MsgSender) Consume(protobuf []byte) {
 		go l.replyMessageWithAck(&msg)
 	case constant.MSG_ALERT_MSG:
 		// 一般是系统给前端的提示信息，不需要Ack
+		// TODO: 还是需要Ack的，改进该方法
 		go l.sendAlertMessage(&msg)
 	case constant.MSG_DUP_CLIENT:
 		// 重复客户端提醒，不用发消息，直接处理

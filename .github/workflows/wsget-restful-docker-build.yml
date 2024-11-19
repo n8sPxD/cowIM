@@ -3,7 +3,7 @@ on:
   push:
     paths:
       - .github/workflows/wsget-restful-docker-build.yml
-      - internal/apis/wsget/api/**
+      - internal/business/wsget/api/**
 
 jobs:
   base-rebuild-and-push:
@@ -42,6 +42,6 @@ jobs:
       - name: 构建wsget-api Docker镜像并push到DockerHub
         uses: docker/build-push-action@v6.9.0
         with:
-          context: internal/apis/wsget/api
+          context: internal/business/wsget/api
           push: true
           tags: n8spxd/cow-im:wsget-api

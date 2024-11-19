@@ -48,7 +48,7 @@ func (l *LoginLogic) Login(req *types.LoginRequest) (*types.LoginResponse, error
 		l.svcCtx.Config.Auth.AccessExpire,
 	)
 	if err != nil {
-		logx.Errorf("User %s generate token error, err: %v\n", req.ID, err)
+		logx.Errorf("User %d generate token error, err: %v\n", req.ID, err)
 		return nil, errors.New("登陆失败！请稍后再试")
 	}
 
