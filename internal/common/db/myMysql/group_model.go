@@ -16,7 +16,7 @@ func (db *DB) InsertGroup(ctx context.Context, group *models.Group) error {
 		}
 		return err
 	}
-	return db.client.WithContext(ctx).Create(&models.GroupConfig{GroupID: group.ID}).Error
+	return nil
 }
 
 //func (db *DB) GetGroupMembers(ctx context.Context, id uint) ([]models.GroupMember, error) {
@@ -44,8 +44,8 @@ func (db *DB) GetGroupMemberIDs(ctx context.Context, id uint) ([]uint, error) {
 
 func (db *DB) InsertGroupMember(ctx context.Context, groupID uint32, member uint32) error {
 	membercol := models.GroupMember{
-		GroupID: uint(groupID),
-		UserID:  uint(member),
+		GroupID: uint32(groupID),
+		UserID:  uint32(member),
 		Role:    constant.GROUP_COMMON,
 	}
 	return db.client.WithContext(ctx).Create(&membercol).Error
@@ -55,8 +55,8 @@ func (db *DB) InsertGroupMembers(ctx context.Context, groupID uint32, members []
 	membercols := make([]models.GroupMember, 0, len(members))
 	for i := range membercols {
 		tmp := models.GroupMember{
-			GroupID: uint(groupID),
-			UserID:  uint(members[i]),
+			GroupID: uint32(groupID),
+			UserID:  uint32(members[i]),
 			Role:    constant.GROUP_COMMON,
 		}
 		membercols[i] = tmp

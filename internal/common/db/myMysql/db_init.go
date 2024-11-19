@@ -29,7 +29,6 @@ func (db *DB) Migrate() error {
 		&models2.UserConfig{},
 		&models2.Friends{},
 		&models2.Group{},
-		&models2.GroupConfig{},
 		&models2.GroupMember{},
 	)
 	return err
