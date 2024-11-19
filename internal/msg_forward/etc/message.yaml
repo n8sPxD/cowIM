@@ -6,28 +6,28 @@ Log:
 
 MsgForwarder:
   Brokers:
-    - 10.0.0.5:9092
+    - 127.0.0.1:9092
   Topic: "messages"
 
 MsgSender:
   Brokers:
-    - 10.0.0.5:9092
+    - 127.0.0.1:9092
   Topic: "init_topic"
 
 MsgDBSaver:
   Brokers:
-    - 10.0.0.5:9092
+    - 127.0.0.1:9092
   Topic: "msg_to_db"
 
 RedisConf:
-  Host: "10.0.0.3:6379"
+  Host: "127.0.0.1:6379"
   Type: "node"
 
 MongoConf:
-  Host: "10.0.0.6:27017"
+  Host: "127.0.0.1:27017"
 
 MySQL:
-  DataSource: root:123456@tcp(10.0.0.2:3306)/im_server_db?charset=utf8mb4&parseTime=True&loc=Local
+  DataSource: root:123456@tcp(127.0.0.1:3306)/im_server_db?charset=utf8mb4&parseTime=True&loc=Local
 
 
 WorkID: 1 # 雪花漂移id生成用

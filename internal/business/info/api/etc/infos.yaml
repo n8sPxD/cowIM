@@ -9,4 +9,4 @@ Log:
   Stat: false
 
 Mongo:
-  Host: "mongodb://10.0.0.6:27017"
+  Host: "mongodb://127.0.0.1:27017"

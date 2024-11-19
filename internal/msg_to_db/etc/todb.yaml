@@ -5,9 +5,9 @@ Log:
   Stat: false
 
 MongoConf:
-  Host: "10.0.0.6:27017"
+  Host: "127.0.0.1:27017"
 
 MsgToDB:
   Brokers:
-    - 10.0.0.5:9092
+    - 127.0.0.1:9092
   Topic: "msg_to_db"
