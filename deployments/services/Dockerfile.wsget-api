@@ -1,0 +1,18 @@
+FROM n8spxd/cow-im:base AS builder
+
+WORKDIR /build/internal/business/wsget/api
+
+RUN go build -o wsget wsget.go
+
+FROM golang:alpine
+
+ARG SERVICE_DIR=/build/internal/business/wsget/api/
+
+COPY configs/wsget.yaml /app/etc/wsget.yaml
+COPY --from=builder $SERVICE_DIR/wsget          /app/wsget
+
+WORKDIR /app
+
+EXPOSE 20004
+
+ENTRYPOINT ["/app/wsget"]

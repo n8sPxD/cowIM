@@ -1,0 +1,13 @@
+Name: wsget
+Host: 0.0.0.0
+Port: 20004
+
+Etcd:
+  Host:
+    - 10.0.0.4:2379
+
+
+Log:
+  Encoding: plain
+  TimeFormat: 2006-01-02 15:04:05
+  Stat: false

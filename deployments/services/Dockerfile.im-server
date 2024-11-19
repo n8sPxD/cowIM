@@ -1,0 +1,18 @@
+FROM n8spxd/cow-im:base AS builder
+
+WORKDIR /build/internal/im_server/
+
+RUN go build -o server server.go
+
+FROM golang:alpine
+
+ARG SERVICE_DIR=/build/internal/im_server
+
+COPY configs/server.yaml /app/etc/server.yaml
+COPY --from=builder $SERVICE_DIR/server          /app/server
+
+WORKDIR /app
+
+EXPOSE 8082
+
+ENTRYPOINT ["/app/server"]

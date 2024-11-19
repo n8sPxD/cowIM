@@ -1,0 +1,12 @@
+Name: group
+Host: 0.0.0.0
+Port: 20005
+
+MySQL:
+  DataSource: root:123456@tcp(10.0.0.2:3306)/im_server_db?charset=utf8mb4&parseTime=True&loc=Local
+
+Log:
+  Encoding: plain
+  TimeFormat: 2006-01-02 15:04:05
+  Level: debug
+  Stat: false

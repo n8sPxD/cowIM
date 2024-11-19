@@ -8,8 +8,8 @@ FROM golang:alpine
 
 ARG SERVICE_DIR=/build/internal/business/group/api/
 
-COPY --from=builder $SERVICE_DIR/etc/group.yaml /app/etc/group.yaml
-COPY --from=builder $SERVICE_DIR/group          /app/group
+COPY --from=builder $SERVICE_DIR/configs/group.yaml                 /app/etc/group.yaml
+COPY --from=builder $SERVICE_DIR/group  /app/group
 
 WORKDIR /app
 
