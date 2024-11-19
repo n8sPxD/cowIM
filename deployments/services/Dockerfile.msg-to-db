@@ -8,8 +8,8 @@ FROM golang:alpine
 
 ARG SERVICE_DIR=/build/internal/msg_to_db
 
-COPY configs/config.yaml /app/etc/config.yaml
-COPY --from=builder $SERVICE_DIR/main          /app/main
+COPY configs/todb.yaml                  /app/etc/todb.yaml
+COPY --from=builder $SERVICE_DIR/main   /app/main
 
 WORKDIR /app
 
