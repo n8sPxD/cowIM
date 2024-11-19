@@ -29,3 +29,6 @@ go.work.sum
 tmp
 
 .template
+
+# other base deployments
+deployments/base/local/
