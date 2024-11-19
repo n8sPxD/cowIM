@@ -14,7 +14,7 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-var configFile = flag.String("f", "etc/config.yaml", "the config file")
+var configFile = flag.String("f", "etc/todb.yaml", "the config file")
 
 func main() {
 	flag.Parse()

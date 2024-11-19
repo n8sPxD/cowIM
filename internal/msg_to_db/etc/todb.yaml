@@ -1,0 +1,13 @@
+Log:
+  Encoding: plain
+  TimeFormat: 2006-01-02 15:04:05
+  Level: debug
+  Stat: false
+
+MongoConf:
+  Host: "10.0.0.6:27017"
+
+MsgToDB:
+  Brokers:
+    - 10.0.0.5:9092
+  Topic: "msg_to_db"
