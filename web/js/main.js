@@ -61,7 +61,7 @@ export async function initializeMain() {
 async function getWebSocketServerIP() {
     const jwtToken = sessionStorage.getItem('jwtToken');
 
-    const response = await fetch('http://localhost:8080/wsget', {
+    const response = await fetch('http://localhost:8081/wsget', {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${jwtToken}`
@@ -86,7 +86,7 @@ async function fetchInitialData() {
     const latestTimestamp = await getLatestTimestamp();
 
     // 获取离线消息 /timelinesync，并传递 timestamp 参数
-    const timelineResponse = await fetch(`http://localhost:8080/timelinesync?timestamp=${latestTimestamp}`, {
+    const timelineResponse = await fetch(`http://localhost:8081/timelinesync?timestamp=${latestTimestamp}`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${jwtToken}`
@@ -118,7 +118,7 @@ async function fetchInitialData() {
     }
 
     // 获取群组信息 /groups
-    const groupsResponse = await fetch('http://localhost:8080/groups', {
+    const groupsResponse = await fetch('http://localhost:8081/groups', {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${jwtToken}`
@@ -142,7 +142,7 @@ async function fetchInitialData() {
     }
 
     // 获取好友列表 /friends
-    const friendsResponse = await fetch('http://localhost:8080/friends', {
+    const friendsResponse = await fetch('http://localhost:8081/friends', {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${jwtToken}`

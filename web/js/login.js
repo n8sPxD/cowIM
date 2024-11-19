@@ -36,7 +36,7 @@ export function initializeLogin() {
         }
 
         try {
-            const response = await fetch('http://localhost:8080/login', { // 修改了请求路径
+            const response = await fetch('http://localhost:8081/login', { // 修改了请求路径
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

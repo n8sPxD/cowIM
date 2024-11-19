@@ -19,7 +19,7 @@ export function initializeRegister() {
         // 可选：添加更多的输入合法性验证
 
         try {
-            const response = await fetch('http://localhost:8080/register', {
+            const response = await fetch('http://localhost:8081/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
