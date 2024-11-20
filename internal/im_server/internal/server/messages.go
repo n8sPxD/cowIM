@@ -1,13 +1,11 @@
 package server
 
 import (
-	"strconv"
-	"strings"
-	"time"
-
 	"github.com/gorilla/websocket"
 	"github.com/segmentio/kafka-go"
 	"github.com/zeromicro/go-zero/core/logx"
+	"strconv"
+	"strings"
 )
 
 func (s *Server) sendMessageToBackend() error {
@@ -60,7 +58,7 @@ func isAck(message []byte) bool {
 
 // 心跳检查
 func (s *Server) checkHeartBeat(id uint32) {
-	if err := s.svcCtx.Redis.UpdateUserRouterStatus(s.ctx, id, s.svcCtx.Config.WorkID, time.Now()); err != nil {
+	if _, err := s.svcCtx.Redis.UpdateUserRouterStatus(s.ctx, id, s.svcCtx.Config.WorkID); err != nil {
 		logx.Error("[checkHeartBeat] Update router status to redis failed, error: ", err)
 	} else {
 		logx.Info("HeartBeat from User ", id)

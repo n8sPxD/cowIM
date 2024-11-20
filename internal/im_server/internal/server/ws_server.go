@@ -100,7 +100,7 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	logx.Infof("[handleWebsocket] User %s on %s connected", name, conn.RemoteAddr())
 
 	// 维护用户登陆路由
-	if err := s.svcCtx.Redis.UpdateUserRouterStatus(s.ctx, id, s.svcCtx.Config.WorkID); err != nil {
+	if _, err := s.svcCtx.Redis.UpdateUserRouterStatus(s.ctx, id, s.svcCtx.Config.WorkID); err != nil {
 		logx.Error("[updateRouterStatus] Update router status to redis failed, error: ", err)
 	}
 
