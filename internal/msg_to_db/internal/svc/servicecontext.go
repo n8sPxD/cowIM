@@ -3,7 +3,7 @@ package svc
 import (
 	"fmt"
 
-	"github.com/n8sPxD/cowIM/internal/common/db/myMongo"
+	"github.com/n8sPxD/cowIM/internal/common/dao/myMongo"
 	"github.com/n8sPxD/cowIM/internal/msg_to_db/internal/config"
 )
 

@@ -7,7 +7,7 @@ import (
 
 	"github.com/n8sPxD/cowIM/internal/business/info/api/internal/svc"
 	"github.com/n8sPxD/cowIM/internal/business/info/api/internal/types"
-	"github.com/n8sPxD/cowIM/internal/common/db/myMongo/models"
+	"github.com/n8sPxD/cowIM/internal/common/dao/myMongo/models"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 

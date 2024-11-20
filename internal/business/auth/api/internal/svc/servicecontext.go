@@ -2,7 +2,7 @@ package svc
 
 import (
 	"github.com/n8sPxD/cowIM/internal/business/auth/api/internal/config"
-	"github.com/n8sPxD/cowIM/internal/common/db/myMysql"
+	"github.com/n8sPxD/cowIM/internal/common/dao/myMysql"
 )
 
 type ServiceContext struct {

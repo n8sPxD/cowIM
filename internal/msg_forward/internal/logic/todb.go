@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/n8sPxD/cowIM/internal/common/constant"
-	models2 "github.com/n8sPxD/cowIM/internal/common/db/myMongo/models"
+	models2 "github.com/n8sPxD/cowIM/internal/common/dao/myMongo/models"
 	"github.com/n8sPxD/cowIM/internal/common/message/front"
 	"github.com/n8sPxD/cowIM/internal/common/message/inside"
 	"github.com/segmentio/kafka-go"

@@ -3,7 +3,7 @@ package svc
 import (
 	"time"
 
-	"github.com/n8sPxD/cowIM/internal/common/db/myRedis"
+	"github.com/n8sPxD/cowIM/internal/common/dao/myRedis"
 	"github.com/n8sPxD/cowIM/internal/im_server/internal/config"
 	"github.com/n8sPxD/cowIM/pkg/servicehub"
 	"github.com/segmentio/kafka-go"

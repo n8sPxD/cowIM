@@ -6,7 +6,7 @@ import (
 
 	"github.com/n8sPxD/cowIM/internal/business/group/api/internal/svc"
 	"github.com/n8sPxD/cowIM/internal/business/group/api/internal/types"
-	"github.com/n8sPxD/cowIM/internal/common/db/myMysql/models"
+	"github.com/n8sPxD/cowIM/internal/common/dao/myMysql/models"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 

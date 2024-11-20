@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/n8sPxD/cowIM/internal/common/db/myMongo"
-	"github.com/n8sPxD/cowIM/internal/common/db/myMysql"
-	"github.com/n8sPxD/cowIM/internal/common/db/myRedis"
+	"github.com/n8sPxD/cowIM/internal/common/dao/myMongo"
+	"github.com/n8sPxD/cowIM/internal/common/dao/myMysql"
+	"github.com/n8sPxD/cowIM/internal/common/dao/myRedis"
 	"github.com/n8sPxD/cowIM/internal/msg_forward/internal/config"
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/compress"

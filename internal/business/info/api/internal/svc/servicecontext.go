@@ -2,7 +2,7 @@ package svc
 
 import (
 	"github.com/n8sPxD/cowIM/internal/business/info/api/internal/config"
-	"github.com/n8sPxD/cowIM/internal/common/db/myMongo"
+	"github.com/n8sPxD/cowIM/internal/common/dao/myMongo"
 )
 
 type ServiceContext struct {

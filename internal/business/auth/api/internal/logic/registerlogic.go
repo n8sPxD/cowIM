@@ -6,7 +6,7 @@ import (
 
 	"github.com/n8sPxD/cowIM/internal/business/auth/api/internal/svc"
 	"github.com/n8sPxD/cowIM/internal/business/auth/api/internal/types"
-	"github.com/n8sPxD/cowIM/internal/common/db/myMysql/models"
+	"github.com/n8sPxD/cowIM/internal/common/dao/myMysql/models"
 	"github.com/n8sPxD/cowIM/pkg/encrypt"
 	"github.com/zeromicro/go-zero/core/logx"
 )
