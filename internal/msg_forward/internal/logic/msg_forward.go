@@ -4,8 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/n8sPxD/cowIM/internal/common/dao/myRedis"
+	"github.com/redis/go-redis/v9"
 	"github.com/zeromicro/go-zero/core/collection"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/n8sPxD/cowIM/internal/common/constant"
@@ -15,7 +18,6 @@ import (
 	"github.com/segmentio/kafka-go"
 	"github.com/yitter/idgenerator-go/idgen"
 	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/core/stores/redis"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -23,7 +25,7 @@ type MsgForwarder struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 
-	routes       *collection.Cache
+	Routes       *collection.Cache
 	MsgForwarder *kafka.Reader
 }
 
@@ -35,7 +37,7 @@ func NewMsgForwarder(ctx context.Context, svcCtx *svc.ServiceContext) *MsgForwar
 	return &MsgForwarder{
 		ctx:    ctx,
 		svcCtx: svcCtx,
-		routes: cache,
+		Routes: cache,
 		MsgForwarder: kafka.NewReader(kafka.ReaderConfig{
 			Brokers:        svcCtx.Config.MsgForwarder.Brokers,
 			Topic:          svcCtx.Config.MsgForwarder.Topic,
@@ -58,10 +60,20 @@ func (l *MsgForwarder) Start() {
 	options := idgen.NewIdGeneratorOptions(l.svcCtx.Config.WorkID)
 	idgen.SetIdGenerator(options)
 
+	job := []myRedis.Job{
+		{
+			Channel: "routes",
+			After:   l.SubscribeRouteStatus,
+		},
+	}
+	if err := l.svcCtx.Redis.SubscribeWorks(l.ctx, job...); err != nil {
+		logx.Error("[Start] PubSub error: ", err)
+	}
+
 	for {
 		msg, err := l.MsgForwarder.ReadMessage(l.ctx) // 这里的msg是kafka.Message
 		if err != nil {
-			logx.Error("[MsgForwarder.Start] Reading message error: ", err)
+			logx.Error("[Start] Reading message error: ", err)
 			break
 		}
 		go l.Consume(msg.Value, time.Now())
@@ -120,12 +132,16 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	}
 }
 
+const Offline = -1
+
 func (l *MsgForwarder) packageMessageAndSend(protobuf []byte, id uint32, msgID string, msgType uint32) {
-	// 先查用户在不在线
 	// TODO: 如果是DupClient消息，可以省去这一步查询 (2024.11.20添加 不知道这条TODO是干嘛的)
 	var workerID int
-	if router, ok := l.routes.Get(fmt.Sprintf("r_%d", id)); ok {
-		workerID, _ = router.(int)
+	if router, ok := l.Routes.Get(strconv.Itoa(int(id))); ok {
+		workerID = router.(int)
+		if workerID == Offline {
+			return
+		}
 	} else {
 		redisRouter, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, id)
 		if errors.Is(err, redis.Nil) {
@@ -136,6 +152,9 @@ func (l *MsgForwarder) packageMessageAndSend(protobuf []byte, id uint32, msgID s
 			return
 		}
 		workerID, _ = strconv.Atoi(redisRouter)
+		if _, err := l.svcCtx.Redis.UpdateUserRouterStatus(l.ctx, id, l.svcCtx.Config.WorkID); err != nil {
+			logx.Error("[packageMessageAndSend] Update router status to redis failed, error: ", err)
+		}
 	}
 
 	l.svcCtx.MsgSender.Topic = fmt.Sprintf("websocket-server-%d", workerID)
@@ -268,4 +287,13 @@ func (l *MsgForwarder) replyAckMessage(sender *front.Message, oldId string) {
 
 func (l *MsgForwarder) systemOperation(message *front.Message, protobuf []byte) {
 	l.packageMessageAndSend(protobuf, message.To, "", message.MsgType)
+}
+
+func (l *MsgForwarder) SubscribeRouteStatus(message *redis.Message) error {
+	route := strings.Split(message.Payload, "_")
+	user, server := route[0], route[1]
+	if _, ok := l.Routes.Get(user); ok {
+		l.Routes.Set(user, server)
+	}
+	return nil
 }
