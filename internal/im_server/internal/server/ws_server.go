@@ -6,9 +6,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"time"
-
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/n8sPxD/cowIM/internal/common/constant"
@@ -17,6 +14,7 @@ import (
 	"github.com/n8sPxD/cowIM/pkg/servicehub"
 	"github.com/zeromicro/go-zero/core/logx"
 	"google.golang.org/protobuf/proto"
+	"net/http"
 )
 
 type Server struct {
@@ -102,7 +100,9 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	logx.Infof("[handleWebsocket] User %s on %s connected", name, conn.RemoteAddr())
 
 	// 维护用户登陆路由
-	go s.updateRouterStatus(id)
+	if err := s.svcCtx.Redis.UpdateUserRouterStatus(s.ctx, id, s.svcCtx.Config.WorkID); err != nil {
+		logx.Error("[updateRouterStatus] Update router status to redis failed, error: ", err)
+	}
 
 	// 读消息
 	go func() {
@@ -141,12 +141,11 @@ func (s *Server) checkOnline(id uint32) bool {
 		return true
 	}
 
-	status, _ := s.svcCtx.Redis.GetUserRouterStatus(s.ctx, id)
-	if status != nil {
+	if _, err := s.svcCtx.Redis.GetUserRouterStatus(s.ctx, id); err == nil {
 		// 没出错，说明找到了用户在线，但是不在当前服务器中
 		// 消息塞队列，给隔壁处理
 		if msg, err := proto.Marshal(&front.Message{
-			From:    uint32(status.WorkID),
+			From:    constant.USER_SYSTEM,
 			To:      id,
 			Type:    constant.SYSTEM_INFO,
 			MsgType: constant.MSG_DUP_CLIENT,
@@ -159,11 +158,4 @@ func (s *Server) checkOnline(id uint32) bool {
 		}
 	}
 	return false
-}
-
-func (s *Server) updateRouterStatus(id uint32) {
-	err := s.svcCtx.Redis.UpdateUserRouterStatus(s.ctx, id, s.svcCtx.Config.WorkID, time.Now())
-	if err != nil {
-		logx.Error("[updateRouterStatus] Update router status to redis failed, error: ", err)
-	}
 }

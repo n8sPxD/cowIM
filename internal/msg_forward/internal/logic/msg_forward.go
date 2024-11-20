@@ -1,4 +1,4 @@
-package mqs
+package logic
 
 import (
 	"context"
