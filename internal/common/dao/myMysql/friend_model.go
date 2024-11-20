@@ -3,7 +3,7 @@ package myMysql
 import (
 	"context"
 
-	models2 "github.com/n8sPxD/cowIM/internal/common/db/myMysql/models"
+	models2 "github.com/n8sPxD/cowIM/internal/common/dao/myMysql/models"
 )
 
 // InsertFriend 添加好友

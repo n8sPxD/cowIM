@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/n8sPxD/cowIM/internal/common/constant"
-	"github.com/n8sPxD/cowIM/internal/common/db/myMongo/models"
+	"github.com/n8sPxD/cowIM/internal/common/dao/myMongo/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )

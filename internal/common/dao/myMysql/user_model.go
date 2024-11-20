@@ -3,7 +3,7 @@ package myMysql
 import (
 	"context"
 
-	"github.com/n8sPxD/cowIM/internal/common/db/myMysql/models"
+	"github.com/n8sPxD/cowIM/internal/common/dao/myMysql/models"
 )
 
 // InsertUser 创建新的用户，并判断用户名重复

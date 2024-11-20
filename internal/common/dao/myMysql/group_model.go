@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/n8sPxD/cowIM/internal/common/constant"
-	"github.com/n8sPxD/cowIM/internal/common/db/myMysql/models"
+	"github.com/n8sPxD/cowIM/internal/common/dao/myMysql/models"
 	"gorm.io/gorm"
 )
 

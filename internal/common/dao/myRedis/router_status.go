@@ -9,15 +9,16 @@ import (
 )
 
 func (db *DB) GetUserRouterStatus(ctx context.Context, userID uint32) (string, error) {
-	return db.GetCtx(ctx, fmt.Sprintf("r_%d", userID))
+	return db.Get(ctx, fmt.Sprintf("r_%d", userID)).Result()
 }
 
-func (db *DB) UpdateUserRouterStatus(ctx context.Context, userID uint32, workID uint16) error {
-	return db.SetCtx(ctx, fmt.Sprintf("r_%d", userID), strconv.Itoa(int(workID)))
+func (db *DB) UpdateUserRouterStatus(ctx context.Context, userID uint32, workID uint16) (string, error) {
+	// TODO: 最后的expiration根据用户心跳时间来修改
+	return db.Set(ctx, fmt.Sprintf("r_%d", userID), strconv.Itoa(int(workID)), 0).Result()
 }
 
-func (db *DB) RemoveUserRouterStatus(ctx context.Context, userID uint32) (int, error) {
-	return db.DelCtx(ctx, fmt.Sprintf("r_%d", userID))
+func (db *DB) RemoveUserRouterStatus(ctx context.Context, userID uint32) (int64, error) {
+	return db.Del(ctx, fmt.Sprintf("r_%d", userID)).Result()
 }
 
 func (db *DB) RemoveAllUserRouterStatus(ctx context.Context, workerID uint16) error {
@@ -28,18 +29,18 @@ func (db *DB) RemoveAllUserRouterStatus(ctx context.Context, workerID uint16) er
 			next uint64
 			err  error
 		)
-		if keys, next, err = db.ScanCtx(ctx, cursor, "r_*", 100); err != nil {
+		if keys, next, err = db.Scan(ctx, cursor, "r_*", 100).Result(); err != nil {
 			return err
 		}
 		for _, key := range keys {
-			if v, err := db.GetCtx(ctx, key); err != nil {
+			if v, err := db.Get(ctx, key).Result(); err != nil {
 				if !errors.Is(err, redis.Nil) {
 					return err
 				}
 				continue
 			} else {
 				if v == strconv.Itoa(int(workerID)) {
-					if _, err := db.UnlinkCtx(ctx, key); err != nil {
+					if _, err := db.Unlink(ctx, key).Result(); err != nil {
 						return err
 					}
 				}

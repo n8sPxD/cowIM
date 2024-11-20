@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	models2 "github.com/n8sPxD/cowIM/internal/common/db/myMysql/models"
+	models2 "github.com/n8sPxD/cowIM/internal/common/dao/myMysql/models"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
