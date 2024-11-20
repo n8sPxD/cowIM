@@ -62,13 +62,15 @@ func (l *MsgForwarder) Start() {
 
 	job := []myRedis.Job{
 		{
-			Channel: "routes",
-			After:   l.SubscribeRouteStatus,
+			Channel: "online",
+			After:   l.SubscribeOnline,
+		},
+		{
+			Channel: "offline",
+			After:   l.SubscribeOffline,
 		},
 	}
-	if err := l.svcCtx.Redis.SubscribeWorks(l.ctx, job...); err != nil {
-		logx.Error("[Start] PubSub error: ", err)
-	}
+	l.svcCtx.Redis.SubscribeWorks(l.ctx, job...)
 
 	for {
 		msg, err := l.MsgForwarder.ReadMessage(l.ctx) // 这里的msg是kafka.Message
@@ -289,11 +291,15 @@ func (l *MsgForwarder) systemOperation(message *front.Message, protobuf []byte) 
 	l.packageMessageAndSend(protobuf, message.To, "", message.MsgType)
 }
 
-func (l *MsgForwarder) SubscribeRouteStatus(message *redis.Message) error {
-	route := strings.Split(message.Payload, "_")
-	user, server := route[0], route[1]
+func (l *MsgForwarder) SubscribeOnline(message *redis.Message) {
+	data := strings.Split(message.Payload, "_")
+	user, server := data[0], data[1]
+	l.Routes.Set(user, server)
+}
+
+func (l *MsgForwarder) SubscribeOffline(message *redis.Message) {
+	user := strings.Split(message.Payload, "_")[0]
 	if _, ok := l.Routes.Get(user); ok {
-		l.Routes.Set(user, server)
+		l.Routes.Del(user)
 	}
-	return nil
 }
