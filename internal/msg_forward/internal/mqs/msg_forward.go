@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/zeromicro/go-zero/core/collection"
 	"strconv"
 	"time"
 
@@ -19,15 +20,22 @@ import (
 )
 
 type MsgForwarder struct {
-	ctx          context.Context
-	svcCtx       *svc.ServiceContext
+	ctx    context.Context
+	svcCtx *svc.ServiceContext
+
+	routes       *collection.Cache
 	MsgForwarder *kafka.Reader
 }
 
 func NewMsgForwarder(ctx context.Context, svcCtx *svc.ServiceContext) *MsgForwarder {
+	cache, err := collection.NewCache(0)
+	if err != nil {
+		panic(err)
+	}
 	return &MsgForwarder{
 		ctx:    ctx,
 		svcCtx: svcCtx,
+		routes: cache,
 		MsgForwarder: kafka.NewReader(kafka.ReaderConfig{
 			Brokers:        svcCtx.Config.MsgForwarder.Brokers,
 			Topic:          svcCtx.Config.MsgForwarder.Topic,
@@ -114,30 +122,28 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 
 func (l *MsgForwarder) packageMessageAndSend(protobuf []byte, id uint32, msgID string, msgType uint32) {
 	// 先查用户在不在线
-	// TODO: 如果是DupClient消息，可以省去这一步查询
-	status, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, id)
-	if errors.Is(err, redis.Nil) {
-		// 不在线，直接跳过
-		return
-	} else if err != nil {
-		// redis出问题了
-		logx.Error("[packageMessageAndSend] Get router status from redis failed, error: ", err)
-		// TODO: 增加重试
-		return
-	}
-
-	// 心跳检测 如果更新时间大于30秒，就鉴定为离线
-	// TODO: 直接用Redis内置Expire实现心跳超时
-	if time.Now().Sub(status.LastUpdate) > 30*time.Second {
-		go l.svcCtx.Redis.RemoveUserRouterStatus(l.ctx, id)
-		logx.Infof("[packageMessageAndSend] User %d heartbeat timeout", id)
-		return
+	// TODO: 如果是DupClient消息，可以省去这一步查询 (2024.11.20添加 不知道这条TODO是干嘛的)
+	var status int
+	if router, ok := l.routes.Get(fmt.Sprintf("r_%d", id)); ok {
+		status, _ = router.(int)
+	} else {
+		redisRouter, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, id)
+		if errors.Is(err, redis.Nil) {
+			// 不在线，直接跳过
+			return
+		} else if err != nil {
+			// redis出问题了
+			logx.Error("[packageMessageAndSend] Get router status from redis failed, error: ", err)
+			// TODO: 增加重试
+			return
+		}
+		status, _ = strconv.Atoi(redisRouter)
 	}
 
 	// 用户在线，发消息
 	// 确定Topic
 	var (
-		workID = status.WorkID
+		workID = status
 		topic  = fmt.Sprintf("websocket-server-%d", workID)
 	)
 	l.svcCtx.MsgSender.Topic = topic
