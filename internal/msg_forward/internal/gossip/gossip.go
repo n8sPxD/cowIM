@@ -1,6 +1,9 @@
-package logic
+package gossip
 
 import (
+	"context"
+	"github.com/n8sPxD/cowIM/pkg/servicehub"
+	"github.com/zeromicro/go-zero/core/logx"
 	"math/rand"
 	"sync"
 	"time"
@@ -38,7 +41,7 @@ type GossipMessage struct {
 	StateMap   map[string]NodeState // 包含状态数据
 }
 
-func (node *GossipNode) StartGossip(neighbors []string, sendMessage func(string, GossipMessage)) {
+func (node *GossipNode) StartGossip(neighbors []string) {
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 
@@ -48,6 +51,16 @@ func (node *GossipNode) StartGossip(neighbors []string, sendMessage func(string,
 			continue
 		}
 		random := neighbors[rand.Intn(len(neighbors))]
+		client, err := NewGossipClient(random)
+		if err != nil {
+			logx.Errorf("Failed to connect to neighbor %s: %v", random, err)
+			continue
+		}
+		defer client.conn.Close()
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+		defer cancel()
+
 		node.mu.Lock()
 		message := GossipMessage{
 			SourceNode: node.NodeID,
@@ -57,7 +70,10 @@ func (node *GossipNode) StartGossip(neighbors []string, sendMessage func(string,
 			message.StateMap[k] = v
 		}
 		node.mu.Unlock()
-		sendMessage(random, message)
+
+		if err := client.PropagateGossip(ctx, message); err != nil {
+			logx.Errorf("Failed to propagate gossip to %s: %v", random, err)
+		}
 	}
 }
 
@@ -114,4 +130,8 @@ func (node *GossipNode) PullState(neighbor string, fetchSize func(string) map[st
 			node.NeighborMap[id] = state
 		}
 	}
+}
+
+func (node *GossipNode) DiscoverNeighbors(ctx context.Context, hub *servicehub.DiscoveryHub) []string {
+	return hub.GetServiceEndpoints(ctx)
 }
