@@ -133,5 +133,5 @@ func (node *GossipNode) PullState(neighbor string, fetchSize func(string) map[st
 }
 
 func (node *GossipNode) DiscoverNeighbors(ctx context.Context, hub *servicehub.DiscoveryHub) []string {
-	return hub.GetServiceEndpoints(ctx)
+	return hub.GetServiceEndpoints(ctx, "message-forward")
 }

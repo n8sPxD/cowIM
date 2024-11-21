@@ -6,6 +6,8 @@ import (
 )
 
 type Config struct {
+	Name      string
+	Port      int
 	Log       logx.LogConf
 	RedisConf redis.RedisConf
 	MongoConf struct {
@@ -25,6 +27,9 @@ type Config struct {
 	}
 	MySQL struct {
 		DataSource string
+	}
+	Etcd struct {
+		Endpoints []string
 	}
 	WorkID uint16
 }

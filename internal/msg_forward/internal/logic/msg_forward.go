@@ -4,11 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/n8sPxD/cowIM/internal/common/dao/myRedis"
 	"github.com/redis/go-redis/v9"
 	"github.com/zeromicro/go-zero/core/collection"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/n8sPxD/cowIM/internal/common/constant"
@@ -59,18 +57,6 @@ func (l *MsgForwarder) Start() {
 	// 初始化id生成器
 	options := idgen.NewIdGeneratorOptions(l.svcCtx.Config.WorkID)
 	idgen.SetIdGenerator(options)
-
-	job := []myRedis.Job{
-		{
-			Channel: "online",
-			After:   l.SubscribeOnline,
-		},
-		{
-			Channel: "offline",
-			After:   l.SubscribeOffline,
-		},
-	}
-	l.svcCtx.Redis.SubscribeWorks(l.ctx, job...)
 
 	for {
 		msg, err := l.MsgForwarder.ReadMessage(l.ctx) // 这里的msg是kafka.Message
@@ -289,17 +275,4 @@ func (l *MsgForwarder) replyAckMessage(sender *front.Message, oldId string) {
 
 func (l *MsgForwarder) systemOperation(message *front.Message, protobuf []byte) {
 	l.packageMessageAndSend(protobuf, message.To, "", message.MsgType)
-}
-
-func (l *MsgForwarder) SubscribeOnline(message *redis.Message) {
-	data := strings.Split(message.Payload, "_")
-	user, server := data[0], data[1]
-	l.Routes.Set(user, server)
-}
-
-func (l *MsgForwarder) SubscribeOffline(message *redis.Message) {
-	user := strings.Split(message.Payload, "_")[0]
-	if _, ok := l.Routes.Get(user); ok {
-		l.Routes.Del(user)
-	}
 }

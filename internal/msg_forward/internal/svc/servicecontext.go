@@ -2,6 +2,7 @@ package svc
 
 import (
 	"fmt"
+	"github.com/n8sPxD/cowIM/pkg/servicehub"
 	"time"
 
 	"github.com/n8sPxD/cowIM/internal/common/dao/myMongo"
@@ -19,6 +20,8 @@ type ServiceContext struct {
 	MsgSender  *kafka.Writer
 	MsgDBSaver *kafka.Writer
 	MySQL      *myMysql.DB
+	REtcd      *servicehub.RegisterHub
+	DEtcd      *servicehub.DiscoveryHub
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -47,5 +50,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			MaxAttempts:  1,                     // 限制重试次数
 		},
 		MySQL: myMysql.MustNewMySQL(c.MySQL.DataSource),
+		REtcd: servicehub.NewRegisterHub(c.Etcd.Endpoints, 3),
+		DEtcd: servicehub.NewDiscoveryHub(c.Etcd.Endpoints, 3),
 	}
 }
