@@ -42,8 +42,8 @@ func NewDiscoveryHub(etcdServers []string, heartbeatFrequency int64) *DiscoveryH
 	return discoveryHub
 }
 
-func (hub *DiscoveryHub) GetServiceEndpoints(ctx context.Context) []string {
-	prefix := fmt.Sprintf("%s/", KEY_PREFIX)
+func (hub *DiscoveryHub) GetServiceEndpoints(ctx context.Context, service string) []string {
+	prefix := fmt.Sprintf("%s/", service)
 	if resp, err := hub.client.Get(ctx, prefix, clientv3.WithPrefix()); err != nil {
 		logx.Error("[GetServiceEndpoints] Get service from etcd failed, error: ", err)
 		return nil
@@ -56,8 +56,8 @@ func (hub *DiscoveryHub) GetServiceEndpoints(ctx context.Context) []string {
 	}
 }
 
-func (hub *DiscoveryHub) GetServiceEndpoint(ctx context.Context) string {
-	return hub.loadBalancer.Take(hub.GetServiceEndpoints(ctx))
+func (hub *DiscoveryHub) GetServiceEndpoint(ctx context.Context, service string) string {
+	return hub.loadBalancer.Take(hub.GetServiceEndpoints(ctx, service))
 }
 
 func (hub *DiscoveryHub) Close() {
