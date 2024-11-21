@@ -24,8 +24,6 @@ var (
 	registerOnce sync.Once
 )
 
-const KEY_PREFIX = "ws.server"
-
 // NewRegisterHub 单例模式创建一个RegisterHub
 func NewRegisterHub(etcdServers []string, heartbeatFrequency int64) *RegisterHub {
 	if registerHub == nil {
@@ -54,22 +52,21 @@ func (hub *RegisterHub) Register(ctx context.Context, service string, port int, 
 		panic(err)
 	}
 	addr := fmt.Sprintf("%s:%d", ip, port)
-	serviceName := fmt.Sprintf("%s_%d", service, workerID)
 	// 先注册一遍
-	leaseID, err := hub.register(ctx, serviceName, addr, 0)
+	leaseID, err := hub.register(ctx, service, int(workerID), addr, 0)
 	if err != nil {
 		panic(err)
 	}
 	go func() {
 		// 异步持续续租
 		for {
-			hub.register(ctx, service, addr, leaseID)
+			hub.register(ctx, service, int(workerID), addr, leaseID)
 			time.Sleep(time.Duration(3)*time.Second - 100*time.Millisecond)
 		}
 	}()
 }
 
-func (hub *RegisterHub) register(ctx context.Context, service string, endpoint string, leaseID clientv3.LeaseID) (clientv3.LeaseID, error) {
+func (hub *RegisterHub) register(ctx context.Context, service string, workerID int, endpoint string, leaseID clientv3.LeaseID) (clientv3.LeaseID, error) {
 	// 还未进行注册
 	if leaseID <= 0 {
 		// 先获取租赁leaseID
@@ -78,7 +75,7 @@ func (hub *RegisterHub) register(ctx context.Context, service string, endpoint s
 			return 0, err
 		} else {
 			// 在etcd进行服务注册，key是当前服务器id,value为当前服务器地址
-			key := fmt.Sprintf("%s/%s", KEY_PREFIX, service)
+			key := fmt.Sprintf("%s/%d", service, workerID)
 			if _, err = hub.client.Put(ctx, key, endpoint, clientv3.WithLease(lease.ID)); err != nil {
 				logx.Error("[Register] Put service to etcd failed, error: ", err)
 				return lease.ID, err
@@ -90,7 +87,7 @@ func (hub *RegisterHub) register(ctx context.Context, service string, endpoint s
 	} else {
 		// 之前注册过了，这里是续租
 		if _, err := hub.client.KeepAliveOnce(ctx, leaseID); errors.Is(err, rpctypes.ErrLeaseNotFound) {
-			return hub.register(ctx, service, endpoint, 0) // 走注册流程
+			return hub.register(ctx, service, workerID, endpoint, 0) // 走注册流程
 		} else if err != nil {
 			logx.Error("[Register] Keep alive failed, error: ", err)
 			return 0, err
@@ -100,8 +97,8 @@ func (hub *RegisterHub) register(ctx context.Context, service string, endpoint s
 	}
 }
 
-func (hub *RegisterHub) Unregister(ctx context.Context, service string, endpoint string) error {
-	key := fmt.Sprintf("%s/%s", KEY_PREFIX, service)
+func (hub *RegisterHub) Unregister(ctx context.Context, service string, workerID int, endpoint string) error {
+	key := fmt.Sprintf("%s/%d", service, workerID)
 	if _, err := hub.client.Delete(ctx, key); err != nil {
 		logx.Errorf("[Unregister] Unregist service %s at %s failed, error: %v", service, endpoint, err)
 		return err
