@@ -9,7 +9,7 @@ service GossipService {
 }
 
 message GossipMessage {
-  string source_node = 1;
+  int32 source_node = 1;
   map<string, NodeState> state_map = 2;
 }
 
@@ -18,16 +18,16 @@ message GossipResponse {
 }
 
 message PullRequest {
-  string requester_node = 1;
+  int32 requester_node = 1;
 }
 
 message PullResponse {
-  map<string, NodeState> state_map = 1;
+  map<int32, NodeState> state_map = 1;
 }
 
 message NodeState {
-  string node_id = 1;
-  map<string, string> status = 2;
+  int32 node_id = 1;
+  map<int32, int32> status = 2;
   int64 version = 3;
   string last_update = 4;
 }
