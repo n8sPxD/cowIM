@@ -31,6 +31,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			MaxAttempts:  1,                     // 限制重试次数
 		},
 		Redis:       myRedis.MustNewRedis(c.RedisConf),
-		RegisterHub: servicehub.NewRegisterHub(c.Etcd.Hosts, 3),
+		RegisterHub: servicehub.NewRegisterHub(c.Etcd.Endpoints, 3),
 	}
 }
