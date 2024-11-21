@@ -11,6 +11,7 @@ import (
 	"github.com/n8sPxD/cowIM/internal/common/constant"
 	"github.com/n8sPxD/cowIM/internal/common/message/front"
 	"github.com/n8sPxD/cowIM/internal/im_server/svc"
+	"github.com/n8sPxD/cowIM/pkg/jwt"
 	"github.com/n8sPxD/cowIM/pkg/servicehub"
 	"github.com/zeromicro/go-zero/core/logx"
 	"google.golang.org/protobuf/proto"
@@ -132,6 +133,23 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		) // TODO: 这里出错要么是没读到在线状态，不影响，要么就是redis挂了，再考虑后续怎么处理
 		return
 	}
+}
+
+func (s *Server) authenticate(w http.ResponseWriter, r *http.Request) (*jwt.CustomClaims, bool) {
+	// 从 URL 查询参数中获取 JWT 令牌
+	tokenString := r.URL.Query().Get("token")
+	if tokenString == "" {
+		http.Error(w, "Token is required", http.StatusUnauthorized)
+		return nil, false
+	}
+
+	// 验证 JWT
+	claims, err := jwt.ParseToken(tokenString, s.svcCtx.Config.Auth.AccessSecret)
+	if err != nil {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return nil, false
+	}
+	return claims, true
 }
 
 func (s *Server) checkOnline(id uint32) bool {
