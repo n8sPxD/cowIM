@@ -24,6 +24,6 @@ type Config struct {
 	}
 	RedisConf redis.RedisConf
 	Etcd      struct {
-		Hosts []string
+		Endpoints []string
 	}
 }

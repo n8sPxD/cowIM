@@ -39,7 +39,7 @@ func MustNewServer(ctx context.Context, svcCtx *svc.ServiceContext) *Server {
 		},
 		messages:    make(chan string, 100000),
 		close:       make(chan struct{}),
-		registerHub: servicehub.NewRegisterHub(svcCtx.Config.Etcd.Hosts, 3),
+		registerHub: servicehub.NewRegisterHub(svcCtx.Config.Etcd.Endpoints, 3),
 	}
 }
 
@@ -49,7 +49,7 @@ func (s *Server) Start() {
 	r.HandleFunc("/ws", s.handleWebSocket)
 
 	// 注册服务
-	s.register()
+	s.registerHub.Register(s.ctx, s.svcCtx.Config.Name, s.svcCtx.Config.Port, s.svcCtx.Config.WorkID)
 
 	// 启动HTTP服务器
 	addr := fmt.Sprintf("%s:%d", s.svcCtx.Config.Host, s.svcCtx.Config.Port)
@@ -66,6 +66,7 @@ func (s *Server) Close() {
 // handleWebSocket 处理WebSocket连接
 func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// JWT 鉴权
+	// TODO: 换成Token+redis鉴权
 	var (
 		id   uint32
 		name string
@@ -103,6 +104,8 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	if _, err := s.svcCtx.Redis.UpdateUserRouterStatus(s.ctx, id, s.svcCtx.Config.WorkID); err != nil {
 		logx.Error("[updateRouterStatus] Update router status to redis failed, error: ", err)
 	}
+
+	// publish用户登陆信息给所有
 
 	// 读消息
 	go func() {

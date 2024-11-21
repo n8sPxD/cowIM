@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/n8sPxD/cowIM/pkg/utils"
 	"sync"
 	"time"
 
@@ -47,7 +48,28 @@ func NewRegisterHub(etcdServers []string, heartbeatFrequency int64) *RegisterHub
 }
 
 // Register 注册加续租
-func (hub *RegisterHub) Register(ctx context.Context, service string, endpoint string, leaseID clientv3.LeaseID) (clientv3.LeaseID, error) {
+func (hub *RegisterHub) Register(ctx context.Context, service string, port int, workerID uint16) {
+	ip, err := utils.GetLocalIP()
+	if err != nil {
+		panic(err)
+	}
+	addr := fmt.Sprintf("%s:%d", ip, port)
+	serviceName := fmt.Sprintf("%s_%d", service, workerID)
+	// 先注册一遍
+	leaseID, err := hub.register(ctx, serviceName, addr, 0)
+	if err != nil {
+		panic(err)
+	}
+	go func() {
+		// 异步持续续租
+		for {
+			hub.register(ctx, service, addr, leaseID)
+			time.Sleep(time.Duration(3)*time.Second - 100*time.Millisecond)
+		}
+	}()
+}
+
+func (hub *RegisterHub) register(ctx context.Context, service string, endpoint string, leaseID clientv3.LeaseID) (clientv3.LeaseID, error) {
 	// 还未进行注册
 	if leaseID <= 0 {
 		// 先获取租赁leaseID
@@ -68,7 +90,7 @@ func (hub *RegisterHub) Register(ctx context.Context, service string, endpoint s
 	} else {
 		// 之前注册过了，这里是续租
 		if _, err := hub.client.KeepAliveOnce(ctx, leaseID); errors.Is(err, rpctypes.ErrLeaseNotFound) {
-			return hub.Register(ctx, service, endpoint, 0) // 走注册流程
+			return hub.register(ctx, service, endpoint, 0) // 走注册流程
 		} else if err != nil {
 			logx.Error("[Register] Keep alive failed, error: ", err)
 			return 0, err

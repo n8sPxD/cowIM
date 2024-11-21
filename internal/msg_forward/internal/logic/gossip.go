@@ -1,4 +1,4 @@
-package gossip
+package logic
 
 import (
 	"math/rand"
