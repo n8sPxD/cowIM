@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package gossippb;
+option go_package = "./gossippb";
+
+message PushRequest {
+  repeated Data data = 1;
+  int32    depth = 2;
+}
+
+message PushResponse {
+}
+
+message RemoteRequest {
+  repeated Data data = 1;
+}
+
+message RemoteResponse {
+}
+
+message Data {
+  int32 key = 1;
+  int32 value = 2;
+  int64 version = 3;
+  int64 timestamp = 4;
+}
+
+service Gossip {
+  // 节点之间数据同步
+  rpc PushData (PushRequest) returns (PushResponse);
+  // 远程更新
+  rpc RemoteUpdate (RemoteRequest) returns (RemoteResponse);
+}

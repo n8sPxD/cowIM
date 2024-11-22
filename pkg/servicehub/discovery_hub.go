@@ -56,6 +56,7 @@ func (hub *DiscoveryHub) GetServiceEndpoints(ctx context.Context, service string
 	}
 }
 
+// GetServiceEndpoint 通过负载均衡算法获取一个服务地址
 func (hub *DiscoveryHub) GetServiceEndpoint(ctx context.Context, service string) string {
 	return hub.loadBalancer.Take(hub.GetServiceEndpoints(ctx, service))
 }
