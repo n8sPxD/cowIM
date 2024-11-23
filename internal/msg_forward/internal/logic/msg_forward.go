@@ -2,10 +2,8 @@ package logic
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"github.com/redis/go-redis/v9"
-	"github.com/zeromicro/go-zero/core/collection"
+	"github.com/n8sPxD/cowIM/internal/msg_forward/gossip"
+	"github.com/segmentio/kafka-go/compress"
 	"strconv"
 	"time"
 
@@ -23,19 +21,40 @@ type MsgForwarder struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 
-	Routes       *collection.Cache
+	Routes  *gossip.Server
+	offline chan OfflineCacheMessage // 隔一段时间清一次，隔多久取决于Gossip集群大小和同步延迟
+
 	MsgForwarder *kafka.Reader
+	MsgSender    *map[int]*kafka.Writer
+	MsgDBSaver   *kafka.Writer
+}
+
+// NewMsgSenderPool 创建消息发送Sender池
+func NewMsgSenderPool(brokers []string, count int) *map[int]*kafka.Writer {
+	// TODO: 当前只能固定数量，后续改进可以通过服务发现获取WebsocketServer数量，动态创建和销毁Sender
+	pool := make(map[int]*kafka.Writer)
+	for i := 1; i <= count; i++ {
+		writer := &kafka.Writer{
+			Addr:         kafka.TCP(brokers...),
+			Topic:        "websocket-server-" + strconv.Itoa(i),
+			Balancer:     &kafka.LeastBytes{},
+			BatchTimeout: 10 * time.Millisecond, // 低超时时间
+			RequiredAcks: kafka.RequireOne,      // 仅等待 Leader 确认
+			Compression:  compress.Zstd,         // Zstd压缩
+			Async:        true,                  // 启用异步写入
+			MaxAttempts:  1,                     // 限制重试次数
+		}
+		pool[i] = writer
+	}
+	return &pool
 }
 
 func NewMsgForwarder(ctx context.Context, svcCtx *svc.ServiceContext) *MsgForwarder {
-	cache, err := collection.NewCache(0)
-	if err != nil {
-		panic(err)
-	}
 	return &MsgForwarder{
-		ctx:    ctx,
-		svcCtx: svcCtx,
-		Routes: cache,
+		ctx:     ctx,
+		svcCtx:  svcCtx,
+		Routes:  gossip.MustNewServer(svcCtx.Discov, svcCtx.Regist, svcCtx.Config.RPCPort, int(svcCtx.Config.WorkID), 3, 3, 3),
+		offline: make(chan OfflineCacheMessage),
 		MsgForwarder: kafka.NewReader(kafka.ReaderConfig{
 			Brokers:        svcCtx.Config.MsgForwarder.Brokers,
 			Topic:          svcCtx.Config.MsgForwarder.Topic,
@@ -46,6 +65,17 @@ func NewMsgForwarder(ctx context.Context, svcCtx *svc.ServiceContext) *MsgForwar
 			MaxWait:        100 * time.Millisecond, // 最大等待时间
 			CommitInterval: 500 * time.Millisecond, // 提交间隔
 		}),
+		MsgSender: NewMsgSenderPool(svcCtx.Config.MsgSender.Brokers, 1), // 最后的count是WebsocketServer的数量
+		MsgDBSaver: &kafka.Writer{
+			Addr:         kafka.TCP(svcCtx.Config.MsgDBSaver.Brokers...),
+			Topic:        svcCtx.Config.MsgDBSaver.Topic,
+			Balancer:     &kafka.LeastBytes{},
+			BatchTimeout: 10 * time.Millisecond, // 低超时时间
+			RequiredAcks: kafka.RequireOne,      // 仅等待 Leader 确认
+			Compression:  compress.Zstd,         // Zstd压缩
+			Async:        true,                  // 启用异步写入
+			MaxAttempts:  1,                     // 限制重试次数
+		},
 	}
 }
 
@@ -57,6 +87,8 @@ func (l *MsgForwarder) Start() {
 	// 初始化id生成器
 	options := idgen.NewIdGeneratorOptions(l.svcCtx.Config.WorkID)
 	idgen.SetIdGenerator(options)
+
+	go l.Routes.Start()
 
 	for {
 		msg, err := l.MsgForwarder.ReadMessage(l.ctx) // 这里的msg是kafka.Message
@@ -120,33 +152,7 @@ func (l *MsgForwarder) Consume(protobuf []byte, now time.Time) {
 	}
 }
 
-const Offline = -1
-
-func (l *MsgForwarder) packageMessageAndSend(protobuf []byte, id uint32, msgID string, msgType uint32) {
-	// TODO: 如果是DupClient消息，可以省去这一步查询 (2024.11.20添加 不知道这条TODO是干嘛的)
-	var workerID int
-	if router, ok := l.Routes.Get(strconv.Itoa(int(id))); ok {
-		workerID = router.(int)
-		if workerID == Offline {
-			return
-		}
-	} else {
-		redisRouter, err := l.svcCtx.Redis.GetUserRouterStatus(l.ctx, id)
-		if errors.Is(err, redis.Nil) {
-			return
-		} else if err != nil {
-			logx.Error("[packageMessageAndSend] Get router status from redis failed, error: ", err)
-			// TODO: 增加重试
-			return
-		}
-		workerID, _ = strconv.Atoi(redisRouter)
-		if _, err := l.svcCtx.Redis.UpdateUserRouterStatus(l.ctx, id, l.svcCtx.Config.WorkID); err != nil {
-			logx.Error("[packageMessageAndSend] Update router status to redis failed, error: ", err)
-		}
-	}
-
-	l.svcCtx.MsgSender.Topic = fmt.Sprintf("websocket-server-%d", workerID)
-
+func (l *MsgForwarder) _packageMessageAndSend(protobuf []byte, id uint32, msgID string, msgType uint32, route int) {
 	msg := inside.Message{
 		To:       id,
 		MsgId:    msgID,
@@ -160,12 +166,40 @@ func (l *MsgForwarder) packageMessageAndSend(protobuf []byte, id uint32, msgID s
 	}
 
 	km := kafka.Message{Value: msgByte}
-	err = l.svcCtx.MsgSender.WriteMessages(l.ctx, km)
+	err = (*l.MsgSender)[route].WriteMessages(l.ctx, km)
 	if err != nil {
 		logx.Error(
 			"[packageMessage] Push message to Websocket-server MQ failed, error: ",
 			err,
 		)
+	}
+}
+
+type OfflineCacheMessage struct {
+	protobuf []byte
+	id       uint32 // 用户ID
+	msgID    string
+	msgType  uint32
+}
+
+func (l *MsgForwarder) packageMessageAndSend(protobuf []byte, id uint32, msgID string, msgType uint32) {
+	if router, ok := l.Routes.Node.Data[int32(id)]; ok {
+		l._packageMessageAndSend(protobuf, id, msgID, msgType, int(router.Value))
+	} else {
+		// 没找到不代表没上线，防止消息误发的补偿机制
+		/*
+			message := OfflineCacheMessage{
+				protobuf: protobuf,
+				id:       id,
+				msgID:    msgID,
+				msgType:  msgType,
+			}
+			l.offline <- message
+		*/
+		/*
+			 TODO: 完善消息缓存以及补偿机制，具体：定时消费l.offline，时间大概为Gossip同步周期+1秒，为空时清空计时器，队列中有元素开始计时
+					MsgForwarder服务Start时启动异步消费任务，
+		*/
 	}
 }
 
@@ -177,6 +211,7 @@ func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
 // 群聊处理
 func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
 	// 先获取群里所有成员
+	// TODO: 群组成员加缓存
 	members, err := l.svcCtx.MySQL.GetGroupMemberIDs(l.ctx, uint(*msg.Group))
 	if err != nil {
 		logx.Error("[groupChat] Get group members from mysql failed, error: ", err)
