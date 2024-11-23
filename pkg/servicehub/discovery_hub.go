@@ -22,7 +22,7 @@ var (
 )
 
 // NewDiscoveryHub 单例模式创建一个DiscoveryHub
-func NewDiscoveryHub(etcdServers []string, heartbeatFrequency int64) *DiscoveryHub {
+func NewDiscoveryHub(etcdServers []string) *DiscoveryHub {
 	if discoveryHub == nil {
 		discoveryOnce.Do(func() {
 			if client, err := clientv3.New(
