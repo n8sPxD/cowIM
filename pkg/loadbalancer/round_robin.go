@@ -1,25 +1,6 @@
-package lb
+package loadbalancer
 
-import (
-	"sync/atomic"
-)
-
-const (
-	ROUNDROBIN = iota
-)
-
-type LoadBalancer interface {
-	Take([]string) string
-}
-
-func NewLoadBalancer(lbtype int) LoadBalancer {
-	switch lbtype {
-	case ROUNDROBIN:
-		return &RoundRobin{}
-	default:
-		return nil
-	}
-}
+import "sync/atomic"
 
 // RoundRobin 轮询法
 type RoundRobin struct {

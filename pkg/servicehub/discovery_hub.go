@@ -6,14 +6,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/n8sPxD/cowIM/pkg/lb"
+	"github.com/n8sPxD/cowIM/pkg/loadbalancer"
 	"github.com/zeromicro/go-zero/core/logx"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 type DiscoveryHub struct {
 	client       *clientv3.Client
-	loadBalancer lb.LoadBalancer
+	loadBalancer loadbalancer.LoadBalancer
 }
 
 var (
@@ -34,7 +34,7 @@ func NewDiscoveryHub(etcdServers []string, heartbeatFrequency int64) *DiscoveryH
 			} else {
 				discoveryHub = &DiscoveryHub{
 					client:       client,
-					loadBalancer: lb.NewLoadBalancer(lb.ROUNDROBIN),
+					loadBalancer: loadbalancer.NewLoadBalancer(loadbalancer.RoundRobinBalancer),
 				}
 			}
 		})
