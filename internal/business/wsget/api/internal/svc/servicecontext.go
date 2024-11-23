@@ -13,6 +13,6 @@ type ServiceContext struct {
 func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
 		Config:       c,
-		DiscoveryHub: servicehub.NewDiscoveryHub(c.Etcd.Host, 3),
+		DiscoveryHub: servicehub.NewDiscoveryHub(c.Etcd.Host),
 	}
 }

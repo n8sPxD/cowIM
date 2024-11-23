@@ -8,6 +8,7 @@ import (
 type Config struct {
 	Name      string
 	Port      int
+	RPCPort   int
 	Log       logx.LogConf
 	RedisConf redis.RedisConf
 	MongoConf struct {

@@ -32,7 +32,7 @@ func main() {
 	mq = logic.NewMsgForwarder(ctx, svcCtx)
 	go mq.Start()
 
-	svcCtx.REtcd.Register(ctx, svcCtx.Config.Name, svcCtx.Config.Port, svcCtx.Config.WorkID)
+	svcCtx.Regist.Register(ctx, svcCtx.Config.Name, svcCtx.Config.Port, svcCtx.Config.WorkID)
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)

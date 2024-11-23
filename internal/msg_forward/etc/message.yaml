@@ -1,6 +1,8 @@
 Name: message-forward
 Port: 23333
 
+RPCPort: 6666
+
 Log:
   Encoding: plain
   TimeFormat: 2006-01-02 15:04:05
