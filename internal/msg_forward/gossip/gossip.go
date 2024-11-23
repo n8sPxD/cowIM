@@ -24,6 +24,21 @@ type Client struct {
 	conn *grpc.ClientConn
 }
 
+func NewClient(neighbor string) *Client {
+	conn, err := grpc.NewClient(neighbor)
+	if err != nil {
+		// TODO: 重试，或者直接无视，从etcd中再次同步后再连接
+		logx.Error("[UpdateNeighbors] Create client failed, error: ", err)
+		return nil
+	}
+	client := gossippb.NewGossipClient(conn)
+	return &Client{client, conn}
+}
+
+func (c *Client) Close() {
+	c.conn.Close()
+}
+
 type Node struct {
 	sync.RWMutex
 	self      string
@@ -73,7 +88,7 @@ func (s *Server) Start(ctx context.Context, port int) {
 	}()
 
 	// 启动 gRPC 服务
-	lis, err := net.Listen("tcp", "0.0.0.0:"+strconv.Itoa(port))
+	lis, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	if err != nil {
 		logx.Error("[Start] Listen failed, error: ", err)
 		return
@@ -103,24 +118,15 @@ func (s *Server) UpdateNeighbors(ctx context.Context) {
 			continue
 		} else {
 			// 如果有新的节点加入，建立rpc客户端，加入映射表
-			if s.node.clients[neighbor] == nil {
-				conn, err := grpc.NewClient(neighbor)
-				if err != nil {
-					// TODO: 重试，或者直接无视，从etcd中再次同步
-					logx.Error("[UpdateNeighbors] Create client failed, error: ", err)
-					continue
-				}
-				client := gossippb.NewGossipClient(conn)
-				s.node.clients[neighbor] = &Client{client, conn}
-			}
-			exist[neighbor] = true
+			s.node.clients[neighbor] = NewClient(neighbor)
 		}
+		exist[neighbor] = true
 	}
 
 	for addr, neighbor := range s.node.clients {
 		if !exist[addr] {
 			// 如果有节点退出，关闭rpc客户端，从映射表中删除
-			neighbor.conn.Close()
+			neighbor.Close()
 			delete(s.node.clients, addr)
 		}
 	}
