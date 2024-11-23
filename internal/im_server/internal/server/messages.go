@@ -38,6 +38,7 @@ func (s *Server) readMessageFromFrontend(id uint32) error {
 			return err
 		}
 		// 判定消息类型
+		// TODO: 这里的消息类型可以放到MsgForwarder中去判断
 		if isHeartbeat(msg) {
 			go s.checkHeartBeat(id)
 		} else if isAck(msg) {
@@ -58,11 +59,11 @@ func isAck(message []byte) bool {
 
 // 心跳检查
 func (s *Server) checkHeartBeat(id uint32) {
-	if _, err := s.svcCtx.Redis.UpdateUserRouterStatus(s.ctx, id, s.svcCtx.Config.WorkID); err != nil {
-		logx.Error("[checkHeartBeat] Update router status to redis failed, error: ", err)
-	} else {
-		logx.Info("HeartBeat from User ", id)
-	}
+	//if _, err := s.svcCtx.Redis.UpdateUserRouterStatus(s.ctx, id, s.svcCtx.Config.WorkID); err != nil {
+	//	logx.Error("[checkHeartBeat] Update router status to redis failed, error: ", err)
+	//} else {
+	//	logx.Info("HeartBeat from User ", id)
+	//}
 }
 
 // 接受ACK消息

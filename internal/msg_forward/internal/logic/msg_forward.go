@@ -197,8 +197,8 @@ func (l *MsgForwarder) packageMessageAndSend(protobuf []byte, id uint32, msgID s
 			l.offline <- message
 		*/
 		/*
-			 TODO: 完善消息缓存以及补偿机制，具体：定时消费l.offline，时间大概为Gossip同步周期+1秒，为空时清空计时器，队列中有元素开始计时
-					MsgForwarder服务Start时启动异步消费任务，
+				 TODO: 完善消息缓存以及补偿机制，具体：定时消费l.offline，时间大概为Gossip同步周期+1秒，
+			            为空时清空计时器，并且不计时，队列中有元素开始计时。MsgForwarder服务Start时启动异步消费任务
 		*/
 	}
 }

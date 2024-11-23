@@ -42,6 +42,7 @@ func (l *MsgSender) WithManager(manager server.IConnectionManager) *MsgSender {
 	return l
 }
 
+// TODO: 调用msg-forward rpc方法，如果发送失败即用户不在线，通知回去，进行后续操作
 func (l *MsgSender) Start() {
 	for {
 		msg, err := l.MsgSender.ReadMessage(l.ctx)

@@ -36,5 +36,5 @@ RedisConf:
   Type: "cluster"
 
 Etcd:
-  Hosts:
+  Endpoints:
     - 127.0.0.1:2379

@@ -12,7 +12,7 @@ type Job struct {
 	After   WorkWork
 }
 
-func (db *DB) SubscribeWork(ctx context.Context, job Job) {
+func (db *Native) SubscribeWork(ctx context.Context, job Job) {
 	pubsub := db.Subscribe(ctx, job.Channel)
 	defer pubsub.Close()
 
@@ -25,7 +25,7 @@ func (db *DB) SubscribeWork(ctx context.Context, job Job) {
 	}
 }
 
-func (db *DB) SubscribeWorks(ctx context.Context, jobs ...Job) {
+func (db *Native) SubscribeWorks(ctx context.Context, jobs ...Job) {
 	for _, job := range jobs {
 		go func(job Job) {
 			db.SubscribeWork(ctx, job)

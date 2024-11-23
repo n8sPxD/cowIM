@@ -11,7 +11,7 @@ import (
 
 type ServiceContext struct {
 	Config config.Config
-	Redis  *myRedis.DB
+	Redis  *myRedis.Native
 	Mongo  *myMongo.DB
 
 	MySQL  *myMysql.DB
@@ -22,7 +22,7 @@ type ServiceContext struct {
 func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
 		Config: c,
-		Redis:  myRedis.MustNewRedis(c.RedisConf),
+		Redis:  myRedis.MustNewNativeRedis(c.RedisConf),
 		Mongo:  myMongo.MustNewMongo(fmt.Sprintf("mongodb://%s", c.MongoConf.Host)),
 		//MsgDBSaver: &kafka.Writer{
 		//	Addr:         kafka.TCP(c.MsgDBSaver.Brokers...),

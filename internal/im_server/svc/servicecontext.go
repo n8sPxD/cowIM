@@ -13,7 +13,7 @@ import (
 type ServiceContext struct {
 	Config       config.Config
 	MsgForwarder *kafka.Writer
-	Redis        *myRedis.DB
+	Redis        *myRedis.Native
 	RegisterHub  *servicehub.RegisterHub
 }
 
@@ -30,7 +30,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			Async:        true,                  // 启用异步写入
 			MaxAttempts:  1,                     // 限制重试次数
 		},
-		Redis:       myRedis.MustNewRedis(c.RedisConf),
+		Redis:       myRedis.MustNewNativeRedis(c.RedisConf),
 		RegisterHub: servicehub.NewRegisterHub(c.Etcd.Endpoints, 3),
 	}
 }

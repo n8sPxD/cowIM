@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func (db *DB) CheckDuplicateMessage(ctx context.Context, uuid string) (bool, error) {
+func (db *Native) CheckDuplicateMessage(ctx context.Context, uuid string) (bool, error) {
 	var (
 		key = "dup_id"
 		ok  bool
@@ -23,7 +23,7 @@ func (db *DB) CheckDuplicateMessage(ctx context.Context, uuid string) (bool, err
 	return ok, nil
 }
 
-func (db *DB) RemoveAllDupMessages(ctx context.Context) {
+func (db *Native) RemoveAllDupMessages(ctx context.Context) {
 	fields, _ := db.SMembers(ctx, "dup_id").Result()
 	db.SRem(ctx, "dup_id", fields)
 }

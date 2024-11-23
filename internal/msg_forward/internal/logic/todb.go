@@ -57,7 +57,7 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 		mqMsg := kafka.Message{
 			Value: packMsgByte,
 		}
-		err = l.svcCtx.MsgDBSaver.WriteMessages(l.ctx, mqMsg)
+		err = l.MsgDBSaver.WriteMessages(l.ctx, mqMsg)
 		if err != nil {
 			logx.Error("[sendTimelineToDB] Push message to DBSaver MQ failed, error: ", err)
 		}
@@ -102,7 +102,7 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 		mqMsg := kafka.Message{
 			Value: packByte,
 		}
-		err = l.svcCtx.MsgDBSaver.WriteMessages(l.ctx, mqMsg)
+		err = l.MsgDBSaver.WriteMessages(l.ctx, mqMsg)
 		if err != nil {
 			logx.Error("[sendTimelineToDB] Push message to DBSaver MQ failed, error: ", err)
 		}
@@ -131,7 +131,7 @@ func (l *MsgForwarder) sendTimelineToDB(msg *front.Message, now time.Time) {
 		mqMsg := kafka.Message{
 			Value: packMsgByte,
 		}
-		err = l.svcCtx.MsgDBSaver.WriteMessages(l.ctx, mqMsg)
+		err = l.MsgDBSaver.WriteMessages(l.ctx, mqMsg)
 		if err != nil {
 			logx.Error("[sendTimelineToDB] Push message to DBSaver MQ failed, error: ", err)
 		}
@@ -179,7 +179,7 @@ func (l *MsgForwarder) sendRecordMsgToDB(msg *front.Message, now time.Time) {
 	mqMsg := kafka.Message{
 		Value: rawPackMsg,
 	}
-	err = l.svcCtx.MsgDBSaver.WriteMessages(l.ctx, mqMsg)
+	err = l.MsgDBSaver.WriteMessages(l.ctx, mqMsg)
 	if err != nil {
 		logx.Error("[sendRecordMsgToDB] Push message to DBSaver MQ failed, error: ", err)
 	}

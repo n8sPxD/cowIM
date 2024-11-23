@@ -9,12 +9,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/n8sPxD/cowIM/internal/common/constant"
-	"github.com/n8sPxD/cowIM/internal/common/message/front"
 	"github.com/n8sPxD/cowIM/internal/im_server/svc"
 	"github.com/n8sPxD/cowIM/pkg/jwt"
 	"github.com/n8sPxD/cowIM/pkg/servicehub"
 	"github.com/zeromicro/go-zero/core/logx"
-	"google.golang.org/protobuf/proto"
 	"net/http"
 )
 
@@ -102,9 +100,10 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	logx.Infof("[handleWebsocket] User %s on %s connected", name, conn.RemoteAddr())
 
 	// 维护用户登陆路由
-	if _, err := s.svcCtx.Redis.UpdateUserRouterStatus(s.ctx, id, s.svcCtx.Config.WorkID); err != nil {
-		logx.Error("[updateRouterStatus] Update router status to redis failed, error: ", err)
-	}
+	//if _, err := s.svcCtx.Redis.UpdateUserRouterStatus(s.ctx, id, s.svcCtx.Config.WorkID); err != nil {
+	//	logx.Error("[updateRouterStatus] Update router status to redis failed, error: ", err)
+	//}
+	// TODO: 调用RPC客户端直接向消息转发Gossip集群发送，可以多挑几个发
 
 	// publish用户登陆信息给所有
 
@@ -127,10 +126,6 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		<-s.close
-		s.svcCtx.Redis.RemoveUserRouterStatus(
-			s.ctx,
-			id,
-		) // TODO: 这里出错要么是没读到在线状态，不影响，要么就是redis挂了，再考虑后续怎么处理
 		return
 	}
 }
@@ -162,21 +157,22 @@ func (s *Server) checkOnline(id uint32) bool {
 		return true
 	}
 
-	if _, err := s.svcCtx.Redis.GetUserRouterStatus(s.ctx, id); err == nil {
-		// 没出错，说明找到了用户在线，但是不在当前服务器中
-		// 消息塞队列，给隔壁处理
-		if msg, err := proto.Marshal(&front.Message{
-			From:    constant.USER_SYSTEM,
-			To:      id,
-			Type:    constant.SYSTEM_INFO,
-			MsgType: constant.MSG_DUP_CLIENT,
-		}); err != nil {
-			logx.Error("[checkOnline] Marshal message to protobuf failed, error: ", err)
-			return false
-		} else {
-			s.messages <- string(msg)
-			return true
-		}
-	}
+	// TODO: 重复在线消息当正常消息发，直接传隔壁去
+	//if _, err := s.svcCtx.Redis.GetUserRouterStatus(s.ctx, id); err == nil {
+	//	// 没出错，说明找到了用户在线，但是不在当前服务器中
+	//	// 消息塞队列，给隔壁处理
+	//	if msg, err := proto.Marshal(&front.Message{
+	//		From:    constant.USER_SYSTEM,
+	//		To:      id,
+	//		Type:    constant.SYSTEM_INFO,
+	//		MsgType: constant.MSG_DUP_CLIENT,
+	//	}); err != nil {
+	//		logx.Error("[checkOnline] Marshal message to protobuf failed, error: ", err)
+	//		return false
+	//	} else {
+	//		s.messages <- string(msg)
+	//		return true
+	//	}
+	//}
 	return false
 }

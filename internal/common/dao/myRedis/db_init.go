@@ -6,15 +6,21 @@ import (
 	"strings"
 )
 
-type DB struct {
+type Native struct {
 	redis.UniversalClient
 }
 
-func MustNewRedis(c redis2.RedisConf) *DB {
-	return &DB{
-		UniversalClient: redis.NewUniversalClient(&redis.UniversalOptions{
-			Addrs:    strings.Split(c.Host, ","),
-			Password: c.Pass,
-		}),
-	}
+type GoZero struct {
+	*redis2.Redis
+}
+
+func MustNewNativeRedis(c redis2.RedisConf) *Native {
+	return &Native{redis.NewUniversalClient(&redis.UniversalOptions{
+		Addrs:    strings.Split(c.Host, ","),
+		Password: c.Pass,
+	})}
+}
+
+func MustNewGoRedis(c redis2.RedisConf) *GoZero {
+	return &GoZero{redis2.MustNewRedis(c)}
 }
