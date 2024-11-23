@@ -61,7 +61,7 @@ func (hub *RegisterHub) Register(ctx context.Context, service string, port int, 
 		// 异步持续续租
 		for {
 			hub.register(ctx, service, int(workerID), addr, leaseID)
-			time.Sleep(time.Duration(3)*time.Second - 100*time.Millisecond)
+			time.Sleep(time.Duration(3)*time.Second - 200*time.Millisecond)
 		}
 	}()
 }
