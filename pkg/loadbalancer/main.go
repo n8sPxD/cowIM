@@ -12,9 +12,9 @@ type LoadBalancer interface {
 func NewLoadBalancer(lbtype int) LoadBalancer {
 	switch lbtype {
 	case RoundRobinBalancer:
-		return &RoundRobin{}
+		return NewRoundRobin()
 	case ConsistentHashBalancer:
-		return &ConsistentHash{}
+		return NewConsistentHash()
 	default:
 		return nil
 	}

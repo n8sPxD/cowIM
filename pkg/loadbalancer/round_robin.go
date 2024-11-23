@@ -7,6 +7,10 @@ type RoundRobin struct {
 	acc int64
 }
 
+func NewRoundRobin() *RoundRobin {
+	return &RoundRobin{}
+}
+
 func (rr *RoundRobin) Take(endpoints []string) string {
 	if len(endpoints) == 0 {
 		return ""
