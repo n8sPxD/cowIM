@@ -2,9 +2,10 @@ package logic
 
 import (
 	"context"
-	"github.com/n8sPxD/cowIM/internal/business/group/rpc/types/groupRpc"
+	"errors"
 	"github.com/n8sPxD/cowIM/internal/msg_forward/gossip"
 	"github.com/segmentio/kafka-go/compress"
+	"github.com/zeromicro/go-zero/core/stores/redis"
 	"strconv"
 	"time"
 
@@ -211,18 +212,53 @@ func (l *MsgForwarder) singleChat(msg *front.Message, protobuf []byte) {
 
 // 群聊处理，主动推
 func (l *MsgForwarder) groupChat(msg *front.Message, protobuf []byte) {
-	members, err := l.svcCtx.GroupRpc.GetGroupMembers(context.Background(), &groupRpc.GroupMembersRequest{Id: *msg.Group})
-	if err != nil {
-		logx.Error("[groupChat] Get group members failed, error: ", err)
-		// TODO: retry
-		return
+	var ids any
+	if members, err := l.svcCtx.Redis.GetGroupMembers(context.Background(), *msg.Group); err != nil {
+		if errors.Is(err, redis.Nil) {
+			// 缓存中还没有当前群聊的成员信息
+			var sqlMembers []uint32
+			if sqlMembers, err2 := l.svcCtx.MySQL.GetGroupMemberIDs(context.Background(), *msg.Group); err2 != nil {
+				// 从SQL现查
+				logx.Error("[groupChat] Get group members from mysql failed, error: ", err2)
+				return
+			} else if err2 := l.svcCtx.Redis.AddGroupMembers(context.Background(), *msg.Group, sqlMembers); err2 != nil {
+				// MySQL查询没有问题，插缓存
+				logx.Error("[groupChat] Add group members cache to redis failed, error: ", err2)
+				return
+			}
+			// 查询没问题，redis没犯病，进入发送消息流程
+			ids = sqlMembers
+		} else {
+			// redis错误
+			logx.Error("[groupChat] Get group members from redis failed, error: ", err)
+			return
+		}
+	} else {
+		// redis有缓存，直接用
+		ids = members
 	}
 
-	for _, member := range members.Ids {
-		if member == msg.From {
-			continue
+	checkAndSend := func(current uint32, protobuf []byte, message *front.Message) {
+		if current == msg.From {
+			return
+		} else {
+			l.packageMessageAndSend(protobuf, msg.To, msg.Id, msg.MsgType)
 		}
-		l.packageMessageAndSend(protobuf, member, msg.Id, msg.MsgType)
+	}
+
+	switch ids := ids.(type) {
+	case []string:
+		for _, member := range ids {
+			realMember, _ := strconv.Atoi(member)
+			checkAndSend(uint32(realMember), protobuf, msg)
+		}
+	case []int:
+		for _, member := range ids {
+			checkAndSend(uint32(member), protobuf, msg)
+		}
+	default:
+		logx.Error("[sendMessageInGroup] Wrong members type!")
+		return
 	}
 }
 
