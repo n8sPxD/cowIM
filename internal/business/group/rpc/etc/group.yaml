@@ -1,6 +1,9 @@
 Name: group.rpc
-ListenOn: 0.0.0.0:8080
+ListenOn: 0.0.0.0:20006
 Etcd:
   Hosts:
-  - 127.0.0.1:2379
+    - 127.0.0.1:2379
   Key: group.rpc
+
+MySQL:
+  DataSource: root:123456@tcp(127.0.0.1:3306)/im_server_db?charset=utf8mb4&parseTime=True&loc=Local

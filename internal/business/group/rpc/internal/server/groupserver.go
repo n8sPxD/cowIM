@@ -9,7 +9,7 @@ import (
 
 	"github.com/n8sPxD/cowIM/internal/business/group/rpc/internal/logic"
 	"github.com/n8sPxD/cowIM/internal/business/group/rpc/internal/svc"
-	"github.com/n8sPxD/cowIM/internal/business/group/rpc/types/group"
+	"github.com/n8sPxD/cowIM/internal/business/group/rpc/types/groupRpc"
 )
 
 type GroupServer struct {

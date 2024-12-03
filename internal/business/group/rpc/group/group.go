@@ -7,7 +7,7 @@ package group
 import (
 	"context"
 
-	"github.com/n8sPxD/cowIM/internal/business/group/rpc/types/group"
+	"github.com/n8sPxD/cowIM/internal/business/group/rpc/types/groupRpc"
 
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"
