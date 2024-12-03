@@ -7,7 +7,7 @@ import (
 	"github.com/n8sPxD/cowIM/internal/business/group/rpc/internal/config"
 	"github.com/n8sPxD/cowIM/internal/business/group/rpc/internal/server"
 	"github.com/n8sPxD/cowIM/internal/business/group/rpc/internal/svc"
-	"github.com/n8sPxD/cowIM/internal/business/group/rpc/types/group"
+	"github.com/n8sPxD/cowIM/internal/business/group/rpc/types/groupRpc"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
@@ -26,7 +26,7 @@ func main() {
 	ctx := svc.NewServiceContext(c)
 
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
-		group.RegisterGroupServer(grpcServer, server.NewGroupServer(ctx))
+		groupRpc.RegisterGroupServer(grpcServer, server.NewGroupServer(ctx))
 
 		if c.Mode == service.DevMode || c.Mode == service.TestMode {
 			reflection.Register(grpcServer)
