@@ -41,3 +41,9 @@ Etcd:
 
 
 WorkID: 1 # 雪花漂移id生成用
+
+GroupRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: group.rpc

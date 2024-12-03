@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/stores/redis"
+	"github.com/zeromicro/go-zero/zrpc"
 )
 
 type Config struct {
@@ -32,5 +33,6 @@ type Config struct {
 	Etcd struct {
 		Endpoints []string
 	}
-	WorkID uint16
+	WorkID   uint16
+	GroupRpc zrpc.RpcClientConf
 }

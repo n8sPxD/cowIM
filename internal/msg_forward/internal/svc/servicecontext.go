@@ -2,11 +2,14 @@ package svc
 
 import (
 	"fmt"
+	"github.com/n8sPxD/cowIM/internal/business/group/rpc/group"
+	"github.com/n8sPxD/cowIM/internal/business/group/rpc/types/groupRpc"
 	"github.com/n8sPxD/cowIM/internal/common/dao/myMongo"
 	"github.com/n8sPxD/cowIM/internal/common/dao/myMysql"
 	"github.com/n8sPxD/cowIM/internal/common/dao/myRedis"
 	"github.com/n8sPxD/cowIM/internal/msg_forward/internal/config"
 	"github.com/n8sPxD/cowIM/pkg/servicehub"
+	"github.com/zeromicro/go-zero/zrpc"
 )
 
 type ServiceContext struct {
@@ -17,25 +20,18 @@ type ServiceContext struct {
 	MySQL  *myMysql.DB
 	Regist *servicehub.RegisterHub
 	Discov *servicehub.DiscoveryHub
+
+	GroupRpc groupRpc.GroupClient
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
-		Config: c,
-		Redis:  myRedis.MustNewNativeRedis(c.RedisConf),
-		Mongo:  myMongo.MustNewMongo(fmt.Sprintf("mongodb://%s", c.MongoConf.Host)),
-		//MsgDBSaver: &kafka.Writer{
-		//	Addr:         kafka.TCP(c.MsgDBSaver.Brokers...),
-		//	Topic:        c.MsgDBSaver.Topic,
-		//	Balancer:     &kafka.LeastBytes{},
-		//	BatchTimeout: 10 * time.Millisecond, // 低超时时间
-		//	RequiredAcks: kafka.RequireOne,      // 仅等待 Leader 确认
-		//	Compression:  compress.Zstd,         // Zstd压缩
-		//	Async:        true,                  // 启用异步写入
-		//	MaxAttempts:  1,                     // 限制重试次数
-		//},
-		MySQL:  myMysql.MustNewMySQL(c.MySQL.DataSource),
-		Regist: servicehub.NewRegisterHub(c.Etcd.Endpoints, 3),
-		Discov: servicehub.NewDiscoveryHub(c.Etcd.Endpoints),
+		Config:   c,
+		Redis:    myRedis.MustNewNativeRedis(c.RedisConf),
+		Mongo:    myMongo.MustNewMongo(fmt.Sprintf("mongodb://%s", c.MongoConf.Host)),
+		MySQL:    myMysql.MustNewMySQL(c.MySQL.DataSource),
+		Regist:   servicehub.NewRegisterHub(c.Etcd.Endpoints, 3),
+		Discov:   servicehub.NewDiscoveryHub(c.Etcd.Endpoints),
+		GroupRpc: group.NewGroup(zrpc.MustNewClient(c.GroupRpc)),
 	}
 }
