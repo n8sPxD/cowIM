@@ -37,7 +37,6 @@ func main() {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	<-signalChan
-	// TODO: 分布式部署时，最后一个服务关闭的时候才能移除
 	svcCtx.Redis.RemoveAllDupMessages(ctx) // 移除所有未处理的重复消息uuid
 	mq.Close()
 	os.Exit(0)

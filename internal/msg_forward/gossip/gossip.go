@@ -26,11 +26,30 @@ type Client struct {
 	conn *grpc.ClientConn
 }
 
+// NewGossipClient 对ws server的远程更新接口
+func NewGossipClient(endpoint string) *gossippb.GossipClient {
+	conn, err := grpc.NewClient(endpoint, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		logx.Error("[NewGossipClient] Create client failed, error: ", err)
+		return nil
+	}
+	client := gossippb.NewGossipClient(conn)
+	return &client
+}
+
+func NewGossipClients(endpoints []string) []*gossippb.GossipClient {
+	ret := make([]*gossippb.GossipClient, 0)
+	for i := range endpoints {
+		ret = append(ret, NewGossipClient(endpoints[i]))
+	}
+	return ret
+}
+
 func NewClient(neighbor string) *Client {
 	conn, err := grpc.NewClient(neighbor, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		// TODO: 重试，或者直接无视，从etcd中再次同步后再连接
-		logx.Error("[UpdateNeighbors] Create client failed, error: ", err)
+		logx.Error("[NewClient] Create client failed, error: ", err)
 		return nil
 	}
 	client := gossippb.NewGossipClient(conn)

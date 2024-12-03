@@ -1,6 +1,9 @@
 package svc
 
 import (
+	"context"
+	"github.com/n8sPxD/cowIM/internal/msg_forward/gossip"
+	"github.com/n8sPxD/cowIM/internal/msg_forward/gossip/gossippb"
 	"time"
 
 	"github.com/n8sPxD/cowIM/internal/common/dao/myRedis"
@@ -15,9 +18,12 @@ type ServiceContext struct {
 	MsgForwarder *kafka.Writer
 	Redis        *myRedis.Native
 	RegisterHub  *servicehub.RegisterHub
+	DiscovHub    *servicehub.DiscoveryHub
+	Gossips      []*gossippb.GossipClient
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
+	discov := servicehub.NewDiscoveryHub(c.Etcd.Endpoints)
 	return &ServiceContext{
 		Config: c,
 		MsgForwarder: &kafka.Writer{
@@ -32,5 +38,8 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		},
 		Redis:       myRedis.MustNewNativeRedis(c.RedisConf),
 		RegisterHub: servicehub.NewRegisterHub(c.Etcd.Endpoints, 3),
+		DiscovHub:   discov,
+		Gossips:     gossip.NewGossipClients(discov.GetServiceEndpoints(context.Background(), "gossip")),
+		// TODO: 另起goroutine进行异步etcd服务发现订阅
 	}
 }
