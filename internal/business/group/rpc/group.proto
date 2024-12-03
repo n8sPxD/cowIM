@@ -4,11 +4,11 @@ package groupRpc;
 option go_package = "./groupRpc";
 
 message GroupMembersRequest {
-  int32 id = 1;
+  uint32 id = 1;
 }
 
 message GroupMembersResponse {
-  repeated int32 ids = 1;
+  repeated uint32 ids = 1;
 }
 
 service Group {

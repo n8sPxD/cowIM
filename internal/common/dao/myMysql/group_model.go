@@ -31,8 +31,8 @@ func (db *DB) InsertGroup(ctx context.Context, group *models.Group) error {
 //	return members, err
 //}
 
-func (db *DB) GetGroupMemberIDs(ctx context.Context, id uint) ([]uint, error) {
-	var ids []uint
+func (db *DB) GetGroupMemberIDs(ctx context.Context, id uint32) ([]uint32, error) {
+	var ids []uint32
 	err := db.client.WithContext(ctx).
 		Model(&models.GroupMember{}).
 		Select("user_id").

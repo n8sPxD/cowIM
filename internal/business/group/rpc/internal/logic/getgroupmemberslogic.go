@@ -2,7 +2,7 @@ package logic
 
 import (
 	"context"
-
+	"errors"
 	"github.com/n8sPxD/cowIM/internal/business/group/rpc/internal/svc"
 	"github.com/n8sPxD/cowIM/internal/business/group/rpc/types/groupRpc"
 
@@ -23,8 +23,17 @@ func NewGetGroupMembersLogic(ctx context.Context, svcCtx *svc.ServiceContext) *G
 	}
 }
 
+// GetGroupMembers 从数据库获取群员数据
 func (l *GetGroupMembersLogic) GetGroupMembers(in *groupRpc.GroupMembersRequest) (*groupRpc.GroupMembersResponse, error) {
-	// todo: add your logic here and delete this line
+	id := in.GetId()
+	if id == 0 {
+		return nil, errors.New("id must set")
+	}
 
-	return &groupRpc.GroupMembersResponse{}, nil
+	ids, err := l.svcCtx.DB.GetGroupMemberIDs(l.ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &groupRpc.GroupMembersResponse{Ids: ids}, nil
 }
