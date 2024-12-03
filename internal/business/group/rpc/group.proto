@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package groupRpc;
+option go_package = "./groupRpc";
+
+message GroupMembersRequest {
+  int32 id = 1;
+}
+
+message GroupMembersResponse {
+  repeated int32 ids = 1;
+}
+
+service Group {
+  rpc GetGroupMembers(GroupMembersRequest) returns (GroupMembersResponse);
+}
